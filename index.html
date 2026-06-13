@@ -80,12 +80,18 @@
       user-select: none;
     }
  
-    /* Glassmorphism style cards */
+    /* Glassmorphism style cards (Optimized: backdrop-filter on desktop only, higher opacity on mobile for fast GPU drawing) */
     .glass-card {
-      background: rgba(17, 24, 39, 0.45);
-      backdrop-filter: blur(16px);
+      background: rgba(17, 24, 39, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (min-width: 1024px) {
+      .glass-card {
+        background: rgba(17, 24, 39, 0.45);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
     }
  
     /* Mascot breathing/floating float keyframes */
@@ -109,9 +115,9 @@
     <!-- Animated Twinkling Starfield Background -->
     <canvas id="starfield" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
  
-    <!-- Ambient Background Glows -->
-    <div class="absolute top-[20%] left-[5%] w-[30vw] h-[30vw] rounded-full bg-accentpurple/5 blur-[120px] pointer-events-none z-0"></div>
-    <div class="absolute bottom-[20%] right-[5%] w-[25vw] h-[25vw] rounded-full bg-accentblue/5 blur-[120px] pointer-events-none z-0"></div>
+    <!-- Ambient Background Glows (Optimized: Desktop only to prevent expensive blur filters on mobile GPU) -->
+    <div class="hidden lg:block absolute top-[20%] left-[5%] w-[30vw] h-[30vw] rounded-full bg-accentpurple/5 blur-[120px] pointer-events-none z-0"></div>
+    <div class="hidden lg:block absolute bottom-[20%] right-[5%] w-[25vw] h-[25vw] rounded-full bg-accentblue/5 blur-[120px] pointer-events-none z-0"></div>
  
     <!-- ========================================================
          LEFT COLUMN: BRANDING, CLOCK, MASCOT (Desktop Fixed)
@@ -173,9 +179,8 @@
     <!-- ========================================================
          RIGHT COLUMN: MAIN APP CARDS GRID & TEXTAREA NOTE PAD
        ======================================================== -->
-    <div class="w-full lg:w-[65%] xl:w-[68%] p-6 sm:p-10 lg:p-12 overflow-y-auto z-10 flex flex-col justify-between">
+    <div class="w-full lg:w-[65%] xl:w-[68%] p-6 sm:p-10 lg:p-12 lg:overflow-y-auto lg:h-screen z-10 flex flex-col justify-between">
       
-      <!-- Content Wrapper -->
       <div>
         <!-- Heading Label -->
         <div class="mb-6 flex justify-between items-center">
