@@ -809,6 +809,9 @@
     // ==========================================
     //  API calls to Google Apps Script
     // ==========================================
+    let studentHistoryRecords = [];
+    let currentActiveKey = '';
+
     function loadClassesList() {
       if (!SCRIPT_URL) return;
       
@@ -832,6 +835,7 @@
             
             // Format labels for dropdown options
             let optionsHTML = '<option value="">-- เลือกปีการศึกษาและห้องเรียน --</option>';
+            optionsHTML += '<option value="all">🔍 ค้นหาข้ามปีการศึกษาทั้งหมด (ใช้ชื่อ-นามสกุล)</option>';
             classesList.forEach(item => {
               const parts = item.key.split('_');
               let label = item.key;
@@ -864,7 +868,7 @@
       const query = document.getElementById('student-query').value.trim();
       
       if (!key) {
-        alert('กรุณาเลือก ปีการศึกษา/ห้องเรียน ก่อนค้นหาครับ');
+        alert('กรุณาเลือก ปีการศึกษา/ห้องเรียน ก่อนค้นหาครับ (หรือเลือกค้นหาข้ามปีการศึกษาทั้งหมด)');
         playBeep('error');
         return;
       }
@@ -882,60 +886,210 @@
           <p class="text-sm text-cream/70 font-semibold">กำลังค้นหาและดึงฐานข้อมูลผลการเรียนอย่างปลอดภัย...</p>
         </div>`;
       
-      fetch(`${SCRIPT_URL}?action=grades_get&key=${encodeURIComponent(key)}`)
-        .then(res => res.json())
-        .then(res => {
-          if (res.success && res.data) {
-            const classData = res.data;
-            const student = classData.students.find(s => {
-              const matchesName = s.name.includes(query);
-              const matchesNo = String(s.no) === query;
-              return matchesName || matchesNo;
-            });
-            
-            if (student) {
+      studentHistoryRecords = [];
+      currentActiveKey = '';
+
+      if (key === 'all') {
+        // Search by name across all years
+        if (/^\d+$/.test(query)) {
+          playBeep('error');
+          reportDiv.innerHTML = `
+            <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
+              <span class="text-3xl block mb-2">⚠️</span>
+              <h4 class="font-bold text-base">ไม่สามารถค้นหาด้วยเลขที่ได้</h4>
+              <p class="text-xs text-cream/50 mt-1">กรุณาระบุชื่อ-นามสกุล เพื่อทำการสืบค้นประวัติข้ามปีการศึกษา</p>
+            </div>`;
+          return;
+        }
+
+        fetch(`${SCRIPT_URL}?action=grades_search_student&name=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(res => {
+            if (res.success && res.records && res.records.length > 0) {
               playBeep('success');
-              displayGradeCard(student, classData, key);
+              studentHistoryRecords = res.records;
+              sortHistoryRecords();
+              const latestRecord = studentHistoryRecords[studentHistoryRecords.length - 1];
+              currentActiveKey = latestRecord.key;
+              renderStudentDashboard();
             } else {
               playBeep('error');
               reportDiv.innerHTML = `
                 <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
                   <span class="text-3xl block mb-2">🔎❌</span>
-                  <h4 class="font-bold text-base">ไม่พบข้อมูลนักเรียน</h4>
-                  <p class="text-xs text-cream/50 mt-1">กรุณาตรวจสอบชื่อ-นามสกุล สะกดให้ถูกต้อง หรือใส่เลขที่ให้ตรงในรายชื่อชั้นเรียนนี้</p>
+                  <h4 class="font-bold text-base">ไม่พบข้อมูลประวัติการเรียนของนักเรียน</h4>
+                  <p class="text-xs text-cream/50 mt-1">กรุณาตรวจสอบชื่อ-นามสกุล สะกดให้ถูกต้อง หรือลองค้นหาเจาะจงรายห้องเรียน</p>
                 </div>`;
             }
-          } else {
+          })
+          .catch(err => {
             playBeep('error');
             reportDiv.innerHTML = `
               <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
-                <span class="text-3xl block mb-2">❌</span>
-                <h4 class="font-bold text-base">ดึงข้อมูลคะแนนไม่สำเร็จ</h4>
-                <p class="text-xs text-cream/50 mt-1">${res.error || 'ระบบหลังบ้านมีปัญหา คาดว่ายังไม่มีการบันทึกผลสอบของชั้นนี้'}</p>
+                <span class="text-3xl block mb-2">📡🔌</span>
+                <h4 class="font-bold text-base">การเชื่อมต่ออินเทอร์เน็ตขัดข้อง</h4>
+                <p class="text-xs text-cream/50 mt-1">ไม่สามารถดึงข้อมูลคะแนนได้ โปรดลองอีกครั้ง</p>
               </div>`;
-          }
-        })
-        .catch(err => {
-          playBeep('error');
-          reportDiv.innerHTML = `
-            <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
-              <span class="text-3xl block mb-2">📡🔌</span>
-              <h4 class="font-bold text-base">การเชื่อมต่ออินเทอร์เน็ตขัดข้อง</h4>
-              <p class="text-xs text-cream/50 mt-1">ไม่สามารถติดต่อเซิร์ฟเวอร์ระบบจัดเก็บคะแนนได้ โปรดลองอีกครั้ง</p>
-            </div>`;
-          console.error(err);
-        });
+            console.error(err);
+          });
+      } else {
+        // Search in a specific room first
+        fetch(`${SCRIPT_URL}?action=grades_get&key=${encodeURIComponent(key)}`)
+          .then(res => res.json())
+          .then(res => {
+            if (res.success && res.data) {
+              const classData = res.data;
+              const student = classData.students.find(s => {
+                const cleanSName = s.name.replace(/\s+/g, '');
+                const cleanQuery = query.replace(/\s+/g, '');
+                const matchesName = cleanSName.includes(cleanQuery);
+                const matchesNo = String(s.no) === query;
+                return matchesName || matchesNo;
+              });
+              
+              if (student) {
+                playBeep('success');
+                studentHistoryRecords = [{
+                  key: key,
+                  student: student,
+                  subjects: classData.subjects,
+                  lastUpdated: classData.lastUpdated || '',
+                  updatedBy: classData.updatedBy || ''
+                }];
+                currentActiveKey = key;
+                renderStudentDashboard();
+                
+                // Fetch other records for this student's name in background to build timeline
+                fetch(`${SCRIPT_URL}?action=grades_search_student&name=${encodeURIComponent(student.name)}`)
+                  .then(r => r.json())
+                  .then(r => {
+                    if (r.success && r.records && r.records.length > 0) {
+                      studentHistoryRecords = r.records;
+                      sortHistoryRecords();
+                      renderStudentDashboard();
+                    }
+                  })
+                  .catch(e => console.error("Error fetching background history:", e));
+              } else {
+                playBeep('error');
+                reportDiv.innerHTML = `
+                  <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
+                    <span class="text-3xl block mb-2">🔎❌</span>
+                    <h4 class="font-bold text-base">ไม่พบข้อมูลนักเรียน</h4>
+                    <p class="text-xs text-cream/50 mt-1">กรุณาตรวจสอบชื่อ-นามสกุล สะกดให้ถูกต้อง หรือใส่เลขที่ให้ตรงในรายชื่อชั้นเรียนนี้</p>
+                  </div>`;
+              }
+            } else {
+              playBeep('error');
+              reportDiv.innerHTML = `
+                <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
+                  <span class="text-3xl block mb-2">❌</span>
+                  <h4 class="font-bold text-base">ดึงข้อมูลคะแนนไม่สำเร็จ</h4>
+                  <p class="text-xs text-cream/50 mt-1">${res.error || 'ระบบหลังบ้านมีปัญหา คาดว่ายังไม่มีการบันทึกผลสอบของชั้นนี้'}</p>
+                </div>`;
+            }
+          })
+          .catch(err => {
+            playBeep('error');
+            reportDiv.innerHTML = `
+              <div class="liquid-glass p-8 rounded-[28px] text-center text-red-400">
+                <span class="text-3xl block mb-2">📡🔌</span>
+                <h4 class="font-bold text-base">การเชื่อมต่ออินเทอร์เน็ตขัดข้อง</h4>
+                <p class="text-xs text-cream/50 mt-1">ไม่สามารถติดต่อเซิร์ฟเวอร์ระบบจัดเก็บคะแนนได้ โปรดลองอีกครั้ง</p>
+              </div>`;
+            console.error(err);
+          });
+      }
     }
 
-    function displayGradeCard(student, classData, classKey) {
+    function sortHistoryRecords() {
+      studentHistoryRecords.sort((a, b) => {
+        const partsA = a.key.split('_');
+        const partsB = b.key.split('_');
+        const yA = parseInt(partsA[0]) || 0;
+        const sA = parseInt(partsA[1]) || 0;
+        const yB = parseInt(partsB[0]) || 0;
+        const sB = parseInt(partsB[1]) || 0;
+        if (yA !== yB) return yA - yB;
+        return sA - sB;
+      });
+    }
+
+    function renderStudentDashboard() {
+      if (!studentHistoryRecords || studentHistoryRecords.length === 0) return;
+      
+      const activeRecord = studentHistoryRecords.find(r => r.key === currentActiveKey) || studentHistoryRecords[studentHistoryRecords.length - 1];
+      currentActiveKey = activeRecord.key;
+      
+      let timelineHTML = "";
+      if (studentHistoryRecords.length > 1) {
+        timelineHTML = `
+          <!-- Beautiful Glass Timeline -->
+          <div class="liquid-glass p-4 rounded-[24px] mb-6 flex flex-col items-center justify-center border border-white/8 bg-white/[0.01]">
+            <div class="text-[10px] text-teal-400 uppercase tracking-widest font-black mb-3 font-outfit flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-ping"></span>
+              ⏰ ไทม์ไลน์ประวัติผลการเรียนสะสม (3 ปีการศึกษา)
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 relative w-full px-2">
+              <div class="absolute top-1/2 left-[10%] right-[10%] h-[1px] bg-white/10 -translate-y-1/2 hidden md:block z-0"></div>
+        `;
+        
+        studentHistoryRecords.forEach((rec, idx) => {
+          const parts = rec.key.split('_');
+          const year = parts[0] || '';
+          const term = parts[1] || '';
+          const room = parts[2] || '';
+          
+          const isActive = rec.key === currentActiveKey;
+          const gpa = rec.student.gpa || recalculateStudentGPA(rec.student, rec.subjects);
+          
+          const btnClass = isActive 
+            ? 'bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.5)] scale-105 border-neon' 
+            : 'bg-white/5 border-white/10 text-cream/70 hover:bg-white/10 hover:text-white';
+            
+          const displayRoom = room.replace('-', '/');
+          
+          timelineHTML += `
+            <button onclick="switchTimelineSemester('${rec.key}')" class="relative z-10 font-kanit text-xs px-4 py-2 rounded-2xl border transition-all duration-300 active:scale-95 flex items-center gap-2 ${btnClass}">
+              <span class="font-outfit font-extrabold text-[9px] bg-black/10 px-1.5 py-0.5 rounded-md">ม.${displayRoom.replace(/[^0-9\/]/g, '') || displayRoom}</span>
+              <span class="font-bold">ปี ${year} เทอม ${term}</span>
+              <span class="font-outfit font-black text-teal-400 ${isActive ? 'text-spacebg' : ''}">GPA ${gpa}</span>
+            </button>
+          `;
+          
+          if (idx < studentHistoryRecords.length - 1) {
+            timelineHTML += `
+              <span class="text-white/20 hidden md:inline z-10 font-outfit font-bold">➔</span>
+            `;
+          }
+        });
+        
+        timelineHTML += `
+            </div>
+          </div>
+        `;
+      }
+      
+      displayGradeCard(activeRecord.student, activeRecord, activeRecord.key, timelineHTML);
+    }
+
+    function switchTimelineSemester(key) {
+      playBeep('click');
+      currentActiveKey = key;
+      renderStudentDashboard();
+    }
+
+    function displayGradeCard(student, classData, classKey, timelineHTML = "") {
       const parts = classKey.split('_');
       const year = parts[0] || '2568';
       const term = parts[1] || '2';
-      const room = parts[2] || 'ม.6/1';
+      const room = (parts[2] || 'ม.6/1').replace('-', '/');
       
       const reportContainer = document.getElementById('grades-report-card');
       reportContainer.innerHTML = `
+        ${timelineHTML}
         <div id="capture-area" class="liquid-glass p-6 sm:p-8 rounded-[32px] border border-white/12 shadow-[0_20px_50px_rgba(0,0,0,0.6)] relative animate-fade-in">
+
           <!-- Watermark Logo -->
           <div class="absolute right-6 top-6 opacity-[0.04] pointer-events-none">
             <img src="../images/logo.png" class="w-36 h-36 object-contain filter grayscale">
