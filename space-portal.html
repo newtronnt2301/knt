@@ -117,6 +117,21 @@
       animation: float-breath 6s ease-in-out infinite;
     }
 
+    /* Cosmic Logo Pulse & Color Glow Animation (No border, glow pulses between cyan and purple) */
+    @keyframes logo-pulse-glow {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.45));
+      }
+      50% {
+        transform: translateY(-8px) scale(1.03);
+        filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.7));
+      }
+    }
+    .animate-logo-pulse {
+      animation: logo-pulse-glow 6s ease-in-out infinite;
+    }
+
     /* Status dot pulse animation */
     @keyframes status-pulse {
       0%, 100% { opacity: 0.4; }
@@ -126,9 +141,9 @@
       animation: status-pulse 2s infinite ease-in-out;
     }
 
-    /* Shiny Text Effect */
+    /* Shiny Text Effect (Cosmic Gradient) */
     .shiny-text {
-      background: linear-gradient(135deg, #EFF4FF 30%, #a5b4fc 60%, #6FFF00 100%);
+      background: linear-gradient(135deg, #EFF4FF 20%, #a5b4fc 55%, #00E5FF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -157,62 +172,22 @@
     <!-- ========================================================
          ฝั่งซ้าย: โลโก้, มาสคอตแมว 3D หรูหรา, และการ์ดนาฬิกาเรืองแสง
          ======================================================== -->
-    <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 bg-black/5 backdrop-blur-sm z-10">
+    <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-white/10 bg-black/5 backdrop-blur-sm z-10">
       
-      <!-- ส่วนบน/กลาง: โลโก้แบรนดิ้งแบบวงกลมเรืองแสงขนาดใหญ่โดดเด่นสะดุดตา -->
-      <div class="my-auto py-8 flex flex-col items-center text-center gap-5 relative z-10 w-full">
-        <div class="relative group cursor-pointer">
-          <!-- เอฟเฟกต์แสงออร่าหมุนเรืองแสงรอบโลโก้ -->
-          <div class="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-blue-600 via-neon to-emerald-400 opacity-60 blur-lg group-hover:opacity-90 transition duration-1000 group-hover:duration-200 animate-pulse-dot"></div>
-          <img src="images/logo.png" alt="ครูนิวตรอน.com โลโก้" class="relative w-36 h-36 object-contain rounded-full border border-white/20 bg-spacebg/80 p-1 shadow-2xl animate-float-breath">
+      <!-- ส่วนแบรนดิ้งแบบไม่มีขอบและกระพริบเรืองแสงสีฟ้านีออน -->
+      <div class="flex flex-col items-center text-center gap-6 relative z-10 w-full">
+        <div class="relative cursor-pointer">
+          <!-- โลโก้ขนาดใหญ่เรืองแสงกะพริบเป็นสีน้ำเงิน/ม่วงอวกาศ (ไม่มีขอบและพื้นหลังดำ) -->
+          <img src="images/logo.png" alt="ครูนิวตรอน.com โลโก้" class="w-44 h-44 sm:w-48 sm:h-48 object-contain animate-logo-pulse pointer-events-none">
         </div>
         
-        <div class="space-y-2.5 mt-2">
+        <div class="space-y-3 mt-2">
           <h1 class="shiny-text font-black text-3xl sm:text-4xl tracking-tight leading-none font-kanit drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
             ครูนิวตรอน.com
           </h1>
           <p class="text-cream/85 font-light text-xs sm:text-sm max-w-[280px] leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
             พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
           </p>
-        </div>
-      </div>
-
-      <!-- ส่วนล่าง: เครื่องมือจับเวลากิจกรรมห้องเรียน (Classroom Activity Timer) -->
-      <div class="liquid-glass rounded-[24px] px-5 py-4 w-full flex flex-col items-center justify-center border border-white/10 shadow-lg shadow-black/40">
-        <div class="flex items-center gap-2 mb-2">
-          <span id="timer-status-dot" class="w-1.5 h-1.5 rounded-full bg-cream/30"></span>
-          <div class="text-[10px] sm:text-xs font-bold text-cream/60 tracking-widest uppercase">จับเวลากิจกรรมห้องเรียน ⏱️</div>
-        </div>
-        
-        <!-- หน้าจอแสดงผลเวลา -->
-        <div id="timer-display" class="font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-          05:00
-        </div>
-        
-        <!-- ปุ่มลัดสำหรับเลือกนาที -->
-        <div class="flex gap-1.5 mt-3 w-full justify-center">
-          <button onclick="setTimerPreset(60)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
-            1 นาที
-          </button>
-          <button onclick="setTimerPreset(180)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
-            3 นาที
-          </button>
-          <button onclick="setTimerPreset(300)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
-            5 นาที
-          </button>
-          <button onclick="setTimerPreset(600)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
-            10 นาที
-          </button>
-        </div>
-
-        <!-- ปุ่มควบคุม เล่น/หยุด/รีเซ็ต -->
-        <div class="flex gap-2 mt-3.5 w-full justify-center">
-          <button id="btn-timer-toggle" onclick="toggleTimer()" class="flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200">
-            เริ่ม
-          </button>
-          <button id="btn-timer-reset" onclick="resetTimer()" class="flex-1 max-w-[90px] py-1.5 text-xs font-bold rounded-xl border border-white/10 bg-white/[0.02] text-cream/80 hover:bg-white/5 active:scale-95 transition-all duration-200">
-            รีเซ็ต
-          </button>
         </div>
       </div>
 
