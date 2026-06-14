@@ -159,35 +159,60 @@
          ======================================================== -->
     <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 bg-black/5 backdrop-blur-sm z-10">
       
-      <!-- โลโก้ด้านบนสุด -->
-      <div class="flex items-center gap-3">
-        <img src="images/logo.png" alt="ครูนิวตรอน.com" class="w-11 h-11 object-contain drop-shadow-[0_0_10px_rgba(111,255,0,0.25)]">
-        <div class="font-bold tracking-widest text-base sm:text-lg text-cream font-outfit uppercase">
-          ครูนิวตรอน<span class="text-neon drop-shadow-[0_0_10px_rgba(111,255,0,0.5)]">.com</span>
+      <!-- ส่วนบน/กลาง: โลโก้แบรนดิ้งแบบวงกลมเรืองแสงขนาดใหญ่โดดเด่นสะดุดตา -->
+      <div class="my-auto py-8 flex flex-col items-center text-center gap-5 relative z-10 w-full">
+        <div class="relative group cursor-pointer">
+          <!-- เอฟเฟกต์แสงออร่าหมุนเรืองแสงรอบโลโก้ -->
+          <div class="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-blue-600 via-neon to-emerald-400 opacity-60 blur-lg group-hover:opacity-90 transition duration-1000 group-hover:duration-200 animate-pulse-dot"></div>
+          <img src="images/logo.png" alt="ครูนิวตรอน.com โลโก้" class="relative w-36 h-36 object-contain rounded-full border border-white/20 bg-spacebg/80 p-1 shadow-2xl animate-float-breath">
+        </div>
+        
+        <div class="space-y-2.5 mt-2">
+          <h1 class="shiny-text font-black text-3xl sm:text-4xl tracking-tight leading-none font-kanit drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
+            ครูนิวตรอน.com
+          </h1>
+          <p class="text-cream/85 font-light text-xs sm:text-sm max-w-[280px] leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
+          </p>
         </div>
       </div>
 
-      <!-- ส่วนกลาง: หัวข้อหลักแบบไล่เฉดสี (ไม่มีกรอบเพื่อความคลีนและแสดงแอนิเมชันพื้นหลังได้เต็มที่) -->
-      <div class="my-auto py-8 flex flex-col items-center lg:items-start text-center lg:text-left gap-4 relative z-10 w-full px-2">
-        <h1 class="shiny-text font-black text-4xl sm:text-5xl lg:text-[2.85rem] leading-none font-kanit tracking-tight mb-3 drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
-          ครูนิวตรอน.com
-        </h1>
-        <p class="text-cream/95 font-normal text-sm sm:text-base leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-          พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
-        </p>
-      </div>
+      <!-- ส่วนล่าง: เครื่องมือจับเวลากิจกรรมห้องเรียน (Classroom Activity Timer) -->
+      <div class="liquid-glass rounded-[24px] px-5 py-4 w-full flex flex-col items-center justify-center border border-white/10 shadow-lg shadow-black/40">
+        <div class="flex items-center gap-2 mb-2">
+          <span id="timer-status-dot" class="w-1.5 h-1.5 rounded-full bg-cream/30"></span>
+          <div class="text-[10px] sm:text-xs font-bold text-cream/60 tracking-widest uppercase">จับเวลากิจกรรมห้องเรียน ⏱️</div>
+        </div>
+        
+        <!-- หน้าจอแสดงผลเวลา -->
+        <div id="timer-display" class="font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+          05:00
+        </div>
+        
+        <!-- ปุ่มลัดสำหรับเลือกนาที -->
+        <div class="flex gap-1.5 mt-3 w-full justify-center">
+          <button onclick="setTimerPreset(60)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
+            1 นาที
+          </button>
+          <button onclick="setTimerPreset(180)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
+            3 นาที
+          </button>
+          <button onclick="setTimerPreset(300)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
+            5 นาที
+          </button>
+          <button onclick="setTimerPreset(600)" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-white/10 bg-white/[0.02] text-cream/70 hover:border-neon hover:text-neon hover:bg-neon/5 transition-all duration-300">
+            10 นาที
+          </button>
+        </div>
 
-      <!-- ด้านล่าง: กล่องนาฬิกากระจกเหลวดีไซน์ไฮเทค -->
-      <div class="liquid-glass rounded-[24px] px-6 py-5 flex flex-col items-center lg:items-start justify-center">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="w-2 h-2 rounded-full bg-neon shadow-[0_0_10px_#6FFF00] animate-pulse-dot"></span>
-          <div id="clock-greeting" class="text-[10px] sm:text-xs font-bold text-neon tracking-widest uppercase">สวัสดีครับคุณครู 🧑‍🏫</div>
-        </div>
-        <div id="clock-time" class="font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]">
-          00:00:00
-        </div>
-        <div id="clock-date" class="text-[10px] text-cream/60 font-mono mt-1 tracking-wider">
-          วันเสาร์ที่ 13 มิถุนายน 2569
+        <!-- ปุ่มควบคุม เล่น/หยุด/รีเซ็ต -->
+        <div class="flex gap-2 mt-3.5 w-full justify-center">
+          <button id="btn-timer-toggle" onclick="toggleTimer()" class="flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200">
+            เริ่ม
+          </button>
+          <button id="btn-timer-reset" onclick="resetTimer()" class="flex-1 max-w-[90px] py-1.5 text-xs font-bold rounded-xl border border-white/10 bg-white/[0.02] text-cream/80 hover:bg-white/5 active:scale-95 transition-all duration-200">
+            รีเซ็ต
+          </button>
         </div>
       </div>
 
@@ -607,97 +632,130 @@
     })();
 
     // ==========================================
-    //  Mascot Magnet Hover Effect (มาสคอตหันตามเมาส์เบาๆ)
+    //  Classroom Activity Timer & Stopwatch
     // ==========================================
     (function() {
-      const wrapper = document.getElementById('mascot-wrapper');
-      if (!wrapper) return;
-      
-      const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
-      if (isTouchDevice) return;
-      
-      const padding = 180;
-      const strength = 3.5;
-      
-      let rect = wrapper.getBoundingClientRect();
-      const updateRect = () => {
-        rect = wrapper.getBoundingClientRect();
+      let timerDuration = 300; // default 5 minutes (300 seconds)
+      let timeRemaining = timerDuration;
+      let timerInterval = null;
+      let isRunning = false;
+
+      const timerDisplay = document.getElementById('timer-display');
+      const toggleBtn = document.getElementById('btn-timer-toggle');
+      const statusDot = document.getElementById('timer-status-dot');
+
+      const formatTime = (secs) => {
+        const m = String(Math.floor(secs / 60)).padStart(2, '0');
+        const s = String(secs % 60).padStart(2, '0');
+        return `${m}:${s}`;
       };
-      window.addEventListener("resize", updateRect);
-      window.addEventListener("scroll", updateRect, { passive: true });
-      
-      const resetPosition = () => {
-        wrapper.style.transition = "transform 0.6s ease-in-out";
-        wrapper.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
-      };
-      
-      window.addEventListener("mousemove", (e) => {
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        const distanceX = e.clientX - centerX;
-        const distanceY = e.clientY - centerY;
-        
-        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        
-        if (distance < padding) {
-          wrapper.style.transition = "transform 0.2s ease-out";
-          const targetX = distanceX / strength;
-          const targetY = distanceY / strength;
-          wrapper.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) scale(1.04)`;
-        } else {
-          resetPosition();
+
+      const updateDisplay = () => {
+        if (timerDisplay) {
+          timerDisplay.textContent = formatTime(timeRemaining);
         }
-      });
-      
-      wrapper.addEventListener("mouseleave", resetPosition);
+      };
+
+      window.setTimerPreset = (secs) => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        timerDuration = secs;
+        timeRemaining = secs;
+        if (toggleBtn) {
+          toggleBtn.textContent = 'เริ่ม';
+          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+        }
+        if (statusDot) {
+          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
+          statusDot.style.animation = 'none';
+        }
+        if (timerDisplay) {
+          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+        }
+        updateDisplay();
+      };
+
+      window.toggleTimer = () => {
+        if (isRunning) {
+          // Pause timer
+          clearInterval(timerInterval);
+          isRunning = false;
+          if (toggleBtn) toggleBtn.textContent = 'ทำต่อ';
+          if (statusDot) {
+            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+            statusDot.style.animation = 'none';
+          }
+        } else {
+          // Start timer
+          isRunning = true;
+          if (toggleBtn) toggleBtn.textContent = 'หยุด';
+          if (statusDot) {
+            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_10px_#6FFF00]';
+            statusDot.style.animation = 'status-pulse 2s infinite ease-in-out';
+          }
+          
+          timerInterval = setInterval(() => {
+            if (timeRemaining > 0) {
+              timeRemaining--;
+              updateDisplay();
+              
+              // Warning state when under 10 seconds
+              if (timeRemaining <= 10 && timerDisplay) {
+                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+              }
+            } else {
+              // Timer Finished
+              clearInterval(timerInterval);
+              isRunning = false;
+              if (toggleBtn) {
+                toggleBtn.textContent = 'เริ่มใหม่';
+                toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+              }
+              if (statusDot) {
+                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_#EF4444] animate-ping';
+              }
+              if (timerDisplay) {
+                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]';
+              }
+              // Play audio beep
+              try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+              } catch(e) {}
+            }
+          }, 1000);
+        }
+      };
+
+      window.resetTimer = () => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        timeRemaining = timerDuration;
+        if (toggleBtn) {
+          toggleBtn.textContent = 'เริ่ม';
+          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+        }
+        if (statusDot) {
+          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
+          statusDot.style.animation = 'none';
+        }
+        if (timerDisplay) {
+          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+        }
+        updateDisplay();
+      };
+
+      updateDisplay();
     })();
 
-    // ==========================================
-    //  Clock Widget & Greetings Update (นาฬิกาภาษาไทย)
-    // ==========================================
-    (function() {
-      const clockTime = document.getElementById('clock-time');
-      const clockDate = document.getElementById('clock-date');
-      const clockGreeting = document.getElementById('clock-greeting');
-      
-      const updateClock = () => {
-        const daysThai = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
-        const monthsThai = [
-          'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-          'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-        ];
-        
-        const now = new Date();
-        
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        if (clockTime) clockTime.textContent = `${hours}:${minutes}:${seconds}`;
-        
-        const dayName = daysThai[now.getDay()];
-        const dateNum = now.getDate();
-        const monthName = monthsThai[now.getMonth()];
-        const yearTH = now.getFullYear() + 543;
-        if (clockDate) clockDate.textContent = `${dayName}ที่ ${dateNum} ${monthName} ${yearTH}`;
-        
-        const hr = now.getHours();
-        let greeting = "สวัสดีครับคุณครู 🧑‍🏫";
-        if (hr >= 5 && hr < 12) {
-          greeting = "อรุณสวัสดิ์ครับคุณครู 🌅";
-        } else if (hr >= 12 && hr < 17) {
-          greeting = "สวัสดีตอนบ่ายครับคุณครู ☀️";
-        } else if (hr >= 17 && hr < 21) {
-          greeting = "สวัสดีตอนเย็นครับคุณครู 🌆";
-        } else {
-          greeting = "สวัสดีตอนค่ำครับคุณครู 🌌";
-        }
-        if (clockGreeting) clockGreeting.textContent = greeting;
-      };
-      
-      updateClock();
-      setInterval(updateClock, 1000);
-    })();
 
     // ==========================================
     //  Notepad Auto-Save Memo Pad
