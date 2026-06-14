@@ -1768,32 +1768,23 @@
 
       const lines = parseTSV(pastedText);
       
-      let headerIdx = -1;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].some(cell => {
-          const c = cell.replace(/[\s\r\n]+/g, '');
-          return c.includes('ชื่อ') || c.includes('สกุล') || c.includes('เลขที่') || c.includes('เลขประจำตัว');
-        })) {
-          headerIdx = i;
-          break;
-        }
-      }
-      
-      if (headerIdx === -1) {
-        throw new Error('ไม่พบแถวหลักที่มีหัวคอลัมน์ เลขที่ หรือ ชื่อ - สกุล กรุณาคัดลอกตารางให้กว้างขึ้น');
-      }
-      
-      const headers = lines[headerIdx];
-      
+      // 1. Find the credits row (contains "หน่วยกิต" or "หน่วย")
       let creditIdx = -1;
-      for (let i = headerIdx + 1; i < Math.min(headerIdx + 5, lines.length); i++) {
+      for (let i = 0; i < lines.length; i++) {
         if (lines[i].some(cell => cell.includes('หน่วยกิต') || cell.includes('หน่วย'))) {
           creditIdx = i;
           break;
         }
       }
       
-      const studentStartIdx = (creditIdx !== -1) ? creditIdx + 1 : headerIdx + 1;
+      if (creditIdx === -1) {
+        throw new Error('ไม่พบแถว "หน่วยกิต" ในตารางที่คัดลอกมา กรุณาตรวจสอบว่าได้คัดลอกแถวหน่วยกิตมาด้วยหรือไม่');
+      }
+      
+      const studentStartIdx = creditIdx + 1;
+      
+      // Find the maximum number of columns across all header rows
+      const numCols = Math.max(...lines.slice(0, creditIdx).map(row => row.length));
       
       const subjectColumns = [];
       const metaColumns = {
@@ -1803,41 +1794,95 @@
         activities: []
       };
       
-      headers.forEach((h, idx) => {
-        const hClean = h.replace(/[\s\r\n]+/g, ' ').trim();
-        const val = hClean.toLowerCase();
-        
-        if (val.includes('เลขที่') || val === 'ที่' || val === 'no') {
-          metaColumns.no = idx;
-        } else if (val.includes('ชื่อ') || val.includes('สกุล')) {
-          if (metaColumns.name === -1) {
-            metaColumns.name = idx;
-          }
-        } else if (val.includes('เฉลี่ย') || val.includes('gpa') || val.includes('ระดับผลการเรียนเฉลี่ย')) {
-          metaColumns.gpa = idx;
-        } else if (val.includes('กิจกรรม') || val === 'แนะแนว' || val.includes('ลูกเสือ') || val.includes('เนตรนารี') || val.includes('รด.') || val.includes('ชุมนุม') || val.includes('สาธารณประโยชน์') || val === 'ผ' || val === 'มผ') {
-          metaColumns.activities.push({ index: idx, name: hClean });
-        } else {
-          // Check if this header matches course code pattern
-          const code = extractSubjectCode(hClean);
-          if (code) {
-            const credit = (creditIdx !== -1 && lines[creditIdx][idx]) ? parseFloat(lines[creditIdx][idx]) || 1.0 : 1.0;
-            subjectColumns.push({
-              index: idx,
-              code: code,
-              name: hClean,
-              credit: credit
-            });
+      // 2. Scan each column vertically through all rows above creditIdx to gather headers
+      for (let idx = 0; idx < numCols; idx++) {
+        const colCells = [];
+        for (let r = 0; r < creditIdx; r++) {
+          if (lines[r] && lines[r][idx]) {
+            const val = lines[r][idx].replace(/[\s\r\n]+/g, ' ').trim();
+            if (val !== '') {
+              colCells.push({ row: r, text: val });
+            }
           }
         }
-      });
+        
+        if (colCells.length === 0) continue;
+        
+        // Check column type by scanning gathered cells
+        let isMeta = false;
+        
+        for (const item of colCells) {
+          const val = item.text.toLowerCase();
+          if (val.includes('เลขที่') || val === 'ที่' || val === 'no') {
+            metaColumns.no = idx;
+            isMeta = true;
+            break;
+          } else if (val.includes('ชื่อ') || val.includes('สกุล')) {
+            if (metaColumns.name === -1) {
+              metaColumns.name = idx;
+            }
+            isMeta = true;
+            break;
+          } else if (val.includes('เฉลี่ย') || val.includes('gpa') || val.includes('ระดับผลการเรียนเฉลี่ย')) {
+            metaColumns.gpa = idx;
+            isMeta = true;
+            break;
+          }
+        }
+        
+        if (isMeta) continue;
+        
+        // Check for activities
+        const actItem = colCells.find(item => 
+          item.text.includes('กิจกรรม') || 
+          item.text === 'แนะแนว' || 
+          item.text.includes('ชุมนุม') || 
+          item.text.includes('ลูกเสือ') || 
+          item.text.includes('เนตรนารี') || 
+          item.text.includes('รด.') || 
+          item.text.includes('สาธารณประโยชน์')
+        );
+        
+        if (actItem) {
+          metaColumns.activities.push({ index: idx, name: actItem.text });
+          continue;
+        }
+        
+        // Check for subjects matching course codes
+        let foundCode = null;
+        let subjectRowIdx = -1;
+        colCells.forEach(item => {
+          const code = extractSubjectCode(item.text);
+          if (code) {
+            foundCode = code;
+            subjectRowIdx = item.row;
+          }
+        });
+        
+        if (foundCode) {
+          let subjectName = foundCode;
+          // The subject name is usually the cell above the course code cell in the same column
+          const nameItem = colCells.find(item => item.row === subjectRowIdx - 1);
+          if (nameItem) {
+            subjectName = `${foundCode} ${nameItem.text}`;
+          }
+          
+          const credit = lines[creditIdx] && lines[creditIdx][idx] ? parseFloat(lines[creditIdx][idx]) || 1.0 : 1.0;
+          subjectColumns.push({
+            index: idx,
+            code: foundCode,
+            name: subjectName,
+            credit: credit
+          });
+        }
+      }
       
       if (metaColumns.name === -1) {
-        throw new Error('ไม่พบตำแหน่งของคอลัมน์ ชื่อ - นามสกุล ตรวจสอบว่าตารางที่วางมีชื่อสะกดตรงกันหรือไม่');
+        throw new Error('ไม่พบตำแหน่งของคอลัมน์ "ชื่อ - นามสกุล" ตรวจสอบว่าตารางที่วางมีชื่อสะกดตรงกันหรือไม่');
       }
 
-      // Determine where the subject columns begin to know where name columns end
-      let firstSubjectIndex = headers.length;
+      // Determine where subject columns begin to know where the name columns end
+      let firstSubjectIndex = numCols;
       if (subjectColumns.length > 0) {
         firstSubjectIndex = Math.min(...subjectColumns.map(s => s.index));
       }
@@ -1847,11 +1892,11 @@
         const row = lines[i];
         if (row.length < 2 || !row[metaColumns.name]) continue;
         
-        // Check if this row is a total/summary row rather than a student row
+        // Skip total / summary / footer rows
         const testName = row[metaColumns.name].replace(/[\s\r\n]+/g, '');
         if (testName.includes('หน่วยกิต') || testName.includes('เฉลี่ย') || testName.includes('รวม') || testName === '') continue;
         
-        // Assemble student name (handles first and last names split into multiple columns)
+        // Auto-merge first and last name columns if split
         let nameParts = [];
         for (let j = metaColumns.name; j < firstSubjectIndex; j++) {
           if (row[j]) {
@@ -1874,7 +1919,7 @@
           acts[act.name] = (row[act.index] || 'ผ').trim();
         });
         
-        const gpa = (row[metaColumns.gpa] || '').trim();
+        const gpa = row[metaColumns.gpa] ? String(row[metaColumns.gpa]).trim() : '';
         
         students.push({
           no: studentNo,
