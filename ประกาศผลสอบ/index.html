@@ -1298,7 +1298,7 @@
             </div>
             <div class="col-span-2">
               <span class="text-[9.5px] text-cream/40 block">ชื่อ - นามสกุล</span>
-              <span class="text-xs sm:text-sm font-bold text-white">${student.name}</span>
+              <span id="card-student-name" class="text-xs sm:text-sm font-bold text-white">${student.name}</span>
             </div>
           </div>
 
@@ -1441,10 +1441,15 @@
         scale: 2,
         useCORS: true
       }).then(canvas => {
+        const nameEl = document.getElementById('card-student-name');
+        const studentName = nameEl ? nameEl.textContent.trim() : 'นักเรียน';
         const link = document.createElement('a');
-        link.download = `ผลการเรียน_${document.getElementById('card-student-name').textContent.trim()}.png`;
+        link.download = `ผลการเรียน_${studentName}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
+      }).catch(err => {
+        console.error("ดาวน์โหลดรูปภาพล้มเหลว: ", err);
+        alert("ไม่สามารถสร้างรูปภาพดาวน์โหลดได้ในขณะนี้ กรุณาลองใช้เบราว์เซอร์อื่น หรือจับภาพหน้าจอแทนครับ");
       });
     }
 
