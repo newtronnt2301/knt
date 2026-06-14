@@ -137,7 +137,7 @@
       <section id="setup-screen" class="glass-card p-6 sm:p-8 rounded-3xl border border-white/5 space-y-6">
         <div class="text-center space-y-2">
           <span class="text-3xl sm:text-4xl">Exam 📝</span>
-          <h2 class="text-xl sm:text-2xl font-bold text-white font-kanit">ระบบสอบเก็บคะแนนท้ายบท ม.4</h2>
+          <h2 class="text-xl sm:text-2xl font-bold text-white font-kanit">ระบบสอบเก็บคะแนนออนไลน์</h2>
           <p class="text-xs text-textlight/50 font-kanit">กรุณากรอกข้อมูลและเลือกหัวข้อวิชาที่ต้องการสอบเพื่อเริ่มต้นการทดสอบอย่างเป็นทางการ</p>
         </div>
 
@@ -145,13 +145,8 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs text-textlight/40 font-semibold mb-1">ระดับชั้น / ห้องเรียน</label>
-              <select id="exam-room" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-textlight outline-none focus:border-accentred transition-colors">
-                <option value="ม.4/1">ม.4/1</option>
-                <option value="ม.4/2">ม.4/2</option>
-                <option value="ม.4/3">ม.4/3</option>
-                <option value="ม.4/4">ม.4/4</option>
-                <option value="ม.4/5">ม.4/5</option>
-                <option value="ม.4/6">ม.4/6</option>
+              <select id="exam-room" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-textlight outline-none focus:border-accentred transition-colors font-kanit">
+                <!-- Injected dynamically -->
               </select>
             </div>
             <div>
@@ -165,25 +160,18 @@
             <input type="text" id="exam-name" placeholder="เช่น นายวิทยา รักดี" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-textlight outline-none focus:border-accentred transition-colors">
           </div>
 
-          <div>
-            <label class="block text-xs text-textlight/40 font-semibold mb-2">เลือกวิชา / บทเรียนที่ต้องการสอบ</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button onclick="selectChapter('set')" id="btn-chapter-set" class="chapter-btn p-3 rounded-xl border border-white/10 text-left text-xs hover:bg-white/5 transition-all flex items-center justify-between">
-                <span>🔵 บทที่ 1: เซต</span>
-                <span class="text-[10px] text-textlight/40 font-light">คลัง 40 ข้อ</span>
-              </button>
-              <button onclick="selectChapter('logic')" id="btn-chapter-logic" class="chapter-btn p-3 rounded-xl border border-white/10 text-left text-xs hover:bg-white/5 transition-all flex items-center justify-between">
-                <span>🧠 บทที่ 2: ตรรกศาสตร์</span>
-                <span class="text-[10px] text-textlight/40 font-light">คลัง 40 ข้อ</span>
-              </button>
-              <button onclick="selectChapter('real')" id="btn-chapter-real" class="chapter-btn p-3 rounded-xl border border-white/10 text-left text-xs hover:bg-white/5 transition-all flex items-center justify-between">
-                <span>⚡ บทที่ 3: ระบบจำนวนจริง</span>
-                <span class="text-[10px] text-textlight/40 font-light">คลัง 40 ข้อ</span>
-              </button>
-              <button onclick="selectChapter('function')" id="btn-chapter-function" class="chapter-btn p-3 rounded-xl border border-white/10 text-left text-xs hover:bg-white/5 transition-all flex items-center justify-between">
-                <span>📐 บทที่ 4: ความสัมพันธ์และฟังก์ชัน</span>
-                <span class="text-[10px] text-textlight/40 font-light">คลัง 40 ข้อ</span>
-              </button>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-textlight/40 font-semibold mb-1">เลือกวิชาเรียน</label>
+              <select id="exam-subject-select" onchange="renderChapters()" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-textlight outline-none focus:border-accentred transition-colors font-kanit">
+                <!-- Injected dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-textlight/40 font-semibold mb-1">บทเรียนที่สอบ</label>
+              <select id="exam-chapter-select" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-textlight outline-none focus:border-accentred transition-colors font-kanit">
+                <!-- Injected dynamically -->
+              </select>
             </div>
           </div>
 
@@ -606,6 +594,19 @@
 
     let wakeLock = null;
 
+    // Subjects and Chapters Configuration
+    const subjectsConfig = {
+      'math-m4': {
+        label: 'คณิตศาสตร์เพิ่มเติม ม.4',
+        chapters: {
+          'set': 'บทที่ 1: เซต',
+          'logic': 'บทที่ 2: ตรรกศาสตร์',
+          'real': 'บทที่ 3: ระบบจำนวนจริง',
+          'function': 'บทที่ 4: ความสัมพันธ์และฟังก์ชัน'
+        }
+      }
+    };
+
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -633,40 +634,64 @@
       return array;
     }
 
-    function selectChapter(chapterKey) {
-      selectedChapterKey = chapterKey;
-      
-      const buttons = {
-        'set': 'btn-chapter-set',
-        'logic': 'btn-chapter-logic',
-        'real': 'btn-chapter-real',
-        'function': 'btn-chapter-function'
-      };
-
-      const labels = {
-        'set': 'บทที่ 1: เซต',
-        'logic': 'บทที่ 2: ตรรกศาสตร์',
-        'real': 'บทที่ 3: ระบบจำนวนจริง',
-        'function': 'บทที่ 4: ความสัมพันธ์และฟังก์ชัน'
-      };
-
-      selectedChapterLabel = labels[chapterKey];
-
-      Object.keys(buttons).forEach(k => {
-        const btn = document.getElementById(buttons[k]);
-        if (k === chapterKey) {
-          btn.className = "chapter-btn p-3 rounded-xl border border-accentred bg-accentred/10 text-left text-xs text-white transition-all flex items-center justify-between";
-        } else {
-          btn.className = "chapter-btn p-3 rounded-xl border border-white/10 text-left text-xs hover:bg-white/5 transition-all flex items-center justify-between";
+    function initSelectors() {
+      // 1. Generate Rooms (ม.1/1 to ม.6/6)
+      const roomSelect = document.getElementById('exam-room');
+      roomSelect.innerHTML = '';
+      for (let g = 1; g <= 6; g++) {
+        for (let r = 1; r <= 6; r++) {
+          const opt = document.createElement('option');
+          opt.value = `ม.${g}/${r}`;
+          opt.innerText = `ม.${g}/${r}`;
+          if (g === 4 && r === 1) opt.selected = true; // default ม.4/1
+          roomSelect.appendChild(opt);
         }
+      }
+
+      // 2. Populate Subjects
+      const subjectSelect = document.getElementById('exam-subject-select');
+      subjectSelect.innerHTML = '';
+      Object.keys(subjectsConfig).forEach(subKey => {
+        const opt = document.createElement('option');
+        opt.value = subKey;
+        opt.innerText = subjectsConfig[subKey].label;
+        subjectSelect.appendChild(opt);
+      });
+
+      // 3. Render Chapters
+      renderChapters();
+    }
+
+    function renderChapters() {
+      const subjectSelect = document.getElementById('exam-subject-select');
+      const chapterSelect = document.getElementById('exam-chapter-select');
+      const selectedSubKey = subjectSelect.value;
+      
+      chapterSelect.innerHTML = '';
+      const chapters = subjectsConfig[selectedSubKey].chapters;
+      Object.keys(chapters).forEach(chapKey => {
+        const opt = document.createElement('option');
+        opt.value = chapKey;
+        opt.innerText = chapters[chapKey];
+        chapterSelect.appendChild(opt);
       });
     }
+
+    window.addEventListener('DOMContentLoaded', initSelectors);
 
     // Start Exam Setup
     function startExam() {
       examRoom = document.getElementById('exam-room').value;
       examNo = document.getElementById('exam-no').value.trim();
       examName = document.getElementById('exam-name').value.trim();
+      
+      const subjectSelect = document.getElementById('exam-subject-select');
+      const chapterSelect = document.getElementById('exam-chapter-select');
+      
+      selectedChapterKey = chapterSelect.value;
+      selectedChapterLabel = chapterSelect.options[chapterSelect.selectedIndex].text;
+      const selectedSubjectLabel = subjectSelect.options[subjectSelect.selectedIndex].text;
+      
       const errMsg = document.getElementById('setup-error-msg');
 
       if (!examNo || !examName) {
@@ -675,7 +700,7 @@
         return;
       }
       if (!selectedChapterKey) {
-        errMsg.innerText = "⚠️ กรุณาคลิกเลือกหัวข้อบทเรียนที่ต้องการสอบ";
+        errMsg.innerText = "⚠️ กรุณาเลือกบทเรียนที่ต้องการสอบ";
         errMsg.classList.remove('hidden');
         return;
       }
@@ -692,11 +717,11 @@
       document.getElementById('info-room').innerText = examRoom;
       document.getElementById('info-no').innerText = examNo;
       document.getElementById('info-name').innerText = examName;
-      document.getElementById('info-subject').innerText = selectedChapterLabel;
+      document.getElementById('info-subject').innerText = selectedSubjectLabel + " - " + selectedChapterLabel;
 
       // Start timer
       isExamActive = true;
-      timeLeft = 40 * 60; // 20 minutes
+      timeLeft = 40 * 60; // 40 minutes
       startTimer();
       requestWakeLock();
     }
