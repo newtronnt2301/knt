@@ -151,6 +151,143 @@
 </head>
 <body class="select-none font-kanit">
 
+  <!-- ปุ่มเมนูสามขีด (Floating Hamburger Menu Button) -->
+  <button id="menu-toggle-btn" class="fixed top-6 left-6 z-40 w-12 h-12 rounded-full backdrop-blur-md bg-white/5 border border-white/10 flex items-center justify-center text-white hover:text-neon hover:border-blue-500/40 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all duration-300 active:scale-95" aria-label="เปิดเมนูทางลัด">
+    <svg class="w-5 h-5 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
+      <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <!-- แถบเมนูด้านซ้ายแบบสไลด์ (Slide-out Sidebar Drawer) -->
+  <div id="sidebar-drawer" class="fixed inset-y-0 left-0 w-[320px] max-w-[85vw] bg-[#01061E]/95 backdrop-blur-2xl border-r border-white/10 z-50 transform -translate-x-full transition-transform duration-500 ease-in-out flex flex-col shadow-[15px_0_40px_rgba(0,0,0,0.7)]">
+    <!-- Header -->
+    <div class="p-5 border-b border-white/10 flex justify-between items-center bg-black/20">
+      <div class="flex items-center gap-3">
+        <img src="images/logo.png" alt="โลโก้" class="w-10 h-10 object-contain">
+        <div class="flex flex-col text-left">
+          <span class="text-sm font-black shiny-text font-kanit leading-none">ครูนิวตรอน.com</span>
+          <span class="text-[9px] text-cream/55 font-light tracking-wide mt-0.5">เมนูระบบงานทั้งหมด</span>
+        </div>
+      </div>
+      <button id="menu-close-btn" class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-cream/70 hover:text-white hover:bg-white/5 transition-all duration-200" aria-label="ปิดเมนู">
+        <svg class="w-4 h-4 stroke-current stroke-[2]" viewBox="0 0 24 24" fill="none">
+          <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Body: รายการลิงก์ระบบทั้งหมด -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-2.5 custom-scrollbar">
+      
+      <a href="เช็คชื่อรายวิชา/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-blue-500/10 hover:border-blue-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300">
+          <img src="images/grad-cap.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">1. เช็คชื่อเข้าเรียนรายวิชา</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">บันทึกเวลาเรียนรายคาบ/ห้องเรียน</div>
+        </div>
+      </a>
+
+      <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
+          <img src="images/gear.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">2. เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ระบบเช็คห้องเรียนพิเศษ 3 ห้องเรียน</div>
+        </div>
+      </a>
+
+      <a href="ส่งงาน/index-ส่งงาน.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-purple-500/10 hover:border-purple-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-500/40 transition-all duration-300">
+          <img src="images/beaker.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">3. ระบบติดตามส่งงาน/ข้อสอบ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ติดตามการบ้าน/คะแนนเก็บของเด็ก</div>
+        </div>
+      </a>
+
+      <a href="สุ่มเลขที่/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-yellow-500/10 hover:border-yellow-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-500/40 transition-all duration-300">
+          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">4. สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กิจกรรมสุ่มเลขที่ผ่านเกมวิ่งแข่งสุดสนุก</div>
+        </div>
+      </a>
+
+      <a href="boardgame/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-pink-500/10 hover:border-pink-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-pink-500/20 group-hover:border-pink-500/40 transition-all duration-300">
+          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">5. บอร์ดเกมคลับพัฒนาทักษะ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">คลังบอร์ดเกมเล่นง่ายพัฒนาทักษะตรรกะ</div>
+        </div>
+      </a>
+
+      <a href="learning/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-indigo-500/10 hover:border-indigo-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-300">
+          <img src="images/atom.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">6. คลังคณิตศาสตร์เพิ่มเติม ม.4</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ศูนย์รวมบทเรียนและทำโจทย์ออนไลน์</div>
+        </div>
+      </a>
+
+      <a href="exam/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-red-500/10 hover:border-red-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-red-500/20 group-hover:border-red-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5.5 h-5.5 stroke-red-400 stroke-[2] fill-none">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
+            <path d="M9 12L11 14L15 10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">7. ระบบสอบเก็บคะแนนท้ายบท</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">สุ่มสลับข้อสอบ / ตรวจประเมินอัตโนมัติ</div>
+        </div>
+      </a>
+
+      <!-- แบ่งประเภทส่วน QR Code -->
+      <div class="pt-4 pb-1.5 px-1 text-left">
+        <span class="text-[9px] font-extrabold tracking-widest text-teal-400 uppercase">ชุดจัดการ QR Code / การ์ด</span>
+      </div>
+
+      <a href="ส่งงาน/qr-card.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
+          <span class="text-sm group-hover:scale-110 transition-transform duration-200">🖨️</span>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">พิมพ์การ์ดสแกนเช็คชื่อ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">จัดพิมพ์การ์ดเช็คชื่อนักเรียนรายบุคคล</div>
+        </div>
+      </a>
+
+      <a href="ส่งงาน/qr-generator.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
+          <span class="text-sm group-hover:scale-110 transition-transform duration-200">✨</span>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">สร้าง QR Code อิสระ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">เจนคิวอาร์โค้ดปรับแต่งอเนกประสงค์</div>
+        </div>
+      </a>
+
+    </div>
+    
+    <!-- Footer -->
+    <div class="p-4 border-t border-white/10 bg-black/20 text-center">
+      <span class="text-[9px] text-cream/35">ครูนิวตรอน.com &copy; 2026 - Space Portal</span>
+    </div>
+  </div>
+
+  <!-- Backdrop Overlayสำหรับคลิกปิด -->
+  <div id="drawer-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
   <!-- TEXTURE OVERLAY (ฟิลเตอร์ภาพฟิล์มสไตล์โรงภาพยนตร์) -->
   <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.06] mix-blend-lighten" style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E&quot;); background-size: cover;"></div>
 
@@ -769,6 +906,43 @@
           }
         }, 500);
       });
+      // ==========================================
+      //  Sidebar Drawer Navigation Logic
+      // ==========================================
+      const menuToggleBtn = document.getElementById('menu-toggle-btn');
+      const menuCloseBtn = document.getElementById('menu-close-btn');
+      const sidebarDrawer = document.getElementById('sidebar-drawer');
+      const drawerBackdrop = document.getElementById('drawer-backdrop');
+
+      function openDrawer() {
+        if (!sidebarDrawer || !drawerBackdrop) return;
+        sidebarDrawer.classList.remove('-translate-x-full');
+        drawerBackdrop.classList.remove('hidden');
+        // Force reflow
+        drawerBackdrop.offsetWidth;
+        drawerBackdrop.classList.add('opacity-100');
+      }
+
+      function closeDrawer() {
+        if (!sidebarDrawer || !drawerBackdrop) return;
+        sidebarDrawer.classList.add('-translate-x-full');
+        drawerBackdrop.classList.remove('opacity-100');
+        setTimeout(() => {
+          drawerBackdrop.classList.add('hidden');
+        }, 300);
+      }
+
+      if (menuToggleBtn && menuCloseBtn && sidebarDrawer && drawerBackdrop) {
+        menuToggleBtn.addEventListener('click', openDrawer);
+        menuCloseBtn.addEventListener('click', closeDrawer);
+        drawerBackdrop.addEventListener('click', closeDrawer);
+        
+        // Close drawer on clicking any links inside it
+        const drawerLinks = sidebarDrawer.querySelectorAll('a');
+        drawerLinks.forEach(link => {
+          link.addEventListener('click', closeDrawer);
+        });
+      }
     })();
   </script>
 </body>
