@@ -1811,11 +1811,14 @@ function startCamera(cameraId) {
 function initCamera(cameraId) {
   html5QrCode = new Html5Qrcode("scanner-view");
   var config = { 
-    fps: 10, 
+    fps: 25, 
     qrbox: function(width, height) {
       var min = Math.min(width, height);
-      var boxSize = Math.floor(min * 0.75);
+      var boxSize = Math.floor(min * 0.85);
       return { width: boxSize, height: boxSize };
+    },
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
     }
   };
 

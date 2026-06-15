@@ -1463,7 +1463,13 @@
       document.getElementById('qr-scan-dialog').showModal();
       
       html5QrcodeScanner = new Html5Qrcode("camera-scanner");
-      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+      const config = { 
+        fps: 25, 
+        qrbox: { width: 260, height: 260 },
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        }
+      };
       
       html5QrcodeScanner.start(
         { facingMode: "environment" },
