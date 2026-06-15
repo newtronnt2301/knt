@@ -291,9 +291,14 @@
         </p>
       </div>
 
-      <button onclick="forceSubmitExamAfterCheat()" class="w-full py-3 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-xs sm:text-sm transition-all font-kanit">
-        💾 ส่งกระดาษคำตอบและบันทึกคะแนนทุจริต
-      </button>
+      <div class="space-y-3">
+        <button onclick="forceSubmitExamAfterCheat()" class="w-full py-3 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-xs sm:text-sm transition-all font-kanit">
+          💾 ส่งกระดาษคำตอบและบันทึกคะแนนทุจริต
+        </button>
+        <button onclick="teacherUnlockExam()" class="text-accentblue hover:underline text-xs block mx-auto font-kanit">
+          🔑 ปลดล็อคระบบสำหรับคุณครู (กรณีเหตุสุดวิสัย)
+        </button>
+      </div>
     </div>
   </div>
 
@@ -682,7 +687,36 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', initSelectors);
+    window.addEventListener('DOMContentLoaded', () => {
+      initSelectors();
+      
+      // ตรวจสอบสถานะการทุจริตที่ติดค้างอยู่เพื่อบังคับหน้าต่างทุจริตขึ้นมาทันที ป้องกันการรีโหลดหนีความผิด
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('cheated_') && localStorage.getItem(key) === 'true') {
+          const chapKey = key.replace('cheated_', '');
+          selectedChapterKey = chapKey;
+          
+          // โหลดข้อมูลนักเรียนเดิมที่เซฟไว้
+          examRoom = localStorage.getItem('exam_room_' + chapKey) || '';
+          examNo = localStorage.getItem('exam_no_' + chapKey) || '';
+          examName = localStorage.getItem('exam_name_' + chapKey) || '';
+          
+          // ค้นหาชื่อบทเรียน
+          Object.keys(subjectsConfig).forEach(subKey => {
+            const chapters = subjectsConfig[subKey].chapters;
+            if (chapters[chapKey]) {
+              selectedChapterLabel = chapters[chapKey];
+            }
+          });
+          
+          // แสดงหน้าต่างทุจริตเต็มจอทันที
+          document.getElementById('cheat-modal').classList.remove('hidden');
+          document.getElementById('cheat-modal').classList.add('flex');
+          break;
+        }
+      }
+    });
 
     // Start Exam Setup
     function startExam() {
@@ -717,7 +751,8 @@
       // 1. ตรวจสอบล็อกประวัติส่งข้อสอบซ้ำ
       const isSubmitted = localStorage.getItem('submitted_' + selectedChapterKey);
       if (isSubmitted === 'true') {
-        errMsg.innerText = "⚠️ คุณได้ทำการส่งข้อสอบบทเรียนนี้ไปเรียบร้อยแล้ว ไม่ได้รับสิทธิ์ให้ทำข้อสอบซ้ำอีกครั้ง (หากเกิดปัญหาข้อขัดข้องกรุณาแจ้งครูผู้สอน)";
+        errMsg.innerHTML = `⚠️ คุณได้ทำการส่งข้อสอบบทเรียนนี้ไปเรียบร้อยแล้ว ไม่ได้รับสิทธิ์ให้ทำข้อสอบซ้ำอีกครั้ง (หากเกิดปัญหาข้อขัดข้องกรุณาแจ้งครูผู้สอน)
+          <button onclick="teacherUnlockExam()" class="text-accentblue hover:underline text-[11px] block mt-1.5 mx-auto font-kanit">🔑 ปลดล็อคการสอบสำหรับคุณครู</button>`;
         errMsg.classList.remove('hidden');
         return;
       }
@@ -729,7 +764,8 @@
         examNo = localStorage.getItem('exam_no_' + selectedChapterKey) || examNo;
         examName = localStorage.getItem('exam_name_' + selectedChapterKey) || examName;
         
-        errMsg.innerText = "⚠️ บัญชีนี้ถูกระงับเนื่องจากตรวจพบการทุจริต ระบบกำลังบังคับส่งคะแนน 0 คะแนน";
+        errMsg.innerHTML = `⚠️ บัญชีนี้ถูกระงับเนื่องจากตรวจพบการทุจริต ระบบกำลังบังคับส่งคะแนน 0 คะแนน
+          <button onclick="teacherUnlockExam()" class="text-accentblue hover:underline text-[11px] block mt-1.5 mx-auto font-kanit">🔑 ปลดล็อคการสอบสำหรับคุณครู</button>`;
         errMsg.classList.remove('hidden');
         
         forceSubmitExamAfterCheat();
@@ -943,6 +979,76 @@
       
       // ส่งข้อมูลด้วยคะแนน 0 และป้ายชื่อทุจริต
       submitExamScores(true);
+    }
+
+    // ฟังก์ชันปลดล็อคการสอบสำหรับคุณครู (กรณีเผลอหรือเหตุสุดวิสัย)
+    function teacherUnlockExam() {
+      const code = prompt("🔑 กรุณากรอกรหัสผ่านของคุณครู เพื่อจัดการปลดล็อคการสอบสำหรับบทเรียนนี้:");
+      if (code === "neutron99") {
+        const chapterSelect = document.getElementById('exam-chapter-select');
+        const chapKey = selectedChapterKey || (chapterSelect ? chapterSelect.value : '');
+        if (!chapKey) {
+          alert("กรุณาเลือกบทเรียนที่ต้องการดำเนินการก่อน");
+          return;
+        }
+
+        const action = prompt("🔓 รหัสผ่านถูกต้อง! กรุณาพิมพ์ตัวเลขการดำเนินการที่ต้องการ:\n\n1 : ทำข้อสอบเดิมต่อ (กู้คืนเวลาทำข้อสอบเดิมและคำตอบที่เซฟค้างไว้)\n2 : เริ่มทำข้อสอบใหม่ (ล้างประวัติการส่งและลบชุดข้อสอบเดิมทั้งหมดเพื่อเริ่มใหม่ตั้งแต่ต้น)");
+        
+        if (action === "1") {
+          // ล้างสถานะทุจริตแต่เก็บประวัติข้อสอบเดิมและคำตอบไว้
+          localStorage.removeItem('cheated_' + chapKey);
+          
+          // ปิด modal ทุจริต
+          document.getElementById('cheat-modal').classList.add('hidden');
+          document.getElementById('cheat-modal').classList.remove('flex');
+          
+          if (activeExamList && activeExamList.length > 0) {
+            isExamActive = true;
+            startTimer();
+            requestWakeLock();
+            alert("🔓 ปลดล็อคและให้นักเรียนทำข้อสอบเดิมต่อเรียบร้อยแล้ว");
+          } else {
+            alert("🔓 ล้างบล็อกทุจริตสำเร็จแล้ว! กรุณากรอกข้อมูลและกดปุ่ม 'เข้าสู่ห้องสอบและเริ่มทำข้อสอบ' เพื่อทำข้อสอบเดิมต่อ");
+            // รีเฟรชส่วนแจ้งเตือนในหน้าแรก
+            const errMsg = document.getElementById('setup-error-msg');
+            if (errMsg) {
+              errMsg.innerText = "";
+              errMsg.classList.add('hidden');
+            }
+          }
+        } else if (action === "2") {
+          // ล้างทุกอย่างให้หมดจด
+          localStorage.removeItem('submitted_' + chapKey);
+          localStorage.removeItem('cheated_' + chapKey);
+          localStorage.removeItem('exam_start_time_' + chapKey);
+          localStorage.removeItem('exam_questions_' + chapKey);
+          localStorage.removeItem('exam_answers_' + chapKey);
+          localStorage.removeItem('exam_room_' + chapKey);
+          localStorage.removeItem('exam_no_' + chapKey);
+          localStorage.removeItem('exam_name_' + chapKey);
+          
+          // ปิด modal และกลับสู่หน้าตั้งค่าเริ่มต้น
+          document.getElementById('cheat-modal').classList.add('hidden');
+          document.getElementById('cheat-modal').classList.remove('flex');
+          document.getElementById('exam-screen').classList.add('hidden');
+          document.getElementById('setup-screen').classList.remove('hidden');
+          
+          const backBtn = document.getElementById('back-btn');
+          if (backBtn) backBtn.classList.remove('hidden');
+          
+          const errMsg = document.getElementById('setup-error-msg');
+          if (errMsg) {
+            errMsg.innerText = "";
+            errMsg.classList.add('hidden');
+          }
+          
+          alert("🔓 ล้างประวัติการทำข้อสอบนี้ทั้งหมดแล้ว นักเรียนสามารถกดเข้าร่วมสอบเพื่อทำใหม่ได้ทันที");
+        } else {
+          alert("ยกเลิกการปลดล็อคเนื่องจากระบุตัวเลือกไม่ถูกต้อง");
+        }
+      } else if (code !== null) {
+        alert("❌ รหัสผ่านไม่ถูกต้อง");
+      }
     }
 
     // Listen to Browser tab/window blur and visibility events
