@@ -6,6 +6,15 @@
   <title>📝 ระบบสอบเก็บคะแนน ม.4 - ครูนิวตรอน.com</title>
   <meta name="description" content="ห้องสอบออนไลน์วิชาคณิตศาสตร์เพิ่มเติม ม.4 มีระบบสุ่มข้อสอบสลับข้อ และระบบตรวจจับพับย่อหน้าจอเพื่อความเป็นธรรมในการสอบ">
 
+  <style>
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+  </style>
+
   <!-- Google Fonts - Kanit, Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -586,6 +595,7 @@
     let isExamActive = false;
     let countdownTimer = null;
     let timeLeft = 40 * 60; // 20 minutes in seconds
+    let initialWidth = window.innerWidth;
 
     let wakeLock = null;
 
@@ -716,6 +726,7 @@
 
       // Start timer
       isExamActive = true;
+      initialWidth = window.innerWidth;
       timeLeft = 40 * 60; // 40 minutes
       startTimer();
       requestWakeLock();
@@ -832,6 +843,7 @@
       // Reset and start new exam
       setupQuestionsForExam();
       isExamActive = true;
+      initialWidth = window.innerWidth;
       timeLeft = 40 * 60; // Reset timer
       startTimer();
       requestWakeLock();
@@ -846,6 +858,32 @@
 
     window.addEventListener('blur', () => {
       triggerAntiCheating();
+    });
+
+    // Detect Android Split Screen, Floating Window or window resize cheat
+    window.addEventListener('resize', () => {
+      if (!isExamActive) return;
+      
+      const widthDiff = Math.abs(window.innerWidth - initialWidth);
+      const widthPercentChange = (widthDiff / initialWidth) * 100;
+      
+      // If width changes by more than 12%, trigger cheating alert
+      if (widthPercentChange > 12) {
+        console.warn("Anti-cheating: Screen resized", window.innerWidth, initialWidth);
+        triggerAntiCheating();
+      }
+    });
+
+    // Prevent text copying & shortcuts to ask ChatGPT in floating windows
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('paste', e => e.preventDefault());
+    
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
     });
 
     // Countdown Timer logic
