@@ -286,13 +286,13 @@
         <p class="text-xs sm:text-sm text-textlight/70 leading-relaxed font-kanit">
           ระบบความปลอดภัยได้ตรวจพบการสูญเสียโฟกัส หรือการสลับไปเปิดแอปพลิเคชันอื่นของหน้าจอเบราว์เซอร์
         </p>
-        <p class="text-xs text-accentamber font-semibold font-kanit">
-          ข้อสอบชุดเดิมของท่านถูกยกเลิกแล้ว และระบบได้ทำการสุ่มข้อสอบ 20 ข้อชุดใหม่ขึ้นมาสลับแทนที่เรียบร้อยเพื่อความโปร่งใส
+        <p class="text-xs text-accentred font-bold font-kanit">
+          ⚠️ เนื่องจากตรวจพบการสลับหน้าจอ (ทุจริตการสอบ) ระบบจะทำการบันทึกและส่งกระดาษคำตอบของคุณโดยปรับคะแนนเป็น 0 คะแนนทันที และระงับสิทธิ์การสอบของคุณ
         </p>
       </div>
 
-      <button onclick="restartExamAfterCheat()" class="w-full py-3 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-xs sm:text-sm transition-all font-kanit">
-        🔄 เริ่มทำข้อสอบใหม่อีกครั้ง
+      <button onclick="forceSubmitExamAfterCheat()" class="w-full py-3 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-xs sm:text-sm transition-all font-kanit">
+        💾 ส่งกระดาษคำตอบและบันทึกคะแนนทุจริต
       </button>
     </div>
   </div>
@@ -686,9 +686,13 @@
 
     // Start Exam Setup
     function startExam() {
-      examRoom = document.getElementById('exam-room').value;
-      examNo = document.getElementById('exam-no').value.trim();
-      examName = document.getElementById('exam-name').value.trim();
+      const roomInput = document.getElementById('exam-room');
+      const noInput = document.getElementById('exam-no');
+      const nameInput = document.getElementById('exam-name');
+      
+      examRoom = roomInput.value;
+      examNo = noInput.value.trim();
+      examName = nameInput.value.trim();
       
       const subjectSelect = document.getElementById('exam-subject-select');
       const chapterSelect = document.getElementById('exam-chapter-select');
@@ -710,24 +714,111 @@
         return;
       }
 
+      // 1. ตรวจสอบล็อกประวัติส่งข้อสอบซ้ำ
+      const isSubmitted = localStorage.getItem('submitted_' + selectedChapterKey);
+      if (isSubmitted === 'true') {
+        errMsg.innerText = "⚠️ คุณได้ทำการส่งข้อสอบบทเรียนนี้ไปเรียบร้อยแล้ว ไม่ได้รับสิทธิ์ให้ทำข้อสอบซ้ำอีกครั้ง (หากเกิดปัญหาข้อขัดข้องกรุณาแจ้งครูผู้สอน)";
+        errMsg.classList.remove('hidden');
+        return;
+      }
+
+      // 2. ตรวจสอบสถานะการทุจริตค้างคา (ถ้าทุจริตแล้วรีโหลดหน้าเว็บ)
+      const isCheated = localStorage.getItem('cheated_' + selectedChapterKey);
+      if (isCheated === 'true') {
+        examRoom = localStorage.getItem('exam_room_' + selectedChapterKey) || examRoom;
+        examNo = localStorage.getItem('exam_no_' + selectedChapterKey) || examNo;
+        examName = localStorage.getItem('exam_name_' + selectedChapterKey) || examName;
+        
+        errMsg.innerText = "⚠️ บัญชีนี้ถูกระงับเนื่องจากตรวจพบการทุจริต ระบบกำลังบังคับส่งคะแนน 0 คะแนน";
+        errMsg.classList.remove('hidden');
+        
+        forceSubmitExamAfterCheat();
+        return;
+      }
+
       errMsg.classList.add('hidden');
-      setupQuestionsForExam();
+
+      // 3. ตรวจสอบประวัติข้อสอบสอบค้างอยู่ (Resume Exam)
+      const savedStartTime = localStorage.getItem('exam_start_time_' + selectedChapterKey);
+      const savedQuestions = localStorage.getItem('exam_questions_' + selectedChapterKey);
+      
+      if (savedStartTime && savedQuestions) {
+        // คำนวณเวลาที่เหลือจริง
+        const elapsedSeconds = Math.floor((Date.now() - Number(savedStartTime)) / 1000);
+        const totalDuration = 40 * 60; // 40 minutes in seconds
+        
+        if (elapsedSeconds >= totalDuration) {
+          // ถ้าเวลาหมดเกินกำหนดไปแล้วขณะปิดเว็บ
+          examRoom = localStorage.getItem('exam_room_' + selectedChapterKey) || examRoom;
+          examNo = localStorage.getItem('exam_no_' + selectedChapterKey) || examNo;
+          examName = localStorage.getItem('exam_name_' + selectedChapterKey) || examName;
+          activeExamList = JSON.parse(savedQuestions);
+          selectedExamAnswers = JSON.parse(localStorage.getItem('exam_answers_' + selectedChapterKey)) || {};
+          
+          alert("⏰ เวลาในการทำข้อสอบที่เคยค้างอยู่ได้หมดลงแล้ว ระบบจะส่งผลคะแนนล่าสุดที่ท่านเลือกไว้โดยอัตโนมัติ");
+          submitExamScores(false);
+          return;
+        } else {
+          // สามารถกลับไปทำต่อได้ (Resume)
+          examRoom = localStorage.getItem('exam_room_' + selectedChapterKey);
+          examNo = localStorage.getItem('exam_no_' + selectedChapterKey);
+          examName = localStorage.getItem('exam_name_' + selectedChapterKey);
+          
+          // คืนค่าใน input ของฟอร์ม
+          roomInput.value = examRoom;
+          noInput.value = examNo;
+          nameInput.value = examName;
+          
+          activeExamList = JSON.parse(savedQuestions);
+          selectedExamAnswers = JSON.parse(localStorage.getItem('exam_answers_' + selectedChapterKey)) || {};
+          timeLeft = totalDuration - elapsedSeconds;
+          
+          // อัปเดต UI ข้อมูลการสอบ
+          document.getElementById('info-room').innerText = examRoom;
+          document.getElementById('info-no').innerText = examNo;
+          document.getElementById('info-name').innerText = examName;
+          document.getElementById('info-subject').innerText = selectedSubjectLabel + " - " + selectedChapterLabel;
+          
+          renderExamQuestions();
+          
+          // ไฮไลต์ตัวเลือกที่เคยเลือกค้างไว้
+          activeExamList.forEach((_, qIdx) => {
+            const chosen = selectedExamAnswers[qIdx];
+            if (chosen !== undefined) {
+              const btn = document.getElementById(`exam-opt-${qIdx}-${chosen}`);
+              if (btn) btn.classList.add('selected');
+            }
+          });
+          
+          alert("🔄 ระบบกู้คืนข้อสอบและเวลาที่เหลือของท่านเรียบร้อยแล้ว");
+        }
+      } else {
+        // กรณีเป็นการสอบใหม่แบบปกติ
+        setupQuestionsForExam();
+        
+        // บันทึกค่าเซสชันเริ่มต้น
+        localStorage.setItem('exam_start_time_' + selectedChapterKey, Date.now().toString());
+        localStorage.setItem('exam_questions_' + selectedChapterKey, JSON.stringify(activeExamList));
+        localStorage.setItem('exam_answers_' + selectedChapterKey, JSON.stringify(selectedExamAnswers));
+        localStorage.setItem('exam_room_' + selectedChapterKey, examRoom);
+        localStorage.setItem('exam_no_' + selectedChapterKey, examNo);
+        localStorage.setItem('exam_name_' + selectedChapterKey, examName);
+        
+        timeLeft = 40 * 60; // 40 นาที
+        
+        document.getElementById('info-room').innerText = examRoom;
+        document.getElementById('info-no').innerText = examNo;
+        document.getElementById('info-name').innerText = examName;
+        document.getElementById('info-subject').innerText = selectedSubjectLabel + " - " + selectedChapterLabel;
+      }
 
       // Show Exam Screen, Hide setup screen
       document.getElementById('setup-screen').classList.add('hidden');
-      document.getElementById('back-btn').classList.add('hidden'); // Hide back button during exam to prevent easy leave
+      document.getElementById('back-btn').classList.add('hidden'); // ซ่อนปุ่มย้อนกลับระหว่างทำข้อสอบ
       document.getElementById('exam-screen').classList.remove('hidden');
 
-      // Set Info
-      document.getElementById('info-room').innerText = examRoom;
-      document.getElementById('info-no').innerText = examNo;
-      document.getElementById('info-name').innerText = examName;
-      document.getElementById('info-subject').innerText = selectedSubjectLabel + " - " + selectedChapterLabel;
-
-      // Start timer
       isExamActive = true;
       initialWidth = window.innerWidth;
-      timeLeft = 40 * 60; // 40 minutes
       startTimer();
       requestWakeLock();
     }
@@ -818,6 +909,9 @@
 
       // Highlight selected
       document.getElementById(`exam-opt-${qIdx}-${oIdx}`).classList.add('selected');
+      
+      // บันทึกคำตอบอัปเดตลง localStorage เรียลไทม์
+      localStorage.setItem('exam_answers_' + selectedChapterKey, JSON.stringify(selectedExamAnswers));
     }
 
     // Anti-Cheating Reset Handler
@@ -829,24 +923,26 @@
       if (countdownTimer) clearInterval(countdownTimer);
       releaseWakeLock();
 
+      // บันทึกสถานะถูกตรวจจับทุจริตค้างใน localStorage ทันที ป้องกันนักเรียนสลับหน้าจอแล้วรีโหลดหลบเลี่ยง
+      localStorage.setItem('cheated_' + selectedChapterKey, 'true');
+
       // Show Cheat alert screen
       document.getElementById('cheat-modal').classList.remove('hidden');
       document.getElementById('cheat-modal').classList.add('flex');
     }
 
-    // Restart exam after cheating modal action
-    function restartExamAfterCheat() {
+    // Force submit exam after cheating detected
+    function forceSubmitExamAfterCheat() {
       // Hide modal
       document.getElementById('cheat-modal').classList.add('hidden');
       document.getElementById('cheat-modal').classList.remove('flex');
 
-      // Reset and start new exam
-      setupQuestionsForExam();
-      isExamActive = true;
-      initialWidth = window.innerWidth;
-      timeLeft = 40 * 60; // Reset timer
-      startTimer();
-      requestWakeLock();
+      // Force stop
+      isExamActive = false;
+      if (countdownTimer) clearInterval(countdownTimer);
+      
+      // ส่งข้อมูลด้วยคะแนน 0 และป้ายชื่อทุจริต
+      submitExamScores(true);
     }
 
     // Listen to Browser tab/window blur and visibility events
@@ -950,19 +1046,25 @@
     }
 
     // Calculate score & send via HTTP to Spreadsheet
-    function submitExamScores() {
+    function submitExamScores(isCheated = false) {
       let score = 0;
-      activeExamList.forEach((quiz, idx) => {
-        const chosen = selectedExamAnswers[idx];
-        if (chosen === quiz.correct) {
-          score++;
-        }
-      });
+      if (!isCheated) {
+        activeExamList.forEach((quiz, idx) => {
+          const chosen = selectedExamAnswers[idx];
+          if (chosen === quiz.correct) {
+            score++;
+          }
+        });
+      } else {
+        score = 0;
+      }
 
       // Show sending state
       const feedback = document.getElementById('exam-feedback');
-      feedback.className = "text-xs font-semibold text-accentamber";
-      feedback.innerText = "⏳ กำลังส่งประวัติและคะแนนสอบของคุณเข้าระบบ...";
+      if (feedback) {
+        feedback.className = "text-xs font-semibold text-accentamber";
+        feedback.innerText = "⏳ กำลังส่งประวัติและคะแนนสอบของคุณเข้าระบบ...";
+      }
 
       // Disable all buttons in UI
       activeExamList.forEach((quiz, qIdx) => {
@@ -975,11 +1077,13 @@
       // Apps script endpoint
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbw3eNbBuhg-P-dLxBeZkYIggp0FW9GM1TdL1wVd1XeyxvwRTzw4BcMNiPBEyyWH1le-/exec';
       
+      const displayName = isCheated ? `${examName} (ตรวจพบทุจริต)` : examName;
+
       const params = {
         action: 'exam_save',
         room: examRoom,
         no: examNo,
-        name: examName,
+        name: displayName,
         subject: selectedChapterLabel,
         score: score.toString(),
         total: "20"
@@ -990,6 +1094,19 @@
       fetch(url, { mode: 'no-cors' })
         .then(() => {
           releaseWakeLock();
+          
+          // ล้างคีย์เก็บประวัติทำข้อสอบเดิมของบทเรียนนี้
+          localStorage.removeItem('exam_start_time_' + selectedChapterKey);
+          localStorage.removeItem('exam_questions_' + selectedChapterKey);
+          localStorage.removeItem('exam_answers_' + selectedChapterKey);
+          localStorage.removeItem('exam_room_' + selectedChapterKey);
+          localStorage.removeItem('exam_no_' + selectedChapterKey);
+          localStorage.removeItem('exam_name_' + selectedChapterKey);
+          localStorage.removeItem('cheated_' + selectedChapterKey);
+          
+          // บันทึกสถานะส่งแล้วของบทเรียนนี้เพื่อล็อกการสอบถาวร
+          localStorage.setItem('submitted_' + selectedChapterKey, 'true');
+
           // Show Screen 3
           document.getElementById('exam-screen').classList.add('hidden');
           document.getElementById('result-screen').classList.remove('hidden');
@@ -999,8 +1116,10 @@
         })
         .catch(err => {
           console.error(err);
-          feedback.className = "text-xs font-semibold text-accentred";
-          feedback.innerText = "❌ เกิดข้อผิดพลาดทางเทคนิคในการส่งข้อมูล กรุณาถ่ายภาพหน้าจอคะแนนแล้วแจ้งคุณครูโดยตรง";
+          if (feedback) {
+            feedback.className = "text-xs font-semibold text-accentred";
+            feedback.innerText = "❌ เกิดข้อผิดพลาดทางเทคนิคในการส่งข้อมูล กรุณาถ่ายภาพหน้าจอคะแนนแล้วแจ้งคุณครูโดยตรง";
+          }
         });
     }
 
