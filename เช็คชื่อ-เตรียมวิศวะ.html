@@ -1555,7 +1555,13 @@ async function openScannerModal() {
     }
   } catch (e) {
     console.error('Failed to get cameras', e);
-    logBox.textContent = '❌ ไม่ได้รับอนุญาตให้เข้าถึงกล้อง';
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      logBox.textContent = '❌ กล้องไม่ทำงานเนื่องจากไม่ได้ใช้ HTTPS (กรุณาพิมพ์ https:// นำหน้าชื่อเว็บ)';
+      logBox.style.background = '#fde8e8';
+      logBox.style.color = '#9b1c1c';
+    } else {
+      logBox.textContent = '❌ ไม่ได้รับอนุญาตให้เข้าถึงกล้อง หรือไม่พบกล้อง';
+    }
     playScanBeep(false);
   }
 }
