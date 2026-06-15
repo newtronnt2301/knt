@@ -992,32 +992,74 @@
           return;
         }
 
-        const action = prompt("🔓 รหัสผ่านถูกต้อง! กรุณาพิมพ์ตัวเลขการดำเนินการที่ต้องการ:\n\n1 : ทำข้อสอบเดิมต่อ (กู้คืนเวลาทำข้อสอบเดิมและคำตอบที่เซฟค้างไว้)\n2 : เริ่มทำข้อสอบใหม่ (ล้างประวัติการส่งและลบชุดข้อสอบเดิมทั้งหมดเพื่อเริ่มใหม่ตั้งแต่ต้น)");
-        
-        if (action === "1") {
-          // ล้างสถานะทุจริตแต่เก็บประวัติข้อสอบเดิมและคำตอบไว้
-          localStorage.removeItem('cheated_' + chapKey);
-          
-          // ปิด modal ทุจริต
-          document.getElementById('cheat-modal').classList.add('hidden');
-          document.getElementById('cheat-modal').classList.remove('flex');
-          
-          if (activeExamList && activeExamList.length > 0) {
+        const savedStartTime = localStorage.getItem('exam_start_time_' + chapKey);
+        const savedQuestions = localStorage.getItem('exam_questions_' + chapKey);
+        const hasSavedSession = savedStartTime && savedQuestions;
+
+        if (hasSavedSession) {
+          const wantResume = confirm("🔓 รหัสผ่านถูกต้อง!\n\nต้องการให้นักเรียนทำข้อสอบเดิมต่อหรือไม่?\n(คำตอบเดิมและเวลาที่เหลือจะถูกกู้คืนกลับมาทำต่อทันที)");
+          if (wantResume) {
+            // ล้างสถานะการทุจริต
+            localStorage.removeItem('cheated_' + chapKey);
+            
+            // กู้คืนข้อมูลการสอบ
+            examRoom = localStorage.getItem('exam_room_' + chapKey);
+            examNo = localStorage.getItem('exam_no_' + chapKey);
+            examName = localStorage.getItem('exam_name_' + chapKey);
+            activeExamList = JSON.parse(savedQuestions);
+            selectedExamAnswers = JSON.parse(localStorage.getItem('exam_answers_' + chapKey)) || {};
+            
+            const elapsedSeconds = Math.floor((Date.now() - Number(savedStartTime)) / 1000);
+            const totalDuration = 40 * 60;
+            timeLeft = totalDuration - elapsedSeconds;
+            
+            // อัปเดตข้อมูล UI หัวข้อสอบ
+            document.getElementById('info-room').innerText = examRoom;
+            document.getElementById('info-no').innerText = examNo;
+            document.getElementById('info-name').innerText = examName;
+            
+            // ค้นหาชื่อบทเรียน
+            let chapLabel = "";
+            let subLabel = "";
+            Object.keys(subjectsConfig).forEach(subKey => {
+              const chapters = subjectsConfig[subKey].chapters;
+              if (chapters[chapKey]) {
+                chapLabel = chapters[chapKey];
+                subLabel = subjectsConfig[subKey].label;
+              }
+            });
+            document.getElementById('info-subject').innerText = subLabel + " - " + chapLabel;
+            
+            renderExamQuestions();
+            
+            // คืนค่าตัวเลือกที่นักเรียนตอบไว้
+            activeExamList.forEach((_, qIdx) => {
+              const chosen = selectedExamAnswers[qIdx];
+              if (chosen !== undefined) {
+                const btn = document.getElementById(`exam-opt-${qIdx}-${chosen}`);
+                if (btn) btn.classList.add('selected');
+              }
+            });
+            
+            // ซ่อนหน้าล็อกอิน / เตือนทุจริต และเปิดหน้าสอบทันที
+            document.getElementById('cheat-modal').classList.add('hidden');
+            document.getElementById('cheat-modal').classList.remove('flex');
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('exam-screen').classList.remove('hidden');
+            
             isExamActive = true;
             startTimer();
             requestWakeLock();
-            alert("🔓 ปลดล็อคและให้นักเรียนทำข้อสอบเดิมต่อเรียบร้อยแล้ว");
-          } else {
-            alert("🔓 ล้างบล็อกทุจริตสำเร็จแล้ว! กรุณากรอกข้อมูลและกดปุ่ม 'เข้าสู่ห้องสอบและเริ่มทำข้อสอบ' เพื่อทำข้อสอบเดิมต่อ");
-            // รีเฟรชส่วนแจ้งเตือนในหน้าแรก
-            const errMsg = document.getElementById('setup-error-msg');
-            if (errMsg) {
-              errMsg.innerText = "";
-              errMsg.classList.add('hidden');
-            }
+            
+            alert("🔓 ปลดล็อคและกู้คืนหน้าจอทำข้อสอบเดิมของนักเรียนเรียบร้อยแล้ว");
+            return;
           }
-        } else if (action === "2") {
-          // ล้างทุกอย่างให้หมดจด
+        }
+
+        // หากครูเลือกที่จะไม่ทำต่อ (กด Cancel) หรือไม่มีข้อมูลเซสชันเดิมค้าง
+        const wantReset = confirm("⚠️ ต้องการปลดล็อคให้เริ่มต้นทำข้อสอบใหม่ทั้งหมดตั้งแต่ต้นหรือไม่?\n(⚠️ คำเตือน: ข้อมูลข้อสอบเดิมและคำตอบที่ค้างอยู่จะถูกลบออกถาวร)");
+        if (wantReset) {
+          // ล้างทุกอย่าง
           localStorage.removeItem('submitted_' + chapKey);
           localStorage.removeItem('cheated_' + chapKey);
           localStorage.removeItem('exam_start_time_' + chapKey);
@@ -1027,7 +1069,7 @@
           localStorage.removeItem('exam_no_' + chapKey);
           localStorage.removeItem('exam_name_' + chapKey);
           
-          // ปิด modal และกลับสู่หน้าตั้งค่าเริ่มต้น
+          // ปิดหน้าทุจริตและสลับกลับหน้าตั้งค่าเริ่มต้น
           document.getElementById('cheat-modal').classList.add('hidden');
           document.getElementById('cheat-modal').classList.remove('flex');
           document.getElementById('exam-screen').classList.add('hidden');
@@ -1042,9 +1084,7 @@
             errMsg.classList.add('hidden');
           }
           
-          alert("🔓 ล้างประวัติการทำข้อสอบนี้ทั้งหมดแล้ว นักเรียนสามารถกดเข้าร่วมสอบเพื่อทำใหม่ได้ทันที");
-        } else {
-          alert("ยกเลิกการปลดล็อคเนื่องจากระบุตัวเลือกไม่ถูกต้อง");
+          alert("🔓 ปลดล็อคระบบสำเร็จ! นักเรียนสามารถเริ่มทำข้อสอบชุดใหม่ได้ทันที");
         }
       } else if (code !== null) {
         alert("❌ รหัสผ่านไม่ถูกต้อง");
