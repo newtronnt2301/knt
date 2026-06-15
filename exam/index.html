@@ -191,6 +191,10 @@
           <button onclick="startExam()" class="w-full py-3 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-sm shadow-lg shadow-accentred/15 transition-all flex items-center justify-center gap-2">
             <span>🚀 เข้าสู่ห้องสอบและเริ่มทำข้อสอบ</span>
           </button>
+          
+          <button onclick="openTeacherDashboard()" class="text-textlight/40 hover:text-white transition-colors text-xs block mx-auto pt-3 font-kanit">
+            📊 ดูคะแนนสอบของนักเรียน (สำหรับคุณครู)
+          </button>
         </div>
       </section>
 
@@ -299,6 +303,72 @@
           🔑 ปลดล็อคระบบสำหรับคุณครู (กรณีเหตุสุดวิสัย)
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- TEACHER DASHBOARD MODAL -->
+  <div id="teacher-dashboard-modal" class="fixed inset-0 w-full h-full z-50 bg-black/95 backdrop-blur-lg hidden flex-col items-center justify-start p-4 sm:p-6 overflow-y-auto">
+    <div class="max-w-4xl w-full glass-card p-6 rounded-3xl border border-white/10 space-y-6 my-auto">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center border-b border-white/5 pb-4 font-kanit">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📊</span>
+          <h2 class="text-lg sm:text-xl font-bold text-white">ระบบสรุปผลคะแนนสอบ (สำหรับคุณครู)</h2>
+        </div>
+        <button onclick="closeTeacherDashboard()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-textlight text-xs font-semibold transition-all">
+          ❌ ปิดหน้าต่าง
+        </button>
+      </div>
+
+      <!-- Controls -->
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 font-kanit">
+        <div class="sm:col-span-2">
+          <label class="block text-[10px] text-textlight/40 font-semibold mb-1">ค้นหา ชื่อ หรือ เลขที่</label>
+          <input type="text" id="teacher-search-input" oninput="filterTeacherScores()" placeholder="พิมพ์ชื่อ หรือ เลขที่เพื่อค้นหา..." class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-textlight outline-none focus:border-accentblue transition-colors">
+        </div>
+        <div>
+          <label class="block text-[10px] text-textlight/40 font-semibold mb-1">กรองห้องเรียน</label>
+          <select id="teacher-filter-room" onchange="filterTeacherScores()" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-textlight outline-none focus:border-accentblue transition-colors">
+            <option value="">ทั้งหมด</option>
+            <!-- Room options dynamically generated -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] text-textlight/40 font-semibold mb-1">การดำเนินการ</label>
+          <button onclick="fetchTeacherScores()" class="w-full py-2 rounded-xl bg-accentblue hover:bg-accentblue/90 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-accentblue/15">
+            <span>🔄 ดึงข้อมูลล่าสุด</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scores Table Container -->
+      <div class="overflow-x-auto border border-white/5 rounded-2xl bg-black/20 font-kanit">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-white/5 bg-white/5 text-textlight/60 font-semibold">
+              <th class="p-3">วันเวลาส่ง</th>
+              <th class="p-3 text-center">ห้อง</th>
+              <th class="p-3 text-center">เลขที่</th>
+              <th class="p-3">ชื่อ-นามสกุล</th>
+              <th class="p-3">บทเรียน</th>
+              <th class="p-3 text-center">คะแนน</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-scores-tbody" class="divide-y divide-white/5 text-textlight/80">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-textlight/40 italic">🔄 กำลังโหลดข้อมูลคะแนนสอบ...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Summary info -->
+      <div class="flex flex-col sm:flex-row justify-between items-center text-[11px] text-textlight/40 font-kanit gap-2">
+        <p>* ข้อมูลดึงโดยตรงจากชีตเก็บคะแนนของห้องเรียนครูนิวตรอน</p>
+        <p>แสดงผลทั้งหมด: <span id="teacher-records-count" class="font-bold text-accentblue">0</span> รายการ</p>
+      </div>
+
     </div>
   </div>
 
@@ -1267,6 +1337,115 @@
             feedback.innerText = "❌ เกิดข้อผิดพลาดทางเทคนิคในการส่งข้อมูล กรุณาถ่ายภาพหน้าจอคะแนนแล้วแจ้งคุณครูโดยตรง";
           }
         });
+    }
+
+    // ==========================================
+    //  Teacher Dashboard for Viewing Scores
+    // ==========================================
+    let allTeacherScores = [];
+
+    function openTeacherDashboard() {
+      const code = prompt("🔒 กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบรายงานคะแนนสอบ:");
+      if (code === "newtron05") {
+        document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
+        document.getElementById('teacher-dashboard-modal').classList.add('flex');
+        
+        // Populates filter rooms if empty
+        const filterRoom = document.getElementById('teacher-filter-room');
+        if (filterRoom.options.length <= 1) {
+          filterRoom.innerHTML = '<option value="">ทั้งหมด</option>';
+          for (let g = 1; g <= 6; g++) {
+            for (let r = 1; r <= 6; r++) {
+              const opt = document.createElement('option');
+              opt.value = `ม.${g}/${r}`;
+              opt.innerText = `ม.${g}/${r}`;
+              filterRoom.appendChild(opt);
+            }
+          }
+        }
+        
+        fetchTeacherScores();
+      } else if (code !== null) {
+        alert("❌ รหัสผ่านไม่ถูกต้อง");
+      }
+    }
+
+    function closeTeacherDashboard() {
+      document.getElementById('teacher-dashboard-modal').classList.add('hidden');
+      document.getElementById('teacher-dashboard-modal').classList.remove('flex');
+    }
+
+    function fetchTeacherScores() {
+      const tbody = document.getElementById('teacher-scores-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-textlight/40 italic">⏳ กำลังดึงข้อมูลคะแนนจาก Google Sheets...</td></tr>';
+      
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbw3eNbBuhg-P-dLxBeZkYIggp0FW9GM1TdL1wVd1XeyxvwRTzw4BcMNiPBEyyWH1le-/exec';
+      const url = scriptUrl + '?action=exam_get';
+      
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success) {
+            // Reverse to show latest first
+            allTeacherScores = (data.list || []).reverse();
+            filterTeacherScores();
+          } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-accentred font-bold">❌ เกิดข้อผิดพลาด: ${data.error || 'ไม่สามารถโหลดข้อมูลได้'}</td></tr>`;
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-accentred font-bold">❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ฐานข้อมูลได้</td></tr>';
+        });
+    }
+
+    function filterTeacherScores() {
+      const query = document.getElementById('teacher-search-input').value.trim().toLowerCase();
+      const selectedRoom = document.getElementById('teacher-filter-room').value;
+      const tbody = document.getElementById('teacher-scores-tbody');
+      
+      let filtered = allTeacherScores;
+      
+      if (selectedRoom) {
+        filtered = filtered.filter(row => row.room === selectedRoom);
+      }
+      
+      if (query) {
+        filtered = filtered.filter(row => {
+          return (row.name || '').toLowerCase().includes(query) ||
+                 (row.no || '').toLowerCase().includes(query) ||
+                 (row.subject || '').toLowerCase().includes(query);
+        });
+      }
+      
+      tbody.innerHTML = '';
+      document.getElementById('teacher-records-count').innerText = filtered.length;
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-textlight/40 italic">ไม่พบข้อมูลคะแนนสอบที่ค้นหา</td></tr>';
+        return;
+      }
+      
+      filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-white/5 hover:bg-white/[0.02] transition-colors';
+        
+        // ไฮไลท์สีแถวสำหรับรายชื่อที่ตรวจพบการทุจริต
+        const isCheated = (row.name || '').includes('ตรวจพบทุจริต');
+        const nameClass = isCheated ? 'text-accentred font-bold' : 'text-white';
+        const trClass = isCheated ? 'bg-accentred/5' : '';
+        if (trClass) tr.className += ' ' + trClass;
+
+        tr.innerHTML = `
+          <td class="p-3 text-textlight/50 font-outfit whitespace-nowrap">${row.timestamp || ''}</td>
+          <td class="p-3 text-center font-bold text-accentemerald">${row.room || ''}</td>
+          <td class="p-3 text-center font-outfit text-textlight/70">${row.no || ''}</td>
+          <td class="p-3 ${nameClass}">${row.name || ''}</td>
+          <td class="p-3 text-textlight/80">${row.subject || ''}</td>
+          <td class="p-3 text-center font-outfit font-bold ${isCheated ? 'text-accentred' : 'text-accentemerald'}">${row.score}/${row.total}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
   </script>
