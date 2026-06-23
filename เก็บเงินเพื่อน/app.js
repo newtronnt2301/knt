@@ -596,7 +596,7 @@ function updateRoleUI() {
   const settingsSubmitBtns = document.querySelectorAll("#panel-settings button[type='submit']");
   settingsSubmitBtns.forEach(b => b.style.display = userRole === "teacher" ? "inline-flex" : "none");
 
-  const settingsInputs = document.querySelectorAll("#panel-settings input:not([disabled]), #panel-settings select");
+  const settingsInputs = document.querySelectorAll("#panel-settings input, #panel-settings select");
   settingsInputs.forEach(input => {
     // skip disabled calculative inputs
     if (input.id === "input-goal-total-calc") return;
