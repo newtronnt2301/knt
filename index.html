@@ -475,7 +475,8 @@
       
       // Create stars
       const stars = [];
-      const numStars = 120;
+      const isMobile = window.innerWidth < 768;
+      const numStars = isMobile ? 40 : 120;
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,

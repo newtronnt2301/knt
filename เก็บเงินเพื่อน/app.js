@@ -482,6 +482,10 @@ async function loadInitialData() {
   }
   if (!state.config.appsScriptUrl) state.config.appsScriptUrl = "https://script.google.com/macros/s/AKfycbz-F0PVMgQel2G7PIutsmvIW_D7UeSwXau39cGn4G8gnKHK2O_AXJnofNu5X5AMmdDafQ/exec";
 
+  // *** Render Cached Local Data Instantly (Stale-While-Revalidate) ***
+  calculateStats();
+  renderAll();
+
   // 3. Connect to Google Sheets if Web App URL is provided
   if (state.config.appsScriptUrl) {
     const statusText = document.querySelector(".status-indicator span:last-child");
@@ -519,6 +523,11 @@ async function loadInitialData() {
             statusDot.style.boxShadow = "0 0 8px var(--success)";
           }
           console.log("Google Sheets sync completed successfully.");
+          
+          // Update rendering and local cache with latest data from Sheets
+          calculateStats();
+          saveToLocalStorage();
+          renderAll();
         }
       }
     } catch (err) {
@@ -530,9 +539,6 @@ async function loadInitialData() {
       }
     }
   }
-
-  calculateStats();
-  renderAll();
 }
 
 function initializeNewState(loadedStudents) {
