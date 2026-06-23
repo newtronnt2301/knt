@@ -264,6 +264,56 @@ function getSeedData(studentList, collectorName) {
   return transactions;
 }
 
+// UI Helper: Show Loading Overlay
+function showLoading(message = "กำลังบันทึกข้อมูลและเชื่อมต่อกับคลาวด์...") {
+  let overlay = document.getElementById("cloud-loading-overlay");
+  if (overlay) {
+    overlay.querySelector(".loading-text").textContent = message;
+    return;
+  }
+  
+  overlay = document.createElement("div");
+  overlay.id = "cloud-loading-overlay";
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = "rgba(10, 15, 30, 0.75)";
+  overlay.style.backdropFilter = "blur(12px)";
+  overlay.style.webkitBackdropFilter = "blur(12px)";
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "99999";
+  overlay.style.color = "#ffffff";
+  overlay.style.fontFamily = "inherit";
+  
+  overlay.innerHTML = `
+    <div style="background: rgba(255, 255, 255, 0.05); padding: 30px 40px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); text-align: center; max-width: 90%; width: 420px;">
+      <div class="spinner" style="border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid var(--primary, #6366f1); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+      <p class="loading-text" style="margin: 0; font-size: 1rem; font-weight: 500; line-height: 1.5; color: rgba(255,255,255,0.9);">${message}</p>
+      <small style="display: block; margin-top: 12px; color: rgba(255, 255, 255, 0.5); font-size: 0.8rem;">กรุณาอย่าเพิ่งปิดหรือรีเฟรชหน้าเว็บ</small>
+    </div>
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// UI Helper: Hide Loading Overlay
+function hideLoading() {
+  const overlay = document.getElementById("cloud-loading-overlay");
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
 // Helper: Send POST request to Google Sheets to write data (prevents URL length limits and CORS preflight options)
 function postToCloud(payload) {
   if (!state.config.appsScriptUrl) return Promise.resolve(null);
@@ -276,20 +326,32 @@ function postToCloud(payload) {
     },
     body: JSON.stringify(payload)
   })
-  .then(r => r.json())
+  .then(r => {
+    if (!r.ok) {
+      throw new Error(`HTTP Error ${r.status}`);
+    }
+    return r.json();
+  })
   .then(data => {
     console.log("Cloud sync POST result:", data);
     return data;
   })
   .catch(e => {
     console.error("Cloud sync POST failed:", e);
+    alert(
+      "⚠️ บันทึกข้อมูลออนไลน์ลง Google Sheets ไม่สำเร็จ!\n\n" +
+      "ความเป็นไปได้สูง:\n" +
+      "1. คุณครูประจำชั้นยังไม่ได้อัปเดตไฟล์ Apps Script (ให้รองรับฟังก์ชัน doPost) ใน Google Sheet\n" +
+      "2. เกิดข้อผิดพลาดของเครือข่ายอินเทอร์เน็ต\n\n" +
+      "กรุณาให้คุณครูคัดลอกโค้ด Apps Script ตัวล่าสุดในชีต และสั่ง Deploy (การทำให้ใช้งานได้) ใหม่ให้เรียบร้อยก่อนค่ะ"
+    );
     throw e;
   });
 }
 
 // Helper: Sync transaction to Google Sheets
 function syncTransactionToCloud(newTx) {
-  postToCloud({
+  return postToCloud({
     action: "save_transaction",
     id: newTx.id,
     timestamp: newTx.timestamp,
@@ -302,6 +364,14 @@ function syncTransactionToCloud(newTx) {
     collector: newTx.collector,
     method: newTx.method,
     slipUrl: newTx.slipUrl
+  });
+}
+
+// Helper: Sync multiple transactions (batch) to Google Sheets
+function syncTransactionsToCloud(txList) {
+  return postToCloud({
+    action: "save_transactions",
+    transactions: txList
   });
 }
 
@@ -988,7 +1058,7 @@ function renderTimeline() {
 }
 
 // Record Transaction (Income or Expense)
-function recordTransaction({ type, description, amount, studentId, slipBase64, method = "cash" }) {
+async function recordTransaction({ type, description, amount, studentId, slipBase64, method = "cash" }) {
   const currentCollector = state.students.find(s => s.id === state.config.currentCollectorId) || { name: "เหรัญญิกห้อง" };
   const collectorName = currentCollector.name;
   
@@ -1048,18 +1118,28 @@ function recordTransaction({ type, description, amount, studentId, slipBase64, m
     newTx.studentName = "เงินรับสมทบกองกลาง";
   }
 
+  // Cloud Sync (with blocker loading screen if online URL exists)
+  if (state.config.appsScriptUrl) {
+    showLoading("กำลังอัปเดตและบันทึกประวัติการเงินไปยัง Google Sheets ออนไลน์...");
+    try {
+      await syncTransactionToCloud(newTx);
+      hideLoading();
+    } catch (e) {
+      hideLoading();
+      return false; // Sync failed, abort local save
+    }
+  }
+
   state.transactions.push(newTx);
   
   calculateStats();
   saveToLocalStorage();
   renderAll();
 
-  // Cloud Sync
-  syncTransactionToCloud(newTx);
-
   // Reset file upload buffers
   tempSlipBase64 = null;
   clearSlipUploadZones();
+  return true;
 }
 
 // Delete Transaction
@@ -1323,7 +1403,7 @@ function setupEventListeners() {
   });
 
   // 8. Payment Form submit
-  document.getElementById("form-record-payment").addEventListener("submit", (e) => {
+  document.getElementById("form-record-payment").addEventListener("submit", async (e) => {
     e.preventDefault();
     const sno = Number(document.getElementById("payment-student-no").value);
     const amount = Number(document.getElementById("payment-amount").value);
@@ -1333,7 +1413,7 @@ function setupEventListeners() {
     const student = state.students.find(s => s.no === sno);
     if (!student) return;
 
-    recordTransaction({
+    const success = await recordTransaction({
       type: "income",
       description: desc || `จ่ายเงินห้องโดยนักเรียน เลขที่ ${student.no}`,
       amount: amount,
@@ -1342,9 +1422,11 @@ function setupEventListeners() {
       method: method
     });
 
-    toggleModal("modal-record-payment", false);
-    const methodText = method === "cash" ? "เงินสด" : "เงินโอน";
-    alert(`บันทึกการรับชำระเงินของ ${student.name} ยอดเงิน ฿${amount.toFixed(2)} (${methodText}) สำเร็จ`);
+    if (success) {
+      toggleModal("modal-record-payment", false);
+      const methodText = method === "cash" ? "เงินสด" : "เงินโอน";
+      alert(`บันทึกการรับชำระเงินของ ${student.name} ยอดเงิน ฿${amount.toFixed(2)} (${methodText}) สำเร็จ`);
+    }
   });
 
   // Dynamic labels for payment method in Modal 1
@@ -1389,7 +1471,7 @@ function setupEventListeners() {
   });
 
   // 10. General Transaction Form Submit
-  document.getElementById("form-record-transaction").addEventListener("submit", (e) => {
+  document.getElementById("form-record-transaction").addEventListener("submit", async (e) => {
     e.preventDefault();
     const type = document.getElementById("trans-type").value;
     const desc = document.getElementById("trans-description").value;
@@ -1397,7 +1479,7 @@ function setupEventListeners() {
     const studentId = document.getElementById("trans-student-select").value;
     const method = document.getElementById("trans-method").value;
 
-    recordTransaction({
+    const success = await recordTransaction({
       type: type,
       description: desc,
       amount: amount,
@@ -1406,10 +1488,12 @@ function setupEventListeners() {
       method: method
     });
 
-    toggleModal("modal-record-transaction", false);
-    document.getElementById("form-record-transaction").reset();
-    const methodText = method === "cash" ? "เงินสด" : "เงินโอน";
-    alert(`บันทึกรายการบัญชีสำเร็จ: ${desc} ยอดเงิน ฿${amount.toFixed(2)} (${methodText})`);
+    if (success) {
+      toggleModal("modal-record-transaction", false);
+      document.getElementById("form-record-transaction").reset();
+      const methodText = method === "cash" ? "เงินสด" : "เงินโอน";
+      alert(`บันทึกรายการบัญชีสำเร็จ: ${desc} ยอดเงิน ฿${amount.toFixed(2)} (${methodText})`);
+    }
   });
 
   // 11. View Slip triggers in tables (delegation)
@@ -1778,7 +1862,7 @@ function setupBatchPaymentEvents() {
   });
 
   // Submit batch payment form
-  batchForm.addEventListener("submit", (e) => {
+  batchForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const dateVal = document.getElementById("batch-date").value;
     const desc = document.getElementById("batch-description").value;
@@ -1810,7 +1894,8 @@ function setupBatchPaymentEvents() {
     const combinedDate = new Date(`${dateVal}T${timeStr}`);
     const dateStr = formatThaiDateTime(isNaN(combinedDate.getTime()) ? now : combinedDate);
 
-    // Save all transactions
+    // Create all transactions list
+    const newTxs = [];
     let totalAmt = 0;
     records.forEach(rec => {
       const studentObj = state.students.find(s => s.id === rec.studentId);
@@ -1842,10 +1927,7 @@ function setupBatchPaymentEvents() {
         slipUrl: finalSlip
       };
 
-      state.transactions.push(newTx);
-
-      // Trigger cloud sync asynchronously in background
-      syncTransactionToCloud(newTx);
+      newTxs.push(newTx);
     });
 
     // Add batch collection log to timeline history
@@ -1855,16 +1937,31 @@ function setupBatchPaymentEvents() {
       desc: `มีการบันทึกเก็บเงินห้องแบบด่วนจำนวน ${records.length} คน มียอดรวม ฿${totalAmt.toLocaleString('th-TH', { minimumFractionDigits: 2 })} รายละเอียด: "${desc}"`,
       author: collectorName
     };
+
+    // Cloud sync batch list first (if online URL exists)
+    if (state.config.appsScriptUrl) {
+      showLoading(`กำลังซิงค์รายการบันทึกเงินสดแบบกลุ่มจำนวน ${newTxs.length} คน ลง Google Sheets ออนไลน์...`);
+      try {
+        await syncTransactionsToCloud(newTxs);
+        // Also sync history log and settings in the background or await
+        await syncHistoryToCloud(log);
+        hideLoading();
+      } catch (err) {
+        hideLoading();
+        return; // Sync failed, abort local save
+      }
+    }
+
+    // Save all to local state
+    newTxs.forEach(newTx => {
+      state.transactions.push(newTx);
+    });
     state.collectorHistory.push(log);
     
     // Save state
     calculateStats();
     saveToLocalStorage();
     renderAll();
-
-    // Cloud sync settings & history log
-    syncSettingsToCloud();
-    syncHistoryToCloud(log);
 
     toggleModal("modal-batch-payment", false);
     alert(`🎉 บันทึกจ่ายเงินด่วนสำเร็จ! บันทึกธุรกรรมแล้ว ${records.length} รายการ รวมยอดรับเงินสดทั้งสิ้น ฿${totalAmt.toLocaleString('th-TH')}`);

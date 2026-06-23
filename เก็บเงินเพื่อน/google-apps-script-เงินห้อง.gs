@@ -163,6 +163,32 @@ function processAction(ss, params) {
     return jsonResponse({ success: true, message: "บันทึกธุรกรรมลง Google Sheet เรียบร้อยแล้ว", id: txid });
   }
 
+  // --- 2.1 SAVE MULTIPLE TRANSACTIONS (BATCH) ---
+  if (action === 'save_transactions') {
+    const transSheet = getOrCreateSheet(ss, "Transactions", [
+      "ID", "Timestamp", "Type", "StudentID", "StudentNo", "StudentName", "Amount", "Description", "Collector", "Method", "SlipURL"
+    ]);
+    
+    const txs = params.transactions || [];
+    txs.forEach(tx => {
+      const txid = tx.id || ("TX-" + Math.floor(100000 + Math.random() * 900000));
+      const timestamp = tx.timestamp || new Date().toLocaleString("th-TH");
+      const type = tx.type || "income";
+      const studentId = tx.studentId || "";
+      const studentNo = tx.studentNo ? Number(tx.studentNo) : "";
+      const studentName = tx.studentName || "";
+      const amount = Number(tx.amount || 0);
+      const description = tx.description || "";
+      const collector = tx.collector || "";
+      const method = tx.method || "cash";
+      const slipUrl = tx.slipUrl || "";
+
+      transSheet.appendRow([txid, timestamp, type, studentId, studentNo, studentName, amount, description, collector, method, slipUrl]);
+    });
+
+    return jsonResponse({ success: true, message: "บันทึกรายการแบบกลุ่มลง Google Sheet เรียบร้อยแล้ว", count: txs.length });
+  }
+
   // --- 3. SAVE CONFIG SETTINGS ---
   if (action === 'save_settings') {
     const configSheet = getOrCreateSheet(ss, "Config", ["Parameter", "Value"]);
