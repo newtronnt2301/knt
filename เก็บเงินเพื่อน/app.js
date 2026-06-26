@@ -635,8 +635,8 @@ function saveToLocalStorage() {
     const strippedState = {
       ...state,
       transactions: state.transactions.map(tx => {
-        // Strip base64 image data from slipUrl in local storage cache
-        if (tx.slipUrl && tx.slipUrl.startsWith("data:image/")) {
+        // Strip base64 or large image data from slipUrl in local storage cache
+        if (tx.slipUrl && tx.slipUrl.length > 500) {
           return { ...tx, slipUrl: "cached_offline" };
         }
         return tx;
