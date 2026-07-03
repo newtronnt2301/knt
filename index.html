@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🏠 ครูนิวตรอน.com - ศูนย์รวมระบบจัดการเรียนการสอน</title>
-  <meta name="description" content="พอร์ตทัลรวมเครื่องมือช่วยสอน ระบบเช็คชื่อ เช็คภาระงาน บันทึกคะแนน และกิจกรรมสันทนาการบอร์ดเกมพรีเมียม">
   
-  <!-- Google Fonts - Kanit, Outfit & Inter -->
+  <!-- Google Fonts: Kanit (สำหรับภาษาไทยที่อ่านง่าย) และ Outfit (สำหรับตัวเลขและอังกฤษดีไซน์หรู) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Outfit:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,177 +19,402 @@
           fontFamily: {
             kanit: ['Kanit', 'sans-serif'],
             outfit: ['Outfit', 'sans-serif'],
-            inter: ['Inter', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
           },
           colors: {
-            darkbg: '#0C0C0C',
-            textlight: '#D7E2EA',
-            accentpurple: '#8b5cf6',
-            accentblue: '#3b82f6',
-            accentpink: '#ec4899',
-            accentemerald: '#10b981',
-            accentamber: '#f59e0b',
-            accentred: '#f43f5e',
-            accentteal: '#2dd4bf',
+            spacebg: '#01061E', // สีกรมท่าอวกาศเข้มเกือบดำ
+            cream: '#EFF4FF',   // สีขาวสว่างนวลตา
+            neon: '#6FFF00',    // สีเขียวนีออนสะท้อนแสงเน้นดีไซน์
           }
         }
       }
     }
   </script>
-  
-  <!-- Custom CSS for specialized styling -->
+
   <style>
-    /* Global Resets and Base Styles */
+    /* Global Base Styles */
     html, body {
-      background-color: #0C0C0C;
-      color: #D7E2EA;
+      background-color: #01061E;
+      color: #EFF4FF;
       font-family: 'Kanit', sans-serif;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
       min-height: 100vh;
       overflow-x: hidden;
-    }
-    
-    * {
       box-sizing: border-box;
     }
 
-    /* Hide scrollbars but keep functionality */
+    /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #0C0C0C;
+      background: #01061E;
     }
     ::-webkit-scrollbar-thumb {
-      background: #2A2A2A;
+      background: rgba(255, 255, 255, 0.08);
       border-radius: 99px;
     }
-
-    /* Hero Heading Gradient Text Class */
-    .hero-heading {
-      background: linear-gradient(180deg, #646973 0%, #BBCCD7 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.15);
     }
 
-    /* Prevent text selection on decorations */
-    .no-select {
-      user-select: none;
-    }
-
-    /* Glassmorphism style cards (Optimized: backdrop-filter on desktop only, higher opacity on mobile for fast GPU drawing) */
-    .glass-card {
-      background: rgba(17, 24, 39, 0.85);
+    /* PREMIUM LIQUID GLASS EFFECT WITH NEON GLOW */
+    .liquid-glass {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 
+        inset 0 1px 1px rgba(255, 255, 255, 0.15), 
+        0 15px 35px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
-    @media (min-width: 1024px) {
-      .glass-card {
-        background: rgba(17, 24, 39, 0.45);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-      }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.2px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 30%,
+        rgba(255,255,255,0) 50%, rgba(255,255,255,0) 70%,
+        rgba(255,255,255,0.05) 80%, rgba(255,255,255,0.25) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
     }
 
-    /* Mascot breathing/floating float keyframes */
+    /* Mesh Gradients animation */
+    @keyframes float-glow-1 {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(40px, -60px) scale(1.1); }
+    }
+    @keyframes float-glow-2 {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(-50px, 40px) scale(1.15); }
+    }
+    .animate-glow-1 {
+      animation: float-glow-1 15s ease-in-out infinite;
+    }
+    .animate-glow-2 {
+      animation: float-glow-2 18s ease-in-out infinite;
+    }
+
+    /* Mascot floating animation */
     @keyframes float-breath {
       0%, 100% {
         transform: translateY(0) scale(1) rotate(0deg);
       }
       50% {
-        transform: translateY(-8px) scale(1.02) rotate(0.8deg);
+        transform: translateY(-10px) scale(1.02) rotate(0.6deg);
       }
     }
     .animate-float-breath {
       animation: float-breath 6s ease-in-out infinite;
     }
+
+    /* Cosmic Logo Pulse & Color Glow Animation (No border, glow pulses between cyan and purple) */
+    @keyframes logo-pulse-glow {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.45));
+      }
+      50% {
+        transform: translateY(-8px) scale(1.03);
+        filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.7));
+      }
+    }
+    .animate-logo-pulse {
+      animation: logo-pulse-glow 6s ease-in-out infinite;
+    }
+
+    /* Status dot pulse animation */
+    @keyframes status-pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .animate-pulse-dot {
+      animation: status-pulse 2s infinite ease-in-out;
+    }
+
+    /* Shiny Text Effect (Cosmic Gradient) */
+    .shiny-text {
+      background: linear-gradient(135deg, #EFF4FF 20%, #a5b4fc 55%, #00E5FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
   </style>
 </head>
-<body class="bg-darkbg text-textlight select-none">
-  
-  <div class="w-full min-h-screen bg-darkbg flex flex-col lg:flex-row relative">
-    
-    <!-- Animated Twinkling Starfield Background -->
-    <canvas id="starfield" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+<body class="select-none font-kanit">
 
-    <!-- Ambient Background Glows (Optimized: Desktop only to prevent expensive blur filters on mobile GPU) -->
-    <div class="hidden lg:block absolute top-[20%] left-[5%] w-[30vw] h-[30vw] rounded-full bg-accentpurple/5 blur-[120px] pointer-events-none z-0"></div>
-    <div class="hidden lg:block absolute bottom-[20%] right-[5%] w-[25vw] h-[25vw] rounded-full bg-accentblue/5 blur-[120px] pointer-events-none z-0"></div>
+  <!-- ปุ่มเมนูสามขีด (Floating Hamburger Menu Button) -->
+  <button id="menu-toggle-btn" class="fixed top-6 left-6 z-40 w-12 h-12 rounded-full backdrop-blur-md bg-white/5 border border-white/10 flex items-center justify-center text-white hover:text-neon hover:border-blue-500/40 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all duration-300 active:scale-95" aria-label="เปิดเมนูทางลัด">
+    <svg class="w-5 h-5 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
+      <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
-    <!-- ========================================================
-         LEFT COLUMN: BRANDING, CLOCK, MASCOT (Desktop Fixed)
-       ======================================================== -->
-    <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/5 bg-black/25 z-10">
-      
-      <!-- Top Logo -->
+  <!-- แถบเมนูด้านซ้ายแบบสไลด์ (Slide-out Sidebar Drawer) -->
+  <div id="sidebar-drawer" class="fixed inset-y-0 left-0 w-[320px] max-w-[85vw] bg-[#01061E]/95 backdrop-blur-2xl border-r border-white/10 z-50 transform -translate-x-full transition-transform duration-500 ease-in-out flex flex-col shadow-[15px_0_40px_rgba(0,0,0,0.7)]">
+    <!-- Header -->
+    <div class="p-5 border-b border-white/10 flex justify-between items-center bg-black/20">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accentpurple to-accentblue flex items-center justify-center shadow-md shadow-accentpurple/15">
-          <svg viewBox="0 0 24 24" class="w-5.5 h-5.5 fill-none stroke-white stroke-[2.5]">
-            <path d="M12 2L1 7L12 12L23 7L12 2Z" />
-            <path d="M21 12.5V17.5L12 22L3 17.5V12.5" />
-            <path d="M12 12V22" />
+        <img src="images/logo.png" alt="โลโก้" class="w-10 h-10 object-contain">
+        <div class="flex flex-col text-left">
+          <span class="text-sm font-black shiny-text font-kanit leading-none">ครูนิวตรอน.com</span>
+          <span class="text-[9px] text-cream/55 font-light tracking-wide mt-0.5">เมนูระบบงานทั้งหมด</span>
+        </div>
+      </div>
+      <button id="menu-close-btn" class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-cream/70 hover:text-white hover:bg-white/5 transition-all duration-200" aria-label="ปิดเมนู">
+        <svg class="w-4 h-4 stroke-current stroke-[2]" viewBox="0 0 24 24" fill="none">
+          <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Body: รายการลิงก์ระบบทั้งหมด -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-2.5 custom-scrollbar">
+      
+      <a href="เช็คชื่อรายวิชา/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-blue-500/10 hover:border-blue-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300">
+          <img src="images/grad-cap.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">1. เช็คชื่อเข้าเรียนรายวิชา</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">บันทึกเวลาเรียนรายคาบ/ห้องเรียน</div>
+        </div>
+      </a>
+
+      <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
+          <img src="images/gear.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">2. เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ระบบเช็คห้องเรียนพิเศษ 3 ห้องเรียน</div>
+        </div>
+      </a>
+
+      <a href="ส่งงาน/index-ส่งงาน.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-purple-500/10 hover:border-purple-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-500/40 transition-all duration-300">
+          <img src="images/beaker.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">3. ระบบติดตามส่งงาน/ข้อสอบ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ติดตามการบ้าน/คะแนนเก็บของเด็ก</div>
+        </div>
+      </a>
+
+      <a href="สุ่มเลขที่/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-yellow-500/10 hover:border-yellow-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-500/40 transition-all duration-300">
+          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">4. สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กิจกรรมสุ่มเลขที่ผ่านเกมวิ่งแข่งสุดสนุก</div>
+        </div>
+      </a>
+
+      <a href="boardgame/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-pink-500/10 hover:border-pink-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-pink-500/20 group-hover:border-pink-500/40 transition-all duration-300">
+          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">5. บอร์ดเกมคลับพัฒนาทักษะ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">คลังบอร์ดเกมเล่นง่ายพัฒนาทักษะตรรกะ</div>
+        </div>
+      </a>
+
+      <a href="learning/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-indigo-500/10 hover:border-indigo-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-300">
+          <img src="images/atom.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">6. คลังคณิตศาสตร์เพิ่มเติม ม.4</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ศูนย์รวมบทเรียนและทำโจทย์ออนไลน์</div>
+        </div>
+      </a>
+
+      <a href="exam/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-red-500/10 hover:border-red-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-red-500/20 group-hover:border-red-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5.5 h-5.5 stroke-red-400 stroke-[2] fill-none">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
+            <path d="M9 12L11 14L15 10" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <div class="font-bold tracking-wider text-base sm:text-lg text-white font-kanit uppercase">
-          KRUNEWTRON<span class="text-accentpurple">.COM</span>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">7. ระบบสอบเก็บคะแนนท้ายบท</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">สุ่มสลับข้อสอบ / ตรวจประเมินอัตโนมัติ</div>
         </div>
+      </a>
+
+      <a href="plickers/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-purple-500/10 hover:border-purple-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-purple-400 stroke-[2] fill-none">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor"/>
+            <circle cx="12" cy="13" r="4" stroke="currentColor"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">8. ระบบสแกนการ์ด Plickers</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กิจกรรมสแกนตอบคำถามด้วยการ์ด ArUco</div>
+        </div>
+      </a>
+
+      <a href="คะแนนเกรด/index-เกรด.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-emerald-400 stroke-[2] fill-none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor"/>
+            <polyline points="14 2 14 8 20 8" stroke="currentColor"/>
+            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor"/>
+            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">9. ระบบจัดการคะแนน / ตัดเกรด</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กรอกคะแนน คำนวณตัดเกรด 8 ระดับ (ครู)</div>
+        </div>
+      </a>
+
+      <a href="ประกาศผลสอบ/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-blue-500/10 hover:border-blue-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-blue-400 stroke-[2] fill-none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">10. ประกาศผลสอบ / ตามงานค้าง</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ประกาศคะแนนสอบรายคนและตามเกรด 0</div>
+        </div>
+      </a>
+
+      <a href="เก็บเงินเพื่อน/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-emerald-400 stroke-[2.5] fill-none">
+            <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">11. บัญชีเงินห้องเรียน ม.6/1</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">รายงานยอดสะสมและประวัติรายรับ-รายจ่าย</div>
+        </div>
+      </a>
+
+      <!-- แบ่งประเภทส่วน QR Code -->
+      <div class="pt-4 pb-1.5 px-1 text-left">
+        <span class="text-[9px] font-extrabold tracking-widest text-teal-400 uppercase">ชุดจัดการ QR Code / การ์ด</span>
       </div>
 
-      <!-- Middle: Title & 3D Cat Mascot -->
-      <div class="my-8 sm:my-10 lg:my-0 flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
-        
-        <!-- 3D Magnet Mascot (Cat Teacher) with breathing floating animation -->
-        <div class="w-[170px] sm:w-[200px] md:w-[220px] lg:w-[230px] xl:w-[245px]">
-          <div id="mascot-wrapper" class="cursor-pointer" style="will-change: transform; transition: transform 0.6s ease-in-out;">
-            <img 
-              src="images/mascot_animated.webp" 
-              alt="Kru Neutron Mascot" 
-              class="w-full h-auto object-contain pointer-events-none drop-shadow-[0_15px_40px_rgba(251,146,60,0.22)] animate-float-breath"
-            />
-          </div>
+      <a href="ส่งงาน/qr-card.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
+          <span class="text-sm group-hover:scale-110 transition-transform duration-200">🖨️</span>
         </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">พิมพ์การ์ดสแกนเช็คชื่อ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">จัดพิมพ์การ์ดเช็คชื่อนักเรียนรายบุคคล</div>
+        </div>
+      </a>
 
-        <div>
-          <h1 class="hero-heading font-black tracking-tight leading-none text-4xl sm:text-5xl lg:text-[2.85rem] xl:text-[3.25rem] whitespace-nowrap uppercase select-none no-select mb-2">
+      <a href="ส่งงาน/qr-generator.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
+        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
+          <span class="text-sm group-hover:scale-110 transition-transform duration-200">✨</span>
+        </div>
+        <div class="flex-1 min-w-0 text-left">
+          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">สร้าง QR Code อิสระ</div>
+          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">เจนคิวอาร์โค้ดปรับแต่งอเนกประสงค์</div>
+        </div>
+      </a>
+
+    </div>
+    
+    <!-- Footer -->
+    <div class="p-4 border-t border-white/10 bg-black/20 text-center">
+      <span class="text-[9px] text-cream/35">ครูนิวตรอน.com &copy; 2026 - Space Portal</span>
+    </div>
+  </div>
+
+  <!-- Backdrop Overlayสำหรับคลิกปิด -->
+  <div id="drawer-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+  <!-- TEXTURE OVERLAY (ฟิลเตอร์ภาพฟิล์มสไตล์โรงภาพยนตร์) -->
+  <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.06] mix-blend-lighten" style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E&quot;); background-size: cover;"></div>
+
+  <!-- MAIN CONTAINER LAYOUT -->
+  <div class="w-full min-h-screen bg-spacebg flex flex-col lg:flex-row relative overflow-hidden">
+    
+    <!-- Background Looping Space Video (ดาวอวกาศลึกเคลื่อนไหวเบาๆ ด้านหลัง) -->
+    <video autoplay loop muted playsinline class="fixed inset-0 w-full h-full object-cover z-0 opacity-[0.38] pointer-events-none">
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_151551_992053d1-3d3e-4b8c-abac-45f22158f411.mp4" type="video/mp4">
+    </video>
+
+    <!-- Starfield Interactive Canvas -->
+    <canvas id="starfield" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+    
+    <!-- Ambient Moving Mesh Glows -->
+    <div class="absolute top-[10%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-blue-500/10 blur-[130px] pointer-events-none z-0 animate-glow-1"></div>
+    <div class="absolute bottom-[10%] right-[5%] w-[40vw] h-[40vw] rounded-full bg-emerald-500/8 blur-[130px] pointer-events-none z-0 animate-glow-2"></div>
+
+    <!-- ========================================================
+         ฝั่งซ้าย: โลโก้, มาสคอตแมว 3D หรูหรา, และการ์ดนาฬิกาเรืองแสง
+         ======================================================== -->
+    <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-white/10 bg-black/5 backdrop-blur-sm z-10">
+      
+      <!-- ส่วนแบรนดิ้งแบบไม่มีขอบและกระพริบเรืองแสงสีฟ้านีออน -->
+      <div class="flex flex-col items-center text-center gap-1 relative z-10 w-full">
+        <div class="relative cursor-pointer">
+          <!-- โลโก้ขนาดใหญ่เรืองแสงกะพริบเป็นสีน้ำเงิน/ม่วงอวกาศ (ไม่มีขอบและพื้นหลังดำ) -->
+          <img src="images/logo.png" alt="ครูนิวตรอน.com โลโก้" class="w-44 h-44 sm:w-52 sm:h-52 object-contain animate-logo-pulse pointer-events-none">
+        </div>
+        
+        <div class="space-y-2 -mt-6">
+          <h1 class="shiny-text font-black text-4xl sm:text-[2.6rem] lg:text-[2.8rem] xl:text-[3.2rem] tracking-tight leading-none font-kanit drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
             ครูนิวตรอน.com
           </h1>
-          <p class="text-textlight/70 font-light text-xs sm:text-sm max-w-[320px] leading-relaxed">
-            พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา ส่งการบ้าน วัดประเมินเกรด และกิจกรรมสันทนาการบอร์ดเกม
+          <p class="text-cream/85 font-light text-xs sm:text-sm max-w-[320px] sm:max-w-[380px] leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา<br>ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
           </p>
-        </div>
-
-      </div>
-
-      <!-- Bottom: Thai Clock Widget -->
-      <div class="glass-card rounded-2xl px-5 py-3.5 border border-white/5 flex flex-col items-center lg:items-start justify-center shadow-lg shadow-black/30">
-        <div id="clock-greeting" class="text-[10px] sm:text-xs font-semibold text-accentpurple tracking-widest uppercase mb-0.5">สวัสดีครับคุณครู 🧑‍🏫</div>
-        <div id="clock-time" class="font-outfit text-xl sm:text-2xl font-bold tracking-widest text-accentemerald drop-shadow-[0_0_10px_rgba(16,185,129,0.18)]">
-          00:00:00
-        </div>
-        <div id="clock-date" class="text-[9px] sm:text-[10px] text-textlight/50 font-light mt-0.5">
-          วันเสาร์ที่ 13 มิถุนายน 2569
         </div>
       </div>
 
     </div>
 
     <!-- ========================================================
-         RIGHT COLUMN: MAIN APP CARDS GRID & TEXTAREA NOTE PAD
-       ======================================================== -->
+         ฝั่งขวา: เมนูหลัก 6 การ์ดเครื่องมือ (เล่นแอนิเมชันเมื่อเอาเมาส์ชี้เท่านั้น)
+         ======================================================== -->
     <div class="w-full lg:w-[65%] xl:w-[68%] p-6 sm:p-10 lg:p-12 lg:overflow-y-auto lg:h-screen z-10 flex flex-col justify-between">
       
       <div>
+        <!-- หัวข้อฝั่งขวา -->
+        <div class="mb-8 flex justify-between items-end border-b border-white/5 pb-4">
+          <div class="flex flex-col">
+            <span class="text-[10px] tracking-widest text-neon uppercase font-extrabold">CLASSROOM PORTAL</span>
+            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">คลังเครื่องมือจัดการชั้นเรียนและระบบช่วยสอน</h2>
+          </div>
+        </div>
 
+        <!-- การ์ดระบบงาน 6 ตัว (ดีไซน์นิ่งคลีนอ่านง่าย แต่ขยับลูปไฮเทคหลังการ์ดเมื่อโฮเวอร์) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          
+          <!-- การ์ด 1: เช็คชื่อรายวิชา -->
+          <a href="เช็คชื่อรายวิชา/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_15px_30px_rgba(59,130,246,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด (แสดงเฉพาะตอนโฮเวอร์เพื่อความคลีนและปุ่มเด่นชัด) -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-        <!-- Sub-Apps Cards Grid (6 apps) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Card 1: เช็คชื่อรายวิชา -->
-          <a href="เช็คชื่อรายวิชา/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentblue hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors duration-300">
                   <img 
                     src="images/grad-cap.png" 
                     alt="เช็คชื่อรายวิชา" 
@@ -198,18 +422,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #60a5fa; border-color: #60a5fa; background: rgba(59, 130, 246, 0.08);">
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-blue-400/40 text-blue-300 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                   เช็คผ่านกล้อง 📷
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
                 ระบบเช็คชื่อเข้าเรียนรายวิชา
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
                 บันทึกเวลาเรียน ขาด ลา มาสาย รายคาบและรายห้องเรียนอย่างเป็นระเบียบ
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -217,11 +441,19 @@
             </div>
           </a>
 
-          <!-- Card 2: เช็คชื่อ เตรียมวิศวะ -->
-          <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentred hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+          <!-- การ์ด 2: เช็คชื่อ เตรียมวิศวะ -->
+          <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
                   <img 
                     src="images/gear.png" 
                     alt="เช็คชื่อ เตรียมวิศวะ" 
@@ -229,18 +461,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #f43f5e; border-color: #f43f5e; background: rgba(244, 63, 94, 0.08);">
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                   ม.4 - ม.6 🚀
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
                 เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
                 ระบบบันทึกการเข้าเรียนออนไลน์ ห้องเรียนพิเศษเตรียมวิศวกรรมศาสตร์ 3 ห้องเรียน
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -248,11 +480,19 @@
             </div>
           </a>
 
-          <!-- Card 3: ระบบติดตามส่งงาน -->
-          <a href="ส่งงาน/index-ส่งงาน.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentpurple hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+          <!-- การ์ด 3: ระบบติดตามส่งงาน -->
+          <a href="ส่งงาน/index-ส่งงาน.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-purple-500/40 hover:shadow-[0_15px_30px_rgba(139,92,246,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300">
                   <img 
                     src="images/beaker.png" 
                     alt="ระบบติดตามส่งงาน" 
@@ -260,18 +500,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #a78bfa; border-color: #a78bfa; background: rgba(139, 92, 246, 0.08);">
-                  สแกนสปีด 📝
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-purple-400/40 text-purple-300 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                  สแกนส่งงาน 📝
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
                 ระบบติดตามส่งงาน/ข้อสอบ
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
                 บันทึกความก้าวหน้าการส่งการบ้านและข้อสอบอย่างรวดเร็ว รองรับสแกนคิวอาร์การ์ดเด็ก
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -279,11 +519,19 @@
             </div>
           </a>
 
-          <!-- Card 4: สุ่มเลขที่เป็ดแข่งวิ่ง -->
-          <a href="สุ่มเลขที่/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentamber hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+          <!-- การ์ด 4: สุ่มเลขที่เป็ดแข่งวิ่ง -->
+          <a href="สุ่มเลขที่/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-yellow-500/40 hover:shadow-[0_15px_30px_rgba(245,158,11,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-yellow-500/10 transition-colors duration-300">
                   <img 
                     src="images/dice.png" 
                     alt="สุ่มเลขที่เป็ดแข่งวิ่ง" 
@@ -291,18 +539,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #fbbf24; border-color: #fbbf24; background: rgba(245, 158, 11, 0.08);">
-                  มินิเกมกิจกรรม 🦆
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-yellow-400/40 text-yellow-300 bg-yellow-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                  กิจกรรม 🦆
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
                 สุ่มเลขที่เป็ดแข่งวิ่ง 3D
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
                 สร้างความสนุกด้วยการวิ่งแข่งสุ่มเลขที่ของเด็กนักเรียนผ่านโมเดลเป็ดสามมิติสุดเร้าใจ
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -310,11 +558,19 @@
             </div>
           </a>
 
-          <!-- Card 5: บอร์ดเกมคลับพัฒนาทักษะ -->
-          <a href="boardgame/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentpink hover:shadow-[0_0_20px_rgba(236,72,153,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+          <!-- การ์ด 5: บอร์ดเกมคลับพัฒนาทักษะ -->
+          <a href="boardgame/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-pink-500/40 hover:shadow-[0_15px_30px_rgba(236,72,153,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-pink-500/10 transition-colors duration-300">
                   <img 
                     src="images/dice.png" 
                     alt="บอร์ดเกมคลับพัฒนาทักษะ" 
@@ -322,18 +578,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #f472b6; border-color: #f472b6; background: rgba(236, 72, 153, 0.08);">
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-pink-400/40 text-pink-300 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
                   สันทนาการ 🧩
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
                 บอร์ดเกมคลับพัฒนาทักษะ
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
                 คลังบอร์ดเกมเล่นง่ายพัฒนาตรรกะและความคิดสร้างสรรค์ เช่น Werewolf, Connect4, Othello
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -341,194 +597,19 @@
             </div>
           </a>
 
-          <!-- Card 6: QR Code Management Tools (Dual Link) -->
-          <div class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] hover:border-accentteal hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentteal stroke-[2.5]">
-                    <path d="M12 4H4v8h8V4zM20 4h-8v8h8V4zM12 12H4v8h8v-8zM20 16h-4v4h4v-4z" />
-                    <path d="M20 12h-2v2h2v-2zM16 12h-2v2h2v-2zM14 20h2v-2h-2v2z" />
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #2dd4bf; border-color: #2dd4bf; background: rgba(45,212,191,0.08);">
-                  QR UTILS 🖨️
-                </span>
-              </div>
-              
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ชุดจัดการ QR Code เช็คชื่อเด็ก
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                จัดพิมพ์การ์ดเช็คชื่อรายบุคคลของนักเรียนตามทะเบียนห้อง หรือสร้างคิวอาร์โค้ดปรับแต่งอเนกประสงค์
-              </p>
+          <!-- การ์ด 6: คลังคณิตศาสตร์เพิ่มเติม -->
+          <a href="learning/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-indigo-500/40 hover:shadow-[0_15px_30px_rgba(99,102,241,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
+              </video>
             </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-            <div class="grid grid-cols-2 gap-2 mt-4">
-              <a href="ส่งงาน/qr-card.html" class="text-center bg-white/[0.03] hover:bg-accentteal/15 hover:text-accentteal border border-white/5 hover:border-accentteal rounded-lg py-2 text-xs font-semibold transition-all duration-300">
-                🖨️ พิมพ์การ์ดสแกน
-              </a>
-              <a href="ส่งงาน/qr-generator.html" class="text-center bg-white/[0.03] hover:bg-accentteal/15 hover:text-accentteal border border-white/5 hover:border-accentteal rounded-lg py-2 text-xs font-semibold transition-all duration-300">
-                ✨ เจน QR Code
-              </a>
-            </div>
-          </div>
-
-          <!-- Card 7: ระบบบัญชีเงินห้องโปร่งใส -->
-          <a href="เก็บเงินเพื่อน/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentemerald hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentemerald stroke-[2.5] group-hover:scale-110 transition-transform duration-300" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23"></line>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #10b981; border-color: #10b981; background: rgba(16, 185, 129, 0.08);">
-                  โปร่งใส 100% 💰
-                </span>
-              </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ระบบบัญชีเงินห้องเรียน ม.6/1
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                รายงานสถิติ ยอดสะสม ประวัติรายรับ-รายจ่าย และตรวจสอบสลิปหลักฐานโอนเงินเพื่อความไว้วางใจ
-              </p>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- Card 8: ระบบจัดการคะแนน / ตัดเกรด -->
-          <a href="คะแนนเกรด/index-เกรด.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentemerald hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentemerald stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #10b981; border-color: #10b981; background: rgba(16, 185, 129, 0.08);">
-                  สำหรับคุณครู 🧑‍🏫
-                </span>
-              </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ระบบจัดการคะแนน / ตัดเกรด
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                กรอกคะแนน คำนวณตัดเกรดอัตโนมัติ 8 ระดับตามมาตรฐาน และสรุปรายงานห้องเรียน
-              </p>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- Card 9: ประกาศผลสอบ & ติดตามเกรด 0 -->
-          <a href="ประกาศผลสอบ/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentblue hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentblue stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #3b82f6; border-color: #3b82f6; background: rgba(59, 130, 246, 0.08);">
-                  สำหรับนักเรียน 🧑‍🎓
-                </span>
-              </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ประกาศผลสอบ & ติดตามเกรด 0
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                ระบบสืบค้นผลคะแนนรายคน ค้นหาข้อมูลผลการเรียน และติดตามงานค้างสำหรับนักเรียน
-              </p>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- Card 10: ระบบสแกนการ์ดตอบคำถาม -->
-          <a href="plickers/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentpurple hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentpurple stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #a78bfa; border-color: #a78bfa; background: rgba(139, 92, 246, 0.08);">
-                  สแกนกล้อง 📷
-                </span>
-              </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ระบบสแกนการ์ดตอบคำถาม (Plickers)
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                จัดกิจกรรมตอบคำถามในห้องเรียนโดยใช้การ์ด ArUco สแกนผลลัพธ์ผ่านกล้องครูได้ทันที
-              </p>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- Card 11: ระบบสอบเก็บคะแนนท้ายบท -->
-          <a href="exam/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentred hover:shadow-[0_0_20px_rgba(244,63,94,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-accentred stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
-                    <path d="M9 12L11 14L15 10"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #f43f5e; border-color: #f43f5e; background: rgba(244, 63, 94, 0.08);">
-                  ห้องสอบออนไลน์ 📝
-                </span>
-              </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                ระบบสอบเก็บคะแนนท้ายบท
-              </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                ห้องสอบทางการแบบสุ่มสลับข้อสอบ จำกัด 20 ข้อ พร้อมระบบป้องกันทุจริตแบบล็อกจอ (Anti-Cheat)
-              </p>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- Card 12: คลังคณิตศาสตร์เพิ่มเติม ม.4 -->
-          <a href="learning/index.html" class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] cursor-pointer group hover:border-accentteal hover:shadow-[0_0_20px_rgba(45,212,191,0.15)]">
-            <div>
-              <div class="flex justify-between items-start mb-3">
-                <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center">
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors duration-300">
                   <img 
                     src="images/atom.png" 
                     alt="คลังคณิตศาสตร์เพิ่มเติม" 
@@ -536,18 +617,18 @@
                     style="mix-blend-mode: screen;"
                   />
                 </div>
-                <span class="text-[9px] font-bold px-2.5 py-0.5 rounded-full border" style="color: #2dd4bf; border-color: #2dd4bf; background: rgba(45, 212, 191, 0.08);">
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-indigo-400/40 text-indigo-300 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                   แบบฝึกหัด 📚
                 </span>
               </div>
-              <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">
-                คลังคณิตศาสตร์เพิ่มเติม ม.4
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                คลังคณิตศาสตร์เพิ่มเติม
               </h3>
-              <p class="text-[11px] sm:text-xs text-textlight/55 font-light mt-1.5 leading-relaxed">
-                ศูนย์รวมบทเรียนและแบบฝึกหัดคณิตศาสตร์เพิ่มเติม เฉลยละเอียด และบันทึกคะแนน
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                ศูนย์รวมบทเรียนวิชาคณิตศาสตร์ เพิ่มข้อสอบเป็น 20 ข้อต่อบท และระบบบันทึกคะแนน
               </p>
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-accentemerald tracking-wider mt-4">
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
               เปิดใช้งาน
               <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
@@ -555,68 +636,270 @@
             </div>
           </a>
 
-          <!-- Card 13: Quick Notepad -->
-          <div class="glass-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] hover:border-accentpurple/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)]">
-            <div class="w-full">
-              <div class="flex justify-between items-center mb-2.5 text-xs font-semibold text-textlight/60">
-                <div class="flex items-center gap-2">
-                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-accentpurple animate-pulse" />
-                  โน้ตเตือนความจำ 📌
+          <!-- การ์ด 7: ระบบสอบเก็บคะแนนท้ายบท -->
+          <a href="exam/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-red-500/40 hover:shadow-[0_15px_30px_rgba(239,68,68,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-red-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-red-400 stroke-[2]">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor"/>
+                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
                 </div>
-                <span id="memo-status" class="transition-colors duration-300 font-medium text-[10px] text-accentemerald">
-                  บันทึกอัตโนมัติแล้ว
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-red-400/40 text-red-300 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                  ห้องสอบเก็บคะแนน 📝
                 </span>
               </div>
-              
-              <textarea 
-                id="memo-input"
-                class="w-full h-[75px] bg-black/30 border border-white/5 rounded-xl p-2.5 text-xs text-textlight font-normal leading-relaxed outline-none focus:border-accentpurple/40 transition-colors duration-300 resize-none font-kanit"
-                placeholder="เขียนข้อความเตือนความจำ โน้ตชั่วคราวในคาบเรียน..."
-              ></textarea>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ระบบสอบเก็บคะแนนท้ายบท
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                ห้องสอบทางการจำกัด 20 ข้อแบบสุ่มสลับ พร้อมตรรกะระบบป้องกันเปิดดูข้อมูล (Anti-Cheating Reset) ยืดหยุ่นสูงสุด
+              </p>
             </div>
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
+              เข้าสู่ห้องสอบ
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
 
-            <div class="flex justify-between items-center mt-2 text-[9px] text-textlight/40 font-light pr-1">
-              <span>* จัดเก็บเฉพาะในเครื่องคอมนี้</span>
-              <span id="memo-count">0 ตัวอักษร</span>
+          <!-- การ์ด 8: ชุดจัดการ QR Code เช็คชื่อเด็ก -->
+          <div class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] group hover:border-teal-500/40 hover:shadow-[0_15px_30px_rgba(20,184,166,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-teal-400 stroke-[2]">
+                    <path d="M12 4H4v8h8V4zM20 4h-8v8h8V4zM12 12H4v8h8v-8zM20 16h-4v4h4v-4z" stroke="currentColor"/>
+                    <path d="M20 12h-2v2h2v-2zM16 12h-2v2h2v-2zM14 20h2v-2h-2v2z" stroke="currentColor"/>
+                  </svg>
+                </div>
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-teal-400/40 text-teal-300 bg-teal-500/10 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
+                  QR UTILS 🖨️
+                </span>
+              </div>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ชุดจัดการ QR Code เช็คชื่อเด็ก
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                จัดพิมพ์การ์ดเช็คชื่อรายบุคคลของนักเรียนตามทะเบียนห้อง หรือสร้างคิวอาร์โค้ดปรับแต่งอเนกประสงค์
+              </p>
+            </div>
+            
+            <div class="relative z-10 grid grid-cols-2 gap-3 mt-5">
+              <a href="ส่งงาน/qr-card.html" class="text-center bg-white/[0.03] hover:bg-teal-500/20 hover:text-neon border border-white/10 hover:border-teal-500/40 rounded-xl py-2 text-xs font-bold transition-all duration-300">
+                🖨️ พิมพ์การ์ดสแกน
+              </a>
+              <a href="ส่งงาน/qr-generator.html" class="text-center bg-white/[0.03] hover:bg-teal-500/20 hover:text-neon border border-white/10 hover:border-teal-500/40 rounded-xl py-2 text-xs font-bold transition-all duration-300">
+                ✨ เจน QR Code
+              </a>
             </div>
           </div>
+
+          <!-- การ์ด 9: ระบบสแกนการ์ดตอบคำถาม (Plickers) -->
+          <a href="plickers/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-purple-500/40 hover:shadow-[0_15px_30px_rgba(139,92,246,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-purple-400 stroke-[2]">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor"/>
+                    <circle cx="12" cy="13" r="4" stroke="currentColor"/>
+                  </svg>
+                </div>
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-purple-400/40 text-purple-300 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                  สแกนกล้อง 📷
+                </span>
+              </div>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ระบบสแกนการ์ดตอบคำถาม (Plickers)
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                จัดกิจกรรมตอบคำถามในห้องเรียนโดยใช้การ์ด ArUco สแกนผลลัพธ์ผ่านกล้องครูได้ทันที
+              </p>
+            </div>
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
+              เปิดใช้งาน
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+
+          <!-- การ์ด 10: ระบบจัดการคะแนน / ตัดเกรด -->
+          <a href="คะแนนเกรด/index-เกรด.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-emerald-400 stroke-[2]">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor"/>
+                    <polyline points="14 2 14 8 20 8" stroke="currentColor"/>
+                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor"/>
+                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor"/>
+                    <polyline points="10 9 9 9 8 9" stroke="currentColor"/>
+                  </svg>
+                </div>
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                  สำหรับคุณครู 🧑‍🏫
+                </span>
+              </div>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ระบบจัดการคะแนน / ตัดเกรด
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                กรอกคะแนน คำนวณตัดเกรดอัตโนมัติ 8 ระดับตามมาตรฐาน และสรุปรายงานห้องเรียน
+              </p>
+            </div>
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
+              เปิดใช้งาน
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+
+          <!-- การ์ด 11: ประกาศผลสอบ & ติดตามเกรด 0 -->
+          <a href="ประกาศผลสอบ/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_15px_30px_rgba(59,130,246,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-blue-400 stroke-[2]">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor"/>
+                  </svg>
+                </div>
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-blue-400/40 text-blue-300 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                  สำหรับนักเรียน 🧑‍🎓
+                </span>
+              </div>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ประกาศผลสอบ & ติดตามเกรด 0
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                ระบบสืบค้นผลคะแนนรายคน ค้นหาข้อมูลผลการเรียน และติดตามงานค้างสำหรับนักเรียน
+              </p>
+            </div>
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
+              เปิดใช้งาน
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+
+          <!-- การ์ด 12: ระบบบัญชีเงินห้องเรียน ม.6/1 -->
+          <a href="เก็บเงินเพื่อน/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
+            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
+            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
+              <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
+                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-emerald-400 stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"/>
+                  </svg>
+                </div>
+                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                  โปร่งใส 100% 💰
+                </span>
+              </div>
+              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
+                ระบบบัญชีเงินห้องเรียน ม.6/1
+              </h3>
+              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
+                รายงานสถิติ ยอดสะสม ประวัติรายรับ-รายจ่าย และตรวจสอบสลิปหลักฐานโอนเงินเพื่อความไว้วางใจ
+              </p>
+            </div>
+            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
+              เปิดใช้งาน
+              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
+                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
 
         </div>
       </div>
 
-      <!-- Footer -->
-      <footer class="w-full border-t border-white/5 pt-6 mt-12 flex flex-col sm:flex-row justify-between items-center text-[10px] sm:text-xs text-textlight/30 gap-4">
-        <div class="flex items-center gap-3">
-          <p>© 2026 ครูนิวตรอน.com. All rights reserved.</p>
-          <span>•</span>
-          <a href="https://github.com/kunewnew/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">
-            GitHub: kunewnew
-          </a>
+      <!-- ส่วนท้าย: กล่องจดบันทึกช่วยจำ (Notepad) -->
+      <div class="liquid-glass rounded-[24px] p-6 mt-8 hover:border-neon/20 transition-all duration-300">
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-neon"></span>
+            <span class="text-xs font-bold text-cream tracking-wide uppercase">สมุดบันทึกช่วยจำของคุณครู</span>
+          </div>
+          <span id="memo-status" class="text-[10px] text-neon/80 tracking-wider">บันทึกอัตโนมัติ</span>
         </div>
-        <p>Designed with Scientific & Educational 3D Clay Models ⚛️</p>
-      </footer>
+        <textarea id="memo-input" class="w-full bg-transparent border-none outline-none resize-none font-mono text-xs sm:text-sm text-cream/90 placeholder-cream/35 min-h-[100px] leading-relaxed" placeholder="พิมพ์บันทึกตารางเรียน ข้อมูลสำคัญ หรือจดเตือนความจำที่นี่ได้เลยครับ..."></textarea>
+        <div id="memo-count" class="text-[9px] text-cream/40 font-mono text-right mt-1">0 ตัวอักษร</div>
+      </div>
 
     </div>
-
   </div>
 
-  <!-- Vanilla JS execution -->
+  <!-- JAVASCRIPT FOR FUNCTIONALITY -->
   <script>
     // ==========================================
-    //  Starfield Background Canvas Animation
+    //  Starfield Interactive Background (ดวงดาวกะพริบ)
     // ==========================================
     (function() {
       const canvas = document.getElementById('starfield');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      let animationFrameId;
       
-      let currentWidth = window.innerWidth;
-      let currentHeight = window.innerHeight;
+      let animationFrameId;
+      let currentWidth = 0;
+      let currentHeight = 0;
+      
       const resizeCanvas = () => {
-        if (window.innerWidth === currentWidth && Math.abs(window.innerHeight - currentHeight) < 120) {
-          return; // Skip small vertical resize on mobile caused by browser address bar collapsing
-        }
         currentWidth = window.innerWidth;
         currentHeight = window.innerHeight;
         canvas.width = currentWidth;
@@ -625,43 +908,37 @@
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
       
-      // Create stars
       const stars = [];
-      const isMobile = window.innerWidth < 768;
-      const numStars = isMobile ? 40 : 120;
+      const numStars = 120;
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: Math.random() * 1.5 + 0.4,
-          speed: Math.random() * 0.05 + 0.015,
+          size: Math.random() * 1.6 + 0.4,
+          speed: Math.random() * 0.04 + 0.015,
           alpha: Math.random(),
           fade: Math.random() > 0.5 ? 1 : -1
         });
       }
       
-      // Render loop
       const render = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         stars.forEach(star => {
-          // Draw star
-          ctx.fillStyle = `rgba(215, 226, 234, ${star.alpha})`;
+          ctx.fillStyle = `rgba(239, 244, 255, ${star.alpha})`;
           ctx.beginPath();
           ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
           ctx.fill();
           
-          // Move star (drift slowly upwards)
           star.y -= star.speed;
           if (star.y < 0) {
             star.y = canvas.height;
             star.x = Math.random() * canvas.width;
           }
           
-          // Twinkle
-          star.alpha += 0.008 * star.fade;
-          if (star.alpha > 1) {
-            star.alpha = 1;
+          star.alpha += 0.007 * star.fade;
+          if (star.alpha > 0.95) {
+            star.alpha = 0.95;
             star.fade = -1;
           } else if (star.alpha < 0.1) {
             star.alpha = 0.1;
@@ -675,99 +952,130 @@
     })();
 
     // ==========================================
-    //  Mascot Magnet Hover Effect (Optimized to prevent layout thrashing & CPU locks)
+    //  Classroom Activity Timer & Stopwatch
     // ==========================================
     (function() {
-      const wrapper = document.getElementById('mascot-wrapper');
-      if (!wrapper) return;
-      
-      // Do not run on touch devices as there is no mouse pointer, preventing heavy touchmove handling
-      const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
-      if (isTouchDevice) return;
-      
-      const padding = 150;
-      const strength = 3.5;
-      
-      // Cache bounding rect to prevent forced synchronous layout calculation (layout thrashing) on mousemove
-      let rect = wrapper.getBoundingClientRect();
-      const updateRect = () => {
-        rect = wrapper.getBoundingClientRect();
+      let timerDuration = 300; // default 5 minutes (300 seconds)
+      let timeRemaining = timerDuration;
+      let timerInterval = null;
+      let isRunning = false;
+
+      const timerDisplay = document.getElementById('timer-display');
+      const toggleBtn = document.getElementById('btn-timer-toggle');
+      const statusDot = document.getElementById('timer-status-dot');
+
+      const formatTime = (secs) => {
+        const m = String(Math.floor(secs / 60)).padStart(2, '0');
+        const s = String(secs % 60).padStart(2, '0');
+        return `${m}:${s}`;
       };
-      window.addEventListener("resize", updateRect);
-      window.addEventListener("scroll", updateRect, { passive: true });
-      
-      const resetPosition = () => {
-        wrapper.style.transition = "transform 0.6s ease-in-out";
-        wrapper.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
-      };
-      
-      window.addEventListener("mousemove", (e) => {
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        const distanceX = e.clientX - centerX;
-        const distanceY = e.clientY - centerY;
-        
-        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        
-        if (distance < padding) {
-          wrapper.style.transition = "transform 0.3s ease-out";
-          const targetX = distanceX / strength;
-          const targetY = distanceY / strength;
-          wrapper.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) scale(1.05)`;
-        } else {
-          resetPosition();
+
+      const updateDisplay = () => {
+        if (timerDisplay) {
+          timerDisplay.textContent = formatTime(timeRemaining);
         }
-      });
-      
-      wrapper.addEventListener("mouseleave", resetPosition);
+      };
+
+      window.setTimerPreset = (secs) => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        timerDuration = secs;
+        timeRemaining = secs;
+        if (toggleBtn) {
+          toggleBtn.textContent = 'เริ่ม';
+          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+        }
+        if (statusDot) {
+          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
+          statusDot.style.animation = 'none';
+        }
+        if (timerDisplay) {
+          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+        }
+        updateDisplay();
+      };
+
+      window.toggleTimer = () => {
+        if (isRunning) {
+          // Pause timer
+          clearInterval(timerInterval);
+          isRunning = false;
+          if (toggleBtn) toggleBtn.textContent = 'ทำต่อ';
+          if (statusDot) {
+            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+            statusDot.style.animation = 'none';
+          }
+        } else {
+          // Start timer
+          isRunning = true;
+          if (toggleBtn) toggleBtn.textContent = 'หยุด';
+          if (statusDot) {
+            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_10px_#6FFF00]';
+            statusDot.style.animation = 'status-pulse 2s infinite ease-in-out';
+          }
+          
+          timerInterval = setInterval(() => {
+            if (timeRemaining > 0) {
+              timeRemaining--;
+              updateDisplay();
+              
+              // Warning state when under 10 seconds
+              if (timeRemaining <= 10 && timerDisplay) {
+                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+              }
+            } else {
+              // Timer Finished
+              clearInterval(timerInterval);
+              isRunning = false;
+              if (toggleBtn) {
+                toggleBtn.textContent = 'เริ่มใหม่';
+                toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+              }
+              if (statusDot) {
+                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_#EF4444] animate-ping';
+              }
+              if (timerDisplay) {
+                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]';
+              }
+              // Play audio beep
+              try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+              } catch(e) {}
+            }
+          }, 1000);
+        }
+      };
+
+      window.resetTimer = () => {
+        clearInterval(timerInterval);
+        isRunning = false;
+        timeRemaining = timerDuration;
+        if (toggleBtn) {
+          toggleBtn.textContent = 'เริ่ม';
+          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
+        }
+        if (statusDot) {
+          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
+          statusDot.style.animation = 'none';
+        }
+        if (timerDisplay) {
+          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
+        }
+        updateDisplay();
+      };
+
+      updateDisplay();
     })();
 
-    // ==========================================
-    //  Clock Widget & Greetings Update
-    // ==========================================
-    (function() {
-      const clockTime = document.getElementById('clock-time');
-      const clockDate = document.getElementById('clock-date');
-      const clockGreeting = document.getElementById('clock-greeting');
-      
-      const updateClock = () => {
-        const daysThai = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
-        const monthsThai = [
-          'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
-          'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-        ];
-        
-        const now = new Date();
-        
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        if (clockTime) clockTime.textContent = `${hours}:${minutes}:${seconds}`;
-        
-        const dayName = daysThai[now.getDay()];
-        const dateNum = now.getDate();
-        const monthName = monthsThai[now.getMonth()];
-        const yearTH = now.getFullYear() + 543;
-        if (clockDate) clockDate.textContent = `${dayName}ที่ ${dateNum} ${monthName} ${yearTH}`;
-        
-        const hr = now.getHours();
-        let greeting = "สวัสดีครับคุณครู 🧑‍🏫";
-        if (hr >= 5 && hr < 12) {
-          greeting = "อรุณสวัสดิ์ครับคุณครู 🌅";
-        } else if (hr >= 12 && hr < 17) {
-          greeting = "สวัสดีตอนบ่ายครับคุณครู ☀️";
-        } else if (hr >= 17 && hr < 21) {
-          greeting = "สวัสดีตอนเย็นครับคุณครู 🌆";
-        } else {
-          greeting = "สวัสดีตอนค่ำครับคุณครู 🌌";
-        }
-        if (clockGreeting) clockGreeting.textContent = greeting;
-      };
-      
-      updateClock();
-      setInterval(updateClock, 1000);
-    })();
 
     // ==========================================
     //  Notepad Auto-Save Memo Pad
@@ -781,7 +1089,6 @@
       
       if (!memoInput) return;
       
-      // Load saved notes
       const saved = localStorage.getItem(MEMO_STORAGE_KEY);
       if (saved !== null) {
         memoInput.value = saved;
@@ -794,8 +1101,8 @@
         if (memoCount) memoCount.textContent = `${val.length} ตัวอักษร`;
         
         if (memoStatus) {
-          memoStatus.textContent = "กำลังพิมพ์...";
-          memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-accentamber";
+          memoStatus.textContent = "กำลังบันทึก...";
+          memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-amber-400";
         }
         
         if (saveTimer) clearTimeout(saveTimer);
@@ -803,10 +1110,47 @@
         saveTimer = setTimeout(() => {
           if (memoStatus) {
             memoStatus.textContent = "บันทึกอัตโนมัติแล้ว";
-            memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-accentemerald";
+            memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-neon";
           }
         }, 500);
       });
+      // ==========================================
+      //  Sidebar Drawer Navigation Logic
+      // ==========================================
+      const menuToggleBtn = document.getElementById('menu-toggle-btn');
+      const menuCloseBtn = document.getElementById('menu-close-btn');
+      const sidebarDrawer = document.getElementById('sidebar-drawer');
+      const drawerBackdrop = document.getElementById('drawer-backdrop');
+
+      function openDrawer() {
+        if (!sidebarDrawer || !drawerBackdrop) return;
+        sidebarDrawer.classList.remove('-translate-x-full');
+        drawerBackdrop.classList.remove('hidden');
+        // Force reflow
+        drawerBackdrop.offsetWidth;
+        drawerBackdrop.classList.add('opacity-100');
+      }
+
+      function closeDrawer() {
+        if (!sidebarDrawer || !drawerBackdrop) return;
+        sidebarDrawer.classList.add('-translate-x-full');
+        drawerBackdrop.classList.remove('opacity-100');
+        setTimeout(() => {
+          drawerBackdrop.classList.add('hidden');
+        }, 300);
+      }
+
+      if (menuToggleBtn && menuCloseBtn && sidebarDrawer && drawerBackdrop) {
+        menuToggleBtn.addEventListener('click', openDrawer);
+        menuCloseBtn.addEventListener('click', closeDrawer);
+        drawerBackdrop.addEventListener('click', closeDrawer);
+        
+        // Close drawer on clicking any links inside it
+        const drawerLinks = sidebarDrawer.querySelectorAll('a');
+        drawerLinks.forEach(link => {
+          link.addEventListener('click', closeDrawer);
+        });
+      }
     })();
   </script>
 </body>
