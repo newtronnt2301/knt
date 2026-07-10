@@ -91,3 +91,13 @@ git push origin main
 - **เพิ่ม defer บน students.js**: 4 หน้า (grades, exam, quiz, submit-work) ไม่งานบล็อก rendering — เร็วขึ้น
 - **แก้ bug submit-work.html**: `els` เคยถูกใช้ก่อนประกาศ → dropdown ห้องไม่เคยโหลด (มีมานานแต่ไม่มีใครเจอ)
 - Push 2 repos: `kunewnew/krunewtron` + `newtronnt2301/knt` (force push ครั้งแรกเพื่อ align history)
+
+### 2026-07-10 — รีธีมเช็คชื่อรายวิชาเป็น JARVIS v2.0
+- **เช็คชื่อรายวิชา/index.html**: รีธีมจาก Earth Tone (น้ำตาล/ครีม/เขียวเซจ) → JARVIS Dark Carbon + Crimson
+- เชื่อม `../styles.css` + `../css/app.css` ใช้ design tokens ร่วมกับทั้งเว็บ
+- ฟอนต์: Mali → Kanit (ไทย) + Orbitron (HUD) + JetBrains Mono (code)
+- ปรับทุก component: header (glass), cards, buttons (แดง gradient), tabs, chips, inputs, modals, drawer, toast
+- สีสถานะ: Present #2ee07c, Late #ffc84d, Leave #6bb6ff, Absent #ff3d5a
+- Export รูป PNG — เปลี่ยนเป็น dark theme
+- Scanner QR — ปรับสี log/alert ให้เข้า JARVIS
+- **Fix**: ROOMS_DATA หายระหว่าง rewrite → ดึงกลับจาก git (29 ห้อง, 1,173 คน)
