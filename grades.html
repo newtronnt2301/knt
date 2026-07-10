@@ -102,7 +102,7 @@
 
   <script src="js/api.js"></script>
   <script src="js/app-shell.js"></script>
-  <script src="js/students.js"></script>
+  <script src="js/students.js" defer></script>
   <script>
   /* =========================================================
      Grades & results — GRADES_API
@@ -122,10 +122,14 @@
       }
     });
 
-    // Populate room dropdowns from KNTStudents
-    const allRooms = KNTStudents.ROOMS;
-    document.getElementById("g_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
-    document.getElementById("sr_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
+    // Populate room dropdowns from KNTStudents (wait for deferred script)
+    function initRooms() {
+      const allRooms = KNTStudents.ROOMS;
+      document.getElementById("g_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
+      document.getElementById("sr_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
+    }
+    if (typeof KNTStudents !== 'undefined') initRooms();
+    else window.addEventListener('DOMContentLoaded', initRooms);
 
     /* ---------- Role switch ---------- */
     document.getElementById("roleSwitch").addEventListener("click", (e) => {
@@ -271,52 +275,112 @@
       }
     });
 
-    /* ---------- Student search ---------- */
+    /* ---------- Student search (local registry → instant + async grades) ---------- */
     document.getElementById("sr_search").addEventListener("click", async () => {
+      if (typeof KNTStudents === 'undefined') { S.toast("กำลังโหลดข้อมูลนักเรียน…", "err"); return; }
       const room = document.getElementById("sr_room").value;
       const q = document.getElementById("sr_query").value.trim();
       const out = document.getElementById("sr_result");
       if (!q) return S.toast("กรุณาใส่เลขที่หรือชื่อ", "err");
-      out.innerHTML = S.loaderHTML("กำลังค้นหาผลการเรียน…");
+
+      // ---- Step 1: find student(s) in LOCAL registry (instant) ----
+      const isNum = /^\d+$/.test(q);
+      let candidates = [];
+      if (isNum) {
+        const found = KNTStudents.findByNo(room, Number(q));
+        if (found) candidates = [{ room, ...found }];
+        else {
+          // maybe typed a number but it's not in this room — search all rooms
+          const allHits = KNTStudents.search(q);
+          const inRoom = allHits.filter(s => s.room === room);
+          candidates = inRoom.length ? inRoom : allHits.slice(0, 3);
+        }
+      } else {
+        candidates = KNTStudents.search(q).filter(s => s.room === room);
+        if (!candidates.length) candidates = KNTStudents.search(q).slice(0, 5); // fallback: show from any room
+      }
+
+      if (!candidates.length) {
+        out.innerHTML = S.emptyHTML("ไม่พบนักเรียน", `ไม่พบ "${S.escapeHTML(q)}" ในทะเบียน`);
+        return;
+      }
+
+      // ---- Step 2: Show student identity instantly ----
+      const studentNames = candidates.map(c =>
+        `<div class="student-hit" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)">
+          <span class="badge gray" style="min-width:48px;text-align:center">${c.room}</span>
+          <span class="badge" style="background:var(--red);min-width:32px;text-align:center">${c.no}</span>
+          <span class="strong" style="flex:1">${S.escapeHTML(c.name)}</span>
+        </div>`
+      ).join("");
+
+      out.innerHTML = `<div class="panel" style="padding:0">
+        <div class="panel-head" style="padding:18px 20px">
+          <div class="panel-title"><span class="dot"></span>พบ ${candidates.length} คน — "${S.escapeHTML(q)}"</div>
+          <span class="text-mute" style="font-size:.8rem">กำลังโหลดเกรด…</span>
+        </div>
+        ${studentNames}
+        <div id="sr_grades_area" style="padding:14px 14px 18px"><div class="loader" style="margin:16px auto"></div></div>
+      </div>`;
+
+      // ---- Step 3: Fetch grades async ----
       try {
-        // Try fetching all stored grades and filter client-side
         const res = await KNT.grades.loadAll();
         const all = Array.isArray(res) ? res : (res?.data || res?.items || []);
-        const key = room;
-        const subjectEntries = all.filter((e) => {
+        const gradesArea = document.getElementById("sr_grades_area");
+        if (!gradesArea) return;
+
+        // Build flat grade list filtered to these candidates
+        const allMatches = [];
+        all.forEach((e) => {
           const k = e.key || e.ห้อง || "";
-          return k.startsWith(room) || k.includes(room);
-        });
-        if (!subjectEntries.length) { out.innerHTML = S.emptyHTML("ยังไม่พบผลการเรียน", `ห้อง ${room} ยังไม่มีข้อมูลในระบบ`); return; }
-        // Aggregate matches per subject
-        const matches = [];
-        subjectEntries.forEach((e) => {
           const students = e.data?.students || e.students || [];
           students.forEach((st) => {
-            const hit = String(st.no) === q || (st.name || "").toLowerCase().includes(q.toLowerCase());
-            if (hit) matches.push({ subject: e.data?.subject || e.subject, term: e.data?.term || e.term, ...st });
+            const match = candidates.some(c =>
+              c.room === room && Number(st.no) === c.no &&
+              (st.name || "").toLowerCase().includes(c.name.toLowerCase().replace(/^(เด็กชาย|เด็กหญิง|นาย|นางสาว)\s*/, ""))
+            );
+            if (match) {
+              allMatches.push({
+                subject: e.data?.subject || e.subject || "—",
+                term: e.data?.term || e.term || "—",
+                no: st.no,
+                name: st.name,
+                score: st.score ?? "—",
+                max: st.max ?? 100,
+                grade: st.grade || "—",
+              });
+            }
           });
         });
-        if (!matches.length) { out.innerHTML = S.emptyHTML("ไม่พบผลการเรียน", `ไม่พบ "${q}" ในห้อง ${room}`); return; }
-        out.innerHTML = `<div class="panel" style="padding:0">
-          <div class="panel-head" style="padding:18px 20px"><div class="panel-title"><span class="dot"></span>ผลการเรียนของ "${S.escapeHTML(q)}" — ${room}</div></div>
-          <div class="table-wrap"><table class="knt-table">
-            <thead><tr><th>วิชา</th><th>เทอม</th><th class="num">คะแนน</th><th class="center">เกรด</th></tr></thead>
-            <tbody>${matches.map((m) => `
+
+        if (!allMatches.length) {
+          gradesArea.innerHTML = S.emptyHTML("ยังไม่มีเกรด", "นักเรียนคนนี้ยังไม่มีการบันทึกเกรดในระบบ");
+        } else {
+          gradesArea.innerHTML = `<div class="table-wrap"><table class="knt-table">
+            <thead><tr><th>เลขที่</th><th>ชื่อ</th><th>วิชา</th><th>เทอม</th><th class="num">คะแนน</th><th class="center">เกรด</th></tr></thead>
+            <tbody>${allMatches.map((m) => `
               <tr>
-                <td class="strong">${S.escapeHTML(m.subject || "—")}</td>
-                <td><span class="badge gray">${S.escapeHTML(m.term || "—")}</span></td>
-                <td class="num strong">${m.score}${m.max?` <span class="text-mute">/ ${m.max}</span>`:""}</td>
-                <td class="center"><span class="badge ${gradeColor(m.grade)}">${m.grade || "—"}</span></td>
+                <td class="num">${m.no}</td>
+                <td class="strong">${S.escapeHTML(m.name || "—")}</td>
+                <td>${S.escapeHTML(m.subject)}</td>
+                <td><span class="badge gray">${S.escapeHTML(m.term)}</span></td>
+                <td class="num strong">${m.score}${m.max ? ` <span class="text-mute">/ ${m.max}</span>` : ""}</td>
+                <td class="center"><span class="badge ${gradeColor(m.grade)}">${m.grade}</span></td>
               </tr>`).join("")}</tbody>
-          </table></div></div>`;
+          </table></div>`;
+        }
       } catch (err) {
-        out.innerHTML = `<div class="alert alert-error"><strong>ค้นหาไม่สำเร็จ</strong><div class="hint">${S.escapeHTML(err.message||"")}</div></div>`;
+        const gradesArea = document.getElementById("sr_grades_area");
+        if (gradesArea) {
+          gradesArea.innerHTML = `<div class="alert alert-warn"><strong>โหลดเกรดไม่สำเร็จ</strong><div class="hint">${S.escapeHTML(err.message || "")}</div></div>`;
+        }
       }
     });
 
     /* ---------- Load roster from student registry ---------- */
     document.getElementById("loadRoster").addEventListener("click", () => {
+      if (typeof KNTStudents === 'undefined') { S.toast("กำลังโหลดข้อมูลนักเรียน…", "err"); return; }
       const room = document.getElementById("g_room").value;
       const roster = KNTStudents.get(room);
       if (!roster.length) { S.toast(`ไม่พบทะเบียนห้อง ${room}`, "err"); return; }

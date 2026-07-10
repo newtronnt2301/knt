@@ -104,7 +104,7 @@
 
   <script src="js/api.js"></script>
   <script src="js/app-shell.js"></script>
-  <script src="js/students.js"></script>
+  <script src="js/students.js" defer></script>
   <script>
   /* =========================================================
      End-of-chapter exam + Teacher dashboard — EXAM_API
@@ -116,13 +116,19 @@
     document.getElementById("tRefresh").querySelector(".ico").innerHTML = S.icons.refresh;
     document.getElementById("tExport").querySelector(".ico").innerHTML = S.icons.download;
 
-    // Populate room dropdown from student registry
-    const EXAM_ROOMS = KNTStudents.ROOMS;
     const S_ROOM = document.getElementById("s_room");
-    S_ROOM.innerHTML = EXAM_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    function initRegistry() {
+      // Populate room dropdown from student registry
+      const EXAM_ROOMS = KNTStudents.ROOMS;
+      S_ROOM.innerHTML = EXAM_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+    }
+    if (typeof KNTStudents !== 'undefined') initRegistry();
+    else document.addEventListener('DOMContentLoaded', initRegistry);
 
     // auto-fill ชื่อจากเลขที่ + ห้อง
     function autoFillExamName() {
+      if (typeof KNTStudents === 'undefined') return;
       const room = S_ROOM.value, no = document.getElementById("s_no").value.trim();
       if (!room || !no) return;
       const st = KNTStudents.findByNo(room, Number(no));

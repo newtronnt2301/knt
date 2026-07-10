@@ -72,7 +72,7 @@
 
   <script src="js/api.js"></script>
   <script src="js/app-shell.js"></script>
-  <script src="js/students.js"></script>
+  <script src="js/students.js" defer></script>
   <script>
   /* =========================================================
      Submit-work tracker — SUBMIT_WORK_API
@@ -83,23 +83,7 @@
     document.getElementById("refreshBtn").querySelector(".ico").innerHTML = S.icons.refresh;
     document.getElementById("newAssignBtn").querySelector(".ico").innerHTML = S.icons.plus;
 
-    // Populate room dropdowns from student registry
-    const allRooms = KNTStudents.ROOMS;
-    els.fRoom.innerHTML = `<option value="">ทุกห้อง</option>` + allRooms.map((r) => `<option>${r}</option>`).join("");
-    document.getElementById("f_room").innerHTML = els.fRoom.innerHTML;
-
-    const STATUS_CLS = { "ส่งแล้ว":"green", "ส่งช้า":"yellow", "ยังไม่ส่ง":"red", "แก้ไข":"blue" };
-
-    // Seed with local demo data using real student names from ม.6/1
-    const demoRoster = KNTStudents.get("ม.6/1");
-    let assignments = [
-      { id:"a1", title:"แบบฝึกหัด ฟิสิกส์ บทที่ 1", room:"ม.6/1", subject:"ฟิสิกส์", due:"2026-07-10",
-        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===1?"ส่งแล้ว":s.no===2?"ส่งช้า":"ยังไม่ส่ง", note: s.no===2?"ส่งช้า 1 วัน":"", file:"" }))},
-      { id:"a2", title:"รายงานเคมี การทดลองที่ 2", room:"ม.6/1", subject:"เคมี", due:"2026-07-12",
-        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===3?"แก้ไข":"ส่งแล้ว", note: s.no===3?"รายงานไม่ครบ":"", file:"" }))},
-    ];
-    const filter = { room:"", status:"", q:"" };
-
+    // DOM refs — define BEFORE any code that references them
     const els = {
       stats: document.getElementById("stats"),
       list: document.getElementById("assignList"),
@@ -108,6 +92,30 @@
       fStatus: document.getElementById("f_status"),
       fSearch: document.getElementById("f_search"),
     };
+
+    // Room dropdown — populated when KNTStudents is ready
+    let allRooms = ["ม.6/1"]; // fallback
+    function initRegistry() {
+      allRooms = KNTStudents.ROOMS;
+      const html = `<option value="">ทุกห้อง</option>` + allRooms.map((r) => `<option>${r}</option>`).join("");
+      els.fRoom.innerHTML = html;
+      document.getElementById("f_room").innerHTML = html;
+    }
+    if (typeof KNTStudents !== 'undefined') initRegistry();
+    else document.addEventListener('DOMContentLoaded', initRegistry);
+
+    const STATUS_CLS = { "ส่งแล้ว":"green", "ส่งช้า":"yellow", "ยังไม่ส่ง":"red", "แก้ไข":"blue" };
+
+    // Seed with local demo data using real student names from ม.6/1
+    function getDemoRoster() { return KNTStudents.get("ม.6/1"); }
+    const demoRoster = (typeof KNTStudents !== 'undefined') ? getDemoRoster() : [];
+    let assignments = [
+      { id:"a1", title:"แบบฝึกหัด ฟิสิกส์ บทที่ 1", room:"ม.6/1", subject:"ฟิสิกส์", due:"2026-07-10",
+        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===1?"ส่งแล้ว":s.no===2?"ส่งช้า":"ยังไม่ส่ง", note: s.no===2?"ส่งช้า 1 วัน":"", file:"" }))},
+      { id:"a2", title:"รายงานเคมี การทดลองที่ 2", room:"ม.6/1", subject:"เคมี", due:"2026-07-12",
+        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===3?"แก้ไข":"ส่งแล้ว", note: s.no===3?"รายงานไม่ครบ":"", file:"" }))},
+    ];
+    const filter = { room:"", status:"", q:"" };
 
     /* ---------- Load from API (adapter แปลงจาก Sheet แล้ว) ---------- */
     async function loadFromSheet() {

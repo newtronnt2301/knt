@@ -98,7 +98,7 @@
 
   <script src="js/api.js"></script>
   <script src="js/app-shell.js"></script>
-  <script src="js/students.js"></script>
+  <script src="js/students.js" defer></script>
   <script>
   /* =========================================================
      Online Quiz ม.4 — EXAM_API (action=quiz_save)
@@ -107,13 +107,19 @@
     const S = window.KNTShell;
     S.mount({ page: "quiz" });
 
-    // Populate room dropdown from student registry (ม.4 เป็นค่าเริ่มต้น)
-    const QUIZ_ROOMS = KNTStudents.ROOMS.filter((r) => r.startsWith("ม.4"));
     const ROOM_SELECT = document.getElementById("room");
-    ROOM_SELECT.innerHTML = QUIZ_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    function initRegistry() {
+      // Populate room dropdown from student registry (ม.4 เป็นค่าเริ่มต้น)
+      const QUIZ_ROOMS = KNTStudents.ROOMS.filter((r) => r.startsWith("ม.4"));
+      ROOM_SELECT.innerHTML = QUIZ_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+    }
+    if (typeof KNTStudents !== 'undefined') initRegistry();
+    else document.addEventListener('DOMContentLoaded', initRegistry);
 
     // auto-fill ชื่อจากเลขที่ + ห้อง
     function autoFillName() {
+      if (typeof KNTStudents === 'undefined') return;
       const room = ROOM_SELECT.value;
       const no = els.no.value.trim();
       if (!room || !no) return;
