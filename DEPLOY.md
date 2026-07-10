@@ -1,6 +1,6 @@
 # KNT – บันทึกสถานะโปรเจกต์
 
-> อัปเดตล่าสุด: 8 กรกฎาคม 2026
+> อัปเดตล่าสุด: 10 กรกฎาคม 2026
 
 ---
 
@@ -9,7 +9,8 @@
 | รายการ | URL |
 |--------|-----|
 | **เว็บหลัก** | https://newtronnt2301.github.io/knt/ |
-| **GitHub Repo** | https://github.com/newtronnt2301/knt |
+| **GitHub Repo (source)** | https://github.com/kunewnew/krunewtron |
+| **GitHub Repo (deploy)** | https://github.com/newtronnt2301/knt |
 
 ---
 
@@ -80,3 +81,13 @@ git push origin main
 | เชื่อม `ติดตามแก้ 0/ร/มส.` | 🟢 |
 | แก้ dead links (footer, ดูทั้งหมด, ฯลฯ) | 🟢 |
 | เปลี่ยนข้อมูล hardcoded → ดึงจาก API | 🟢 |
+
+---
+
+## 📝 บันทึกการแก้ไข
+
+### 2026-07-10 — Fix ค้นหานักเรียน + เพิ่มความเร็ว
+- **ค้นหานักเรียนหน้าเกรด**: เปลี่ยนจากค้นผ่าน API `loadAll()` → ใช้ `KNTStudents.search()` local registry (167KB) แสดงผลทันที แล้วค่อยโหลดเกรดพื้นหลัง
+- **เพิ่ม defer บน students.js**: 4 หน้า (grades, exam, quiz, submit-work) ไม่งานบล็อก rendering — เร็วขึ้น
+- **แก้ bug submit-work.html**: `els` เคยถูกใช้ก่อนประกาศ → dropdown ห้องไม่เคยโหลด (มีมานานแต่ไม่มีใครเจอ)
+- Push 2 repos: `kunewnew/krunewtron` + `newtronnt2301/knt` (force push ครั้งแรกเพื่อ align history)
