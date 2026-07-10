@@ -23,15 +23,15 @@
             inter: ['Inter', 'sans-serif'],
           },
           colors: {
-            darkbg: '#0C0C0C',
-            textlight: '#D7E2EA',
-            accentpurple: '#8b5cf6',
-            accentblue: '#3b82f6',
-            accentpink: '#ec4899',
-            accentemerald: '#10b981',
+            darkbg: '#0a0a0b',
+            textlight: '#a8a8b3',
+            accentpurple: '#e0102f',
+            accentblue: '#e0102f',
+            accentpink: '#ff2d4a',
+            accentemerald: '#e0102f',
             accentamber: '#f59e0b',
             accentred: '#f43f5e',
-            accentteal: '#2dd4bf',
+            accentteal: '#e0102f',
           }
         }
       }
@@ -41,8 +41,8 @@
   <style>
     /* Base Resets */
     html, body {
-      background-color: #0C0C0C;
-      color: #D7E2EA;
+      background-color: #0a0a0b;
+      color: #a8a8b3;
       font-family: 'Kanit', sans-serif;
       margin: 0;
       padding: 0;
@@ -60,7 +60,7 @@
       width: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #0C0C0C;
+      background: #0a0a0b;
     }
     ::-webkit-scrollbar-thumb {
       background: #2A2A2A;
@@ -93,7 +93,7 @@
       font-size: 1.25rem;
       font-weight: 700;
       color: #FFFFFF;
-      border-left: 4px solid #3b82f6;
+      border-left: 4px solid #e0102f;
       padding-left: 0.75rem;
       margin-top: 1.75rem;
       margin-bottom: 0.75rem;
@@ -146,11 +146,11 @@
       color: #f43f5e;
     }
     .lesson-rich-content pre code {
-      color: #D7E2EA;
+      color: #a8a8b3;
     }
     .lesson-rich-content .math-block {
-      background: rgba(59, 130, 246, 0.05);
-      border: 1px dashed rgba(59, 130, 246, 0.2);
+      background: rgba(224, 16, 47, 0.05);
+      border: 1px dashed rgba(224, 16, 47, 0.2);
       border-radius: 0.75rem;
       padding: 1rem;
       text-align: center;
@@ -163,14 +163,14 @@
     .lesson-rich-content .example-box {
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.05);
-      border-left: 4px solid #10b981;
+      border-left: 4px solid #e0102f;
       border-radius: 0.5rem;
       padding: 1rem;
       margin-bottom: 1.25rem;
     }
     .lesson-rich-content .example-box h4 {
       font-weight: 700;
-      color: #10b981;
+      color: #e0102f;
       font-size: 0.95rem;
       margin-bottom: 0.5rem;
     }
@@ -186,13 +186,13 @@
       border-color: rgba(255, 255, 255, 0.15);
     }
     .option-btn.selected {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: #3b82f6;
+      background: rgba(224, 16, 47, 0.15);
+      border-color: #e0102f;
       color: #FFFFFF;
     }
     .option-btn.correct-highlight {
-      background: rgba(16, 185, 129, 0.15) !important;
-      border-color: #10b981 !important;
+      background: rgba(224, 16, 47, 0.15) !important;
+      border-color: #e0102f !important;
       color: #FFFFFF !important;
     }
     .option-btn.wrong-highlight {
@@ -1367,19 +1367,19 @@
         const card = document.createElement('div');
         
         // Pick card border hover colors
-        let hoverColor = 'hover:border-accentblue hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]';
-        let gradeBadgeStyle = 'color: #3b82f6; border-color: #3b82f6; background: rgba(59, 130, 246, 0.08);'; // default
+        let hoverColor = 'hover:border-accentblue hover:shadow-[0_0_20px_rgba(224,16,47,0.1)]';
+        let gradeBadgeStyle = 'color: #e0102f; border-color: #e0102f; background: rgba(224, 16, 47, 0.08);'; // default
         if (lesson.grade === 'set') {
-          gradeBadgeStyle = 'color: #3b82f6; border-color: #3b82f6; background: rgba(59, 130, 246, 0.06);';
-          hoverColor = 'hover:border-accentblue hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]';
+          gradeBadgeStyle = 'color: #e0102f; border-color: #e0102f; background: rgba(224, 16, 47, 0.06);';
+          hoverColor = 'hover:border-accentblue hover:shadow-[0_0_20px_rgba(224,16,47,0.1)]';
         } else if (lesson.grade === 'logic') {
-          gradeBadgeStyle = 'color: #8b5cf6; border-color: #8b5cf6; background: rgba(139, 92, 246, 0.06);';
-          hoverColor = 'hover:border-accentpurple hover:shadow-[0_0_20px_rgba(139,92,246,0.1)]';
+          gradeBadgeStyle = 'color: #e0102f; border-color: #e0102f; background: rgba(139, 92, 246, 0.06);';
+          hoverColor = 'hover:border-accentpurple hover:shadow-[0_0_20px_rgba(224,16,47,0.1)]';
         } else if (lesson.grade === 'real') {
-          gradeBadgeStyle = 'color: #ec4899; border-color: #ec4899; background: rgba(236, 72, 153, 0.06);';
+          gradeBadgeStyle = 'color: #ff2d4a; border-color: #ff2d4a; background: rgba(236, 72, 153, 0.06);';
           hoverColor = 'hover:border-accentpink hover:shadow-[0_0_20px_rgba(236,72,153,0.1)]';
         } else if (lesson.grade === 'function') {
-          gradeBadgeStyle = 'color: #2dd4bf; border-color: #2dd4bf; background: rgba(45, 212, 191, 0.06);';
+          gradeBadgeStyle = 'color: #e0102f; border-color: #e0102f; background: rgba(45, 212, 191, 0.06);';
           hoverColor = 'hover:border-accentteal hover:shadow-[0_0_20px_rgba(45, 212, 191, 0.1)]';
         }
 

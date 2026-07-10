@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>ข้อสอบท้ายบท · KNT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="container">
+
+      <div class="page-head reveal">
+        <div class="page-head-left">
+          <nav class="breadcrumb">
+            <a href="index.html">แดชบอร์ด</a><span class="sep">/</span><span>ข้อสอบท้ายบท</span>
+          </nav>
+          <h1 class="page-title">ข้อสอบ<span class="grad">ท้ายบท</span></h1>
+          <p class="page-desc">ระบบสอบรายบทสำหรับนักเรียน และแผงผู้สอนสำหรับครูในการดูคะแนนแบบเรียลไทม์</p>
+        </div>
+        <div class="page-head-actions">
+          <div class="segmented" id="modeSwitch">
+            <button data-mode="student" class="active">นักเรียน</button>
+            <button data-mode="teacher">แผงผู้สอน</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== STUDENT MODE ===== -->
+      <section id="studentMode">
+        <!-- Setup -->
+        <div class="panel reveal" id="examSetup">
+          <div class="panel-head"><div class="panel-title"><span class="dot"></span>กรอกข้อมูลก่อนสอบ</div></div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">ห้อง <span class="req">*</span></label>
+              <select id="s_room" class="select"></select>
+            </div>
+            <div class="field">
+              <label class="field-label">เลขที่ <span class="req">*</span></label>
+              <input type="number" id="s_no" class="input" min="1" max="60" placeholder="เช่น 12" />
+            </div>
+            <div class="field" style="min-width:240px">
+              <label class="field-label">ชื่อ–สกุล <span class="req">*</span></label>
+              <input type="text" id="s_name" class="input" placeholder="นาย สมชาย ใจดี" />
+            </div>
+            <div class="field" style="min-width:240px">
+              <label class="field-label">บทเรียน/วิชา <span class="req">*</span></label>
+              <input type="text" id="s_subject" class="input" placeholder="เช่น ฟิสิกส์ บทที่ 1" />
+            </div>
+            <div class="field">
+              <label class="field-label">คะแนนเต็ม</label>
+              <input type="number" id="s_total" class="input" value="20" min="1" />
+            </div>
+          </div>
+          <div class="alert alert-warn mt-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+            <div>หากตรวจพบการแท็บหลุดบ่อย ระบบจะบันทึกหมายเหตุ "ตรวจพบทุจริต" ต่อท้ายชื่ออัตโนมัติ</div>
+          </div>
+          <div class="row mt-3" style="justify-content:flex-end">
+            <button class="btn btn-primary" id="startExam">เริ่มทำข้อสอบ →</button>
+          </div>
+        </div>
+
+        <!-- Exam in progress -->
+        <div class="panel reveal hidden" id="examRun">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span><span id="examMeta"></span></div>
+            <span class="badge red" id="examTimer">⏱ 00:00</span>
+          </div>
+          <div id="examQuestions"></div>
+          <div class="row mt-3" style="justify-content:flex-end">
+            <button class="btn btn-danger" id="submitExam">ส่งข้อสอบ & บันทึกคะแนน</button>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div class="panel reveal hidden" id="examResult"></div>
+      </section>
+
+      <!-- ===== TEACHER MODE ===== -->
+      <section id="teacherMode" class="hidden">
+        <div class="grid-auto reveal" style="margin-bottom:18px" id="tStats"></div>
+        <div class="panel reveal">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span>ตารางคะแนนนักเรียนทั้งหมด</div>
+            <div class="row gap-1">
+              <input type="text" id="tSearch" class="input btn-sm" style="padding:8px 12px;width:200px" placeholder="ค้นหาชื่อ/ห้อง/บท…" />
+              <button class="btn btn-ghost btn-sm" id="tRefresh"><span class="ico"></span> รีเฟรช</button>
+              <button class="btn btn-ghost btn-sm" id="tExport"><span class="ico"></span> ส่งออก CSV</button>
+            </div>
+          </div>
+          <div id="tTable"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/students.js"></script>
+  <script>
+  /* =========================================================
+     End-of-chapter exam + Teacher dashboard — EXAM_API
+     actions: exam_save (student), exam_get (teacher)
+     ========================================================= */
+  (function () {
+    const S = window.KNTShell;
+    S.mount({ page: "exam" });
+    document.getElementById("tRefresh").querySelector(".ico").innerHTML = S.icons.refresh;
+    document.getElementById("tExport").querySelector(".ico").innerHTML = S.icons.download;
+
+    // Populate room dropdown from student registry
+    const EXAM_ROOMS = KNTStudents.ROOMS;
+    const S_ROOM = document.getElementById("s_room");
+    S_ROOM.innerHTML = EXAM_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    // auto-fill ชื่อจากเลขที่ + ห้อง
+    function autoFillExamName() {
+      const room = S_ROOM.value, no = document.getElementById("s_no").value.trim();
+      if (!room || !no) return;
+      const st = KNTStudents.findByNo(room, Number(no));
+      if (st) document.getElementById("s_name").value = st.name;
+    }
+    S_ROOM.addEventListener("change", autoFillExamName);
+    document.getElementById("s_no").addEventListener("blur", autoFillExamName);
+
+    /* ---------- Mode switch ---------- */
+    const modeSwitch = document.getElementById("modeSwitch");
+    modeSwitch.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-mode]");
+      if (!b) return;
+      modeSwitch.querySelectorAll("button").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      const m = b.dataset.mode;
+      document.getElementById("studentMode").classList.toggle("hidden", m !== "student");
+      document.getElementById("teacherMode").classList.toggle("hidden", m !== "teacher");
+      if (m === "teacher") loadTeacher();
+    });
+
+    /* =======================================================
+       STUDENT: take exam
+       ======================================================= */
+    const BANK = [
+      { q: "พลังงานจลน์มีสมการใด", o: ["½mv²","mgh","mcΔT","F = ma"], a: 0 },
+      { q: "หน่วยของแรงใน SI คือ", o: ["จูล","นิวตัน","วัตต์","ปาสคาล"], a: 1 },
+      { q: "กฎการเคลื่อนที่ข้อที่ 2 ของนิวตันคือ", o: ["F = mv","F = ma","E = mc²","P = mv"], a: 1 },
+      { q: "งาน = แรง × …", o: ["เวลา","ความเร็ว","การกระจัด","มวล"], a: 2 },
+      { q: "พลังงานศักย์โน้มถ่วง = …", o: ["½mv²","mgh","kx²","qV"], a: 1 },
+      { q: "กฎการอนุรักษ์พลังงานกล่าวว่า", o: ["พลังงานสูญหายได้","พลังงานทั้งหมดคงที่","พลังงานเพิ่มขึ้นเสมอ","พลังงานลดลงเสมอ"], a: 1 },
+      { q: "1 แคลอรี่เท่ากับกี่จูล", o: ["4.184","1,000","0.4184","418.4"], a: 0 },
+      { q: "หน่วยของกำลังคือ", o: ["J","W","N","Pa"], a: 1 },
+      { q: "ความถี่ × ความยาวคลื่น = …", o: ["ความเร็ว","คาบ","แอมพลิจูด","เฟส"], a: 0 },
+      { q: "แสงเดินทางในสุญญากาศที่ความเร็ว", o: ["3×10⁵ m/s","3×10⁸ m/s","3×10¹⁰ m/s","3×10³ m/s"], a: 1 },
+      { q: "มวล × ความเร่ง = …", o: ["งาน","แรง","พลังงาน","โมเมนตัม"], a: 1 },
+      { q: "โมเมนตัม = …", o: ["mv","ma","mgh","½mv²"], a: 0 },
+      { q: "หน่วยของความดันคือ", o: ["Pa","N","J","W"], a: 0 },
+      { q: "พลังงานภายในเกี่ยวข้องกับ", o: ["เคมีเท่านั้น","อุณหภูมิ","โน้มถ่วงเท่านั้น","ไฟฟ้าเท่านั้น"], a: 1 },
+      { q: "คาบของคลื่น T มีหน่วยเป็น", o: ["เมตร","วินาที","เฮิรตซ์","เรเดียน"], a: 1 },
+      { q: "แรงเสียดทานกระทำตามทิศ", o: ["เดียวกับการเคลื่อนที่","ตรงข้ามการเคลื่อนที่","ตั้งฉาก","ไม่มีทิศ"], a: 1 },
+      { q: "มวลของวัตถุบนดวงจันทร์จะ", o: ["เพิ่มขึ้น","ลดลง","เท่าเดิม","หายไป"], a: 2 },
+      { q: "น้ำหนักมีหน่วยเป็น", o: ["กิโลกรัม","นิวตัน","กรัม","จูล"], a: 1 },
+      { q: "หลักการของอาร์คิมิดีสเกี่ยวกับ", o: ["แสง","เสียง","แรงพยุง","ไฟฟ้า"], a: 2 },
+    ];
+
+    const S_EL = {
+      setup: document.getElementById("examSetup"),
+      run: document.getElementById("examRun"),
+      result: document.getElementById("examResult"),
+      room: document.getElementById("s_room"),
+      no: document.getElementById("s_no"),
+      name: document.getElementById("s_name"),
+      subject: document.getElementById("s_subject"),
+      total: document.getElementById("s_total"),
+      meta: document.getElementById("examMeta"),
+      timer: document.getElementById("examTimer"),
+      questions: document.getElementById("examQuestions"),
+    };
+    const exam = { items: [], answers: {}, started: 0, timerInt: null, blurs: 0 };
+
+    document.getElementById("startExam").addEventListener("click", () => {
+      const no = S_EL.no.value.trim(), name = S_EL.name.value.trim(), subj = S_EL.subject.value.trim();
+      if (!no || !name || !subj) return S.toast("กรอกข้อมูลให้ครบก่อน", "err");
+      const total = Math.max(1, Number(S_EL.total.value) || 20);
+      const count = Math.min(BANK.length, total);
+      // Pick & shuffle
+      exam.items = [...BANK].sort(() => Math.random() - 0.5).slice(0, count).map((q) => {
+        const correct = q.o[q.a];
+        const o = [...q.o].sort(() => Math.random() - 0.5);
+        return { q: q.q, o, a: o.indexOf(correct) };
+      });
+      exam.answers = {}; exam.started = Date.now(); exam.blurs = 0;
+      S_EL.setup.classList.add("hidden");
+      S_EL.run.classList.remove("hidden");
+      S_EL.run.classList.add("in");
+      S_EL.meta.textContent = `${S_EL.room.value} · ${subj} · เต็ม ${count} คะแนน`;
+      renderExam();
+      startExamTimer();
+    });
+
+    function startExamTimer() {
+      clearInterval(exam.timerInt);
+      exam.timerInt = setInterval(() => {
+        const s = Math.floor((Date.now() - exam.started) / 1000);
+        S_EL.timer.textContent = `⏱ ${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+      }, 1000);
+    }
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && !S_EL.run.classList.contains("hidden")) {
+        exam.blurs++;
+        if (exam.blurs >= 2) S.toast(`⚠ แท็บหลุด ${exam.blurs} ครั้ง — อาจมีการบันทึกทุจริต`, "err");
+      }
+    });
+
+    function renderExam() {
+      S_EL.questions.innerHTML = exam.items.map((q, i) => {
+        const chosen = exam.answers[i];
+        return `<div class="exam-q">
+          <div class="q-no">ข้อ ${i+1} / ${exam.items.length}</div>
+          <div class="q-text">${S.escapeHTML(q.q)}</div>
+          <div class="q-options">${q.o.map((opt, idx) => `
+            <button class="q-opt ${chosen===idx?"selected":""}" data-q="${i}" data-i="${idx}">
+              <span class="q-letter">${String.fromCharCode(65+idx)}</span><span>${S.escapeHTML(opt)}</span>
+            </button>`).join("")}</div>
+        </div>`;
+      }).join("");
+    }
+    S_EL.questions.addEventListener("click", (e) => {
+      const b = e.target.closest(".q-opt");
+      if (!b) return;
+      exam.answers[Number(b.dataset.q)] = Number(b.dataset.i);
+      renderExam();
+    });
+
+    document.getElementById("submitExam").addEventListener("click", async () => {
+      const unanswered = exam.items.length - Object.keys(exam.answers).length;
+      if (unanswered > 0) {
+        const ok = await S.confirmBox(`ยังไม่ได้ตอบ ${unanswered} ข้อ ยืนยันส่ง?`, { confirmLabel: "ส่งข้อสอบ" });
+        if (!ok) return;
+      }
+      clearInterval(exam.timerInt);
+      const score = exam.items.reduce((s, q, i) => s + (exam.answers[i] === q.a ? 1 : 0), 0);
+      const total = exam.items.length;
+      let nameOut = S_EL.name.value.trim();
+      if (exam.blurs >= 3) nameOut += " ตรวจพบทุจริต";
+
+      S_EL.run.classList.add("hidden");
+      S_EL.result.classList.remove("hidden");
+      S_EL.result.classList.add("in");
+      S_EL.result.innerHTML = S.loaderHTML("กำลังบันทึกคะแนนสอบ…");
+
+      try {
+        await KNT.exam.examSave({
+          room: S_EL.room.value, no: S_EL.no.value.trim(),
+          name: nameOut, subject: S_EL.subject.value.trim(),
+          score, total,
+        });
+        showExamResult(score, total, true, null);
+      } catch (err) {
+        showExamResult(score, total, false, err);
+      }
+    });
+
+    function showExamResult(score, total, saved, err) {
+      const pct = Math.round((score / total) * 100);
+      S_EL.result.innerHTML = `
+        <div class="result-hero ${pct>=50?"pass":"fail"}">
+          <div class="result-ring"><span>${pct}<small>%</small></span></div>
+          <div class="result-summary">
+            <div class="result-status">${pct>=50?"ผ่าน":"ยังไม่ผ่าน"}</div>
+            <h2>ได้ ${score} / ${total} คะแนน</h2>
+            <div class="result-meta">
+              <span>${S_EL.subject.value}</span><span>·</span>
+              <span>${S_EL.room.value} · เลขที่ ${S_EL.no.value}</span>
+            </div>
+            ${exam.blurs >= 3 ? `<div class="alert alert-warn mt-2">⚠ ตรวจพบการแท็บหลุด ${exam.blurs} ครั้ง — ระบบบันทึกหมายเหตุ "ตรวจพบทุจริต"</div>` : ""}
+            ${saved ? `<div class="alert alert-ok mt-1">✓ บันทึกคะแนนเข้าระบบเรียบร้อย</div>` : `<div class="alert alert-error mt-1">✕ บันทึกไม่สำเร็จ: ${S.escapeHTML(err?.message||"")}</div>`}
+          </div>
+        </div>
+        <div class="row mt-3" style="justify-content:center;gap:12px">
+          <button class="btn btn-ghost" onclick="location.reload()">ทำใหม่</button>
+          <a class="btn btn-primary" href="index.html">กลับแดชบอร์ด</a>
+        </div>`;
+    }
+
+    /* =======================================================
+       TEACHER: dashboard (exam_get)
+       ======================================================= */
+    const T = {
+      rows: [], filtered: [],
+      stats: document.getElementById("tStats"),
+      table: document.getElementById("tTable"),
+      search: document.getElementById("tSearch"),
+    };
+    document.getElementById("tRefresh").addEventListener("click", loadTeacher);
+    document.getElementById("tExport").addEventListener("click", exportCSV);
+    T.search.addEventListener("input", () => filterTeacher(T.search.value));
+
+    async function loadTeacher() {
+      T.stats.innerHTML = [1,2,3,4].map(() => `<div class="stat-tile"><div class="skeleton" style="height:14px;width:60px;margin-bottom:8px"></div><div class="skeleton" style="height:30px;width:80px"></div></div>`).join("");
+      T.table.innerHTML = `<div class="table-wrap"><table class="knt-table"><tbody>${Array.from({length:6}).map(()=>`<tr><td><div class="skeleton skeleton-row"></div></td></tr>`).join("")}</tbody></table></div>`;
+      try {
+        const res = await KNT.exam.examGet();
+        // KNT.exam.examGet() แปลงจาก Sheet แล้ว → array ของ {room,no,name,subject,score,total,date}
+        T.rows = Array.isArray(res) ? res : [];
+        renderStats();
+        filterTeacher(T.search.value);
+      } catch (err) {
+        T.stats.innerHTML = "";
+        T.table.innerHTML = `<div class="alert alert-error">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div><strong>โหลดคะแนนไม่สำเร็จ</strong><div class="hint" style="margin-top:2px">${S.escapeHTML(err.message||"")} — ตรวจสอบว่า GAS อนุญาตการเข้าถึงและ action=exam_get ทำงานถูกต้อง</div></div></div>`;
+      }
+    }
+
+    function renderStats() {
+      const n = T.rows.length;
+      const sum = T.rows.reduce((s, r) => {
+        const sc = Number(r.score ?? r.คะแนน ?? 0), tt = Number(r.total ?? r.เต็ม ?? 1) || 1;
+        return s + (sc / tt);
+      }, 0);
+      const avg = n ? Math.round((sum / n) * 100) : 0;
+      const passed = T.rows.filter((r) => {
+        const sc = Number(r.score ?? r.คะแนน ?? 0), tt = Number(r.total ?? r.เต็ม ?? 1) || 1;
+        return (sc / tt) >= 0.5;
+      }).length;
+      const flagged = T.rows.filter((r) => String(r.name ?? r.ชื่อ ?? "").includes("ตรวจพบทุจริต")).length;
+      T.stats.innerHTML = `
+        <div class="stat-tile"><div class="label">ผู้เข้าสอบ</div><div class="value">${n}</div></div>
+        <div class="stat-tile"><div class="label">คะแนนเฉลี่ย</div><div class="value">${avg}%</div></div>
+        <div class="stat-tile"><div class="label">ผ่าน (≥50%)</div><div class="value" style="background:linear-gradient(120deg,var(--text),#2ee07c);-webkit-background-clip:text;background-clip:text;color:transparent">${passed}</div></div>
+        <div class="stat-tile"><div class="label">ทุจริต</div><div class="value" style="background:linear-gradient(120deg,var(--text),var(--red-bright));-webkit-background-clip:text;background-clip:text;color:transparent">${flagged}</div></div>`;
+    }
+
+    function filterTeacher(q) {
+      q = q.trim().toLowerCase();
+      T.filtered = !q ? T.rows : T.rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q));
+      renderTeacherTable();
+    }
+
+    function renderTeacherTable() {
+      if (!T.filtered.length) { T.table.innerHTML = S.emptyHTML("ยังไม่มีคะแนนสอบ", "นักเรียนยังไม่ได้ทำข้อสอบในระบบ"); return; }
+      const rows = T.filtered.map((r) => {
+        const room = r.room ?? r.ห้อง ?? "—";
+        const no = r.no ?? r.เลขที่ ?? "—";
+        const name = r.name ?? r.ชื่อ ?? "—";
+        const subject = r.subject ?? r.บท ?? r.วิชา ?? "—";
+        const score = Number(r.score ?? r.คะแนน ?? 0);
+        const total = Number(r.total ?? r.เต็ม ?? 1) || 1;
+        const pct = Math.round((score/total)*100);
+        const flag = String(name).includes("ตรวจพบทุจริต");
+        const date = r.date ?? r.timestamp ?? r.เวลา ?? "";
+        return `<tr>
+          <td><div class="student-row"><div class="avatar-placeholder">${S.escapeHTML(String(no))}</div><div class="meta"><span class="n">${S.escapeHTML(String(name))} ${flag?`<span class="badge red" style="margin-left:6px">ทุจริต</span>`:""}</span><span class="s">${S.escapeHTML(String(subject))}</span></div></div></td>
+          <td><span class="badge gray">${S.escapeHTML(String(room))}</span></td>
+          <td class="num strong">${score} / ${total}</td>
+          <td><div class="score-bar" style="width:90px"><span style="width:${pct}%"></span></div><span class="text-mono text-mute" style="font-size:.74rem">${pct}%</span></td>
+          <td class="text-mute text-mono" style="font-size:.78rem">${S.escapeHTML(String(date)).slice(0,16)}</td>
+        </tr>`;
+      }).join("");
+      T.table.innerHTML = `<div class="table-wrap"><table class="knt-table">
+        <thead><tr><th>นักเรียน</th><th>ห้อง</th><th class="num">คะแนน</th><th>ผล</th><th>เวลา</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+    }
+
+    function exportCSV() {
+      if (!T.filtered.length) return S.toast("ไม่มีข้อมูลส่งออก", "err");
+      const keys = ["room","no","name","subject","score","total","date"];
+      const header = keys.join(",");
+      const lines = T.filtered.map((r) => keys.map((k) => `"${String(r[k] ?? r[TH_KEY[k]] ?? "").replace(/"/g,'""')}"`).join(","));
+      const csv = [header, ...lines].join("\n");
+      const blob = new Blob(["\uFEFF"+csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `exam-scores-${S.todayISO()}.csv`;
+      a.click();
+      S.toast("ส่งออก CSV สำเร็จ", "ok");
+    }
+    const TH_KEY = { room:"ห้อง", no:"เลขที่", name:"ชื่อ", subject:"บท", score:"คะแนน", total:"เต็ม", date:"เวลา" };
+  })();
+  </script>
+
+  <!-- reuse quiz styles -->
+  <link rel="stylesheet" href="data:text/css," disabled />
+  <style>
+    .exam-q { padding:18px 0;border-bottom:1px solid var(--line); }
+    .exam-q:last-child { border-bottom:none; }
+    .q-no { display:inline-block;font-family:var(--mono);font-size:.78rem;color:var(--red-bright);background:var(--red-soft);padding:4px 10px;border-radius:100px;margin-bottom:12px; }
+    .q-text { font-size:1.1rem;font-weight:600;margin-bottom:18px;line-height:1.5; }
+    .q-options { display:flex;flex-direction:column;gap:9px; }
+    .q-opt { display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;text-align:left;width:100%;background:rgba(0,0,0,.2);border:1px solid var(--line-strong);color:var(--text);font-size:.94rem;transition:all .2s var(--ease); }
+    [data-theme="light"] .q-opt { background:rgba(0,0,0,.03); }
+    .q-opt:hover { border-color:var(--red);transform:translateX(3px); }
+    .q-opt.selected { border-color:var(--red);background:var(--red-soft);box-shadow:0 0 0 3px var(--red-soft); }
+    .q-letter { width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-family:var(--mono);background:var(--carbon-3);color:var(--text-dim);flex-shrink:0;border:1px solid var(--line-strong); }
+    .q-opt.selected .q-letter { background:var(--red);color:#fff;border-color:var(--red); }
+    .result-hero { display:flex;gap:30px;align-items:center;padding:30px;border-radius:var(--radius-lg);background:var(--glass-bg);border:1px solid var(--glass-brd);flex-wrap:wrap; }
+    .result-ring { width:130px;height:130px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;background:conic-gradient(var(--red) 50%, var(--carbon-3) 0);position:relative; }
+    .result-ring::before { content:"";position:absolute;inset:8px;border-radius:50%;background:var(--carbon-2); }
+    .result-ring span { position:relative;font-size:2rem;font-weight:700;font-family:var(--mono); }
+    .result-ring small { font-size:1rem; }
+    .result-hero.pass .result-ring { background:conic-gradient(#2ee07c 50%, var(--carbon-3) 0); }
+    .result-hero.pass .result-ring span { color:#2ee07c; }
+    .result-hero.fail .result-ring span { color:var(--red-bright); }
+    .result-status { font-size:.9rem;color:var(--text-mute);font-family:var(--mono); }
+    .result-summary h2 { font-size:1.8rem;margin:6px 0 10px; }
+    .result-meta { display:flex;gap:8px;flex-wrap:wrap;color:var(--text-dim);font-size:.9rem; }
+    @media (max-width:640px) {
+      .result-hero { flex-direction:column;text-align:center; }
+      .q-text { font-size:1rem; }
+    }
+  </style>
+</body>
+</html>

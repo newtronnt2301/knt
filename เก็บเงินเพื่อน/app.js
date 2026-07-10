@@ -99,7 +99,7 @@ function generateDigitalReceipt(payerName, amount, type, dateStr, refNo, collect
   ctx.textAlign = "center";
   ctx.fillText("ClassFund ม.6/1 (ปี 2569)", 200, 45);
 
-  ctx.fillStyle = "#9CA3AF";
+  ctx.fillStyle = "#6b6b76";
   ctx.font = "12px 'Kanit'";
   ctx.fillText("DIGITAL TRANSACTION RECEIPT", 200, 65);
 
@@ -133,10 +133,10 @@ function generateDigitalReceipt(payerName, amount, type, dateStr, refNo, collect
   // Details
   ctx.textAlign = "left";
   ctx.font = "13px 'Kanit'";
-  ctx.fillStyle = "#9CA3AF";
+  ctx.fillStyle = "#6b6b76";
   
   const drawRow = (label, value, y) => {
-    ctx.fillStyle = "#9CA3AF";
+    ctx.fillStyle = "#6b6b76";
     ctx.fillText(label, 40, y);
     ctx.fillStyle = "#F3F4F6";
     ctx.fillText(value, 160, y);
@@ -676,8 +676,8 @@ function updateRoleUI() {
     btn.style.color = "var(--success)";
     btn.innerHTML = `<i class="fa-solid fa-user-shield"></i> <span id="role-text">โหมดครูประจำชั้น (สิทธิ์สูงสุด)</span>`;
   } else if (userRole === "collector") {
-    btn.style.backgroundColor = "rgba(59, 130, 246, 0.05)";
-    btn.style.borderColor = "rgba(59, 130, 246, 0.2)";
+    btn.style.backgroundColor = "rgba(224, 16, 47, 0.05)";
+    btn.style.borderColor = "rgba(224, 16, 47, 0.2)";
     btn.style.color = "var(--primary)";
     btn.innerHTML = `<i class="fa-solid fa-key"></i> <span id="role-text">โหมดเหรัญญิก (บันทึกข้อมูล)</span>`;
   } else {
@@ -974,7 +974,7 @@ function renderTransactions() {
       lastDateGroup = txDatePart;
       const groupRow = document.createElement("tr");
       groupRow.innerHTML = `
-        <td colspan="7" style="background-color: rgba(59, 130, 246, 0.04); color: var(--primary); font-weight: 600; padding: 10px 16px; border-bottom: 1px solid rgba(59, 130, 246, 0.1); font-size: 0.8rem; border-top: 1px solid var(--border-color);">
+        <td colspan="7" style="background-color: rgba(224, 16, 47, 0.04); color: var(--primary); font-weight: 600; padding: 10px 16px; border-bottom: 1px solid rgba(224, 16, 47, 0.1); font-size: 0.8rem; border-top: 1px solid var(--border-color);">
           <i class="fa-solid fa-calendar-day"></i> วันที่ ${txDatePart}
         </td>
       `;
@@ -1594,7 +1594,7 @@ function setupEventListeners() {
     zone.addEventListener("dragover", (e) => {
       e.preventDefault();
       zone.style.borderColor = "var(--primary)";
-      zone.style.backgroundColor = "rgba(59, 130, 246, 0.05)";
+      zone.style.backgroundColor = "rgba(224, 16, 47, 0.05)";
     });
 
     zone.addEventListener("dragleave", () => {

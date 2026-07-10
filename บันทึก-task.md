@@ -1,7 +1,0 @@
-- [x] ผสานการ์ดใหม่ 4 รายการจาก index.html เข้าสู่ space-portal.html
-- [x] ผสานรายการลิงก์ใน Sidebar Drawer เพิ่มอีก 4 รายการใน space-portal.html
-- [x] ทดสอบความถูกต้องของโค้ด HTML/CSS ใน space-portal.html
-- [x] คัดลอก space-portal.html ไปแทนที่ index.html ในโฟลเดอร์สำหรับอัพโหลด
-- [x] คัดลอก index.html จากโฟลเดอร์สำหรับอัพโหลด ไปยังโฟลเดอร์ทำงานหลัก (root)
-- [x] รันสคริปต์ deploy_github.py เพื่ออัปโหลดขึ้น GitHub และเปิดใช้งานจริง
-- [x] ตรวจสอบความถูกต้องหลังการดีพลอย

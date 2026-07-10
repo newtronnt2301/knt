@@ -1,159 +1,291 @@
-# ⚙️ ระบบเช็คชื่อ ม.6/1 เตรียมวิศวะ
+# KNT – ครูนิวตรอน
 
-โรงเรียนสาธิตพหลโยธินรามินทรภักดี (เทศบาลเมืองราชบุรี)  
-ภาคเรียนที่ 1 ปีการศึกษา 2569 · นักเรียน 36 คน (ชาย 21 หญิง 15)
+> ศูนย์กลางการเรียนรู้และระบบจัดการห้องเรียนแบบ Premium Dashboard
+> Dark Carbon + Deep Red · Minimal Luxury · Mobile First
 
----
-
-## ไฟล์ในโปรเจกต์
-
-| ไฟล์ | หน้าที่ |
-|------|---------|
-| `index-appscript.html` | หน้าเว็บหลัก — copy ไปวางใน Apps Script ไฟล์ `index` |
-| `google-apps-script.gs` | โค้ด backend — copy ไปวางใน Apps Script ไฟล์ `Code.gs` |
-| `เช็คชื่อ-เตรียมวิศวะ.html` | เวอร์ชันเปิดบน Mac เท่านั้น (ไม่ sync) |
+เว็บไซต์สไตล์ศูนย์ควบคุม AI ระดับสูง สำหรับครูและนักเรียน เชื่อมต่อกับฐานข้อมูลผ่าน
+**Google Apps Script Web App** ทั้งระบบทำงานผ่าน Frontend (HTML/CSS/JS) ล้วน — ไม่ต้องเซิร์ฟเวอร์
 
 ---
 
-## การติดตั้ง (ตั้งต้นใหม่)
+## 📑 สารบัญ
 
-### 1. สร้าง Google Sheets
-
-ไปที่ [sheets.google.com](https://sheets.google.com) → สร้าง Spreadsheet ใหม่
-
-### 2. เปิด Apps Script
-
-**Extensions → Apps Script**
-
-### 3. ตั้งค่าไฟล์ Code.gs
-
-- ลบโค้ดเดิมทิ้ง
-- copy เนื้อหาจาก `google-apps-script.gs` → paste → **Cmd+S**
-
-### 4. สร้างไฟล์ index.html
-
-- กด **+** (New File) → **HTML** → ตั้งชื่อ **`index`** (ไม่ต้องมี .html)
-- ลบโค้ดเดิมทิ้ง
-- copy เนื้อหาจาก `index-appscript.html` → paste → **Cmd+S**
-
-### 5. Deploy
-
-1. กด **Deploy → New deployment**
-2. ตั้งค่า:
-   - Type: **Web app**
-   - Execute as: **Me**
-   - Who has access: **Anyone** ← สำคัญมาก (ไม่ใช่ "Anyone with Google account")
-3. กด **Deploy** → copy URL
-
-### 6. เปิดใช้งาน
-
-เปิด URL ที่ได้จาก Deploy ในบราวเซอร์ปกติ (ไม่ใช่ incognito)
+- [ภาพรวมโปรเจกต์](#-ภาพรวมโปรเจกต์)
+- [โครงสร้างไฟล์](#-โครงสร้างไฟล์)
+- [ระบบย่อยทั้งหมด](#-ระบบย่อยทั้งหมด)
+- [API Endpoints](#-api-endpoints)
+- [วิธีการเชื่อมต่อ API](#-วิธีการเชื่อมต่อ-api)
+- [วิธีใช้งาน](#-วิธีใช้งาน)
+- [การปรับแต่ง](#-การปรับแต่ง)
+- [คำถามที่พบบ่อย](#-คำถามที่พบบ่อย)
 
 ---
 
-## การอัปเดตโค้ด (ครั้งต่อไป)
+## 🎯 ภาพรวมโปรเจกต์
 
-ทุกครั้งที่แก้ `index-appscript.html` หรือ `google-apps-script.gs`:
+KNT (ครูนิวตรอน) คือแพลตฟอร์มเว็บแอปสำหรับการจัดการห้องเรียนครบวงจร ประกอบด้วย:
 
-1. copy โค้ดใหม่ → วางใน Apps Script → **Cmd+S**
-2. **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**
+- **พอร์ทัลหลัก** — แดชบอร์ดรวมทุกระบบ พร้อมระบบค้นหา
+- **7 ระบบย่อย** — เช็คชื่อ ควิซ ข้อสอบ เกรด การส่งงาน เงินห้อง
+- **ดีไซน์ Premium** — Dark Carbon โทนแดงเข้ม Glassmorphism รองรับ Mobile First
+- **Dark / Light Mode** — สลับธีมได้ บันทึกค่าใน localStorage
 
-> ⚠️ ถ้าไม่ Deploy new version เว็บจะยังเป็น version เก่าอยู่
+### เทคโนโลยี
 
----
-
-## ฟีเจอร์
-
-- **เช็คชื่อ** — เลือกวันที่ → กดสถานะรายคน (มาเรียน / มาสาย / ลา / ขาด) → บันทึก
-- **หน้าค้าง** — เปิดวันที่เดิมซ้ำ ข้อมูลที่บันทึกไว้โหลดมาให้อัตโนมัติ ไม่ต้องเริ่มใหม่
-- **รหัสผ่าน** — popup ยืนยันก่อนบันทึกทุกครั้ง (รหัส: `newtron05`)
-- **ประวัติ** — ดูย้อนหลังรายวัน กดเพื่อดูรายละเอียด
-- **สถิติ** — ตารางสรุปรายบุคคล พร้อม % เข้าเรียน
-- **รูปนักเรียน** — กด + หน้าชื่อเพื่ออัปโหลด บีบอัดอัตโนมัติ 80×80px
-- **Export รายงาน** — สร้าง HTML รายวันส่งผู้ปกครองผ่าน LINE
+| ส่วน | เทคโนโลยี |
+|------|-----------|
+| Frontend | HTML5, CSS3 (Custom Properties), Vanilla JavaScript (ES6+) |
+| ฟอนต์ | IBM Plex Sans Thai, JetBrains Mono (Google Fonts) |
+| ฐานข้อมูล | Google Sheets (ผ่าน Google Apps Script Web App) |
+| ไอคอน | SVG inline (Outline style) |
+| Dependency | **ไม่มี** — ทำงานได้ทันทีไม่ต้อง build |
 
 ---
 
-## Architecture
+## 📁 โครงสร้างไฟล์
 
 ```
-Browser (Safari / Chrome)
-  ├── localStorage (cache, prefix: att6_1_)
-  │     ├── att6_1_YYYY-MM-DD  → ข้อมูลเช็คชื่อรายวัน
-  │     └── att6_1_ts_YYYY-MM-DD → timestamp บันทึกล่าสุด
-  │
-  └── Google Apps Script Web App
-        ├── Sheets "Attendance"  → ข้อมูลหลัก (date, json, timestamp)
-        └── Sheets "Photos"      → รูปนักเรียน (base64)
+เว็บ knt/
+├── index.html              ← พอร์ทัลหลัก (แดชบอร์ด)
+├── attendance.html         ← ระบบเช็คชื่อ ม.6/1
+├── subject-checkin.html    ← ระบบเช็คชื่อรายวิชา ม.1-6
+├── quiz.html               ← ระบบควิซออนไลน์ ม.4
+├── exam.html               ← ระบบข้อสอบท้ายบท + แผงผู้สอน
+├── grades.html             ← ระบบเกรด & ผลการเรียน
+├── submit-work.html        ← ระบบติดตามการส่งงาน
+├── class-fund.html         ← ระบบเงินห้อง ม.6/1
+│
+├── styles.css              ← ธีมหลักของพอร์ทัล (Dark Carbon)
+├── css/
+│   └── app.css             ← ดีไซน์ระบบหน้าใน (tables, forms, modals)
+│
+├── script.js               ← สคริปต์พอร์ทัลหลัก
+└── js/
+    ├── api.js              ← ชั้นเชื่อม API + fetch helpers
+    └── app-shell.js        ← เชลล์กลาง (header/toast/modal/utils)
 ```
 
-**Sync flow:**
-- เปิดหน้า → โหลด localStorage ก่อน (เร็ว) → sync จาก Sheets (ช้ากว่า แต่แม่นยำ)
-- บันทึก → เขียน localStorage + ส่ง Sheets พร้อมกัน
-- ถ้า Sheets ตอบ "💾 บันทึกสำเร็จ!" → ข้อมูลปลอดภัย เปิดจากเครื่องอื่นได้
-- ถ้า Sheets ไม่ตอบ "⚠️ บันทึกในเครื่องแล้ว" → ข้อมูลอยู่แค่เครื่องนั้น
+---
+
+## 🧩 ระบบย่อยทั้งหมด
+
+### 1. พอร์ทัลหลัก (`index.html`)
+- โลโก้ KNT Monogram + แถบนำทาง
+- ช่องค้นหาระบบขนาดใหญ่ (รองรับ `⌘ K`)
+- การ์ดบริการ 10 รายการแบบ Glassmorphism
+- เครื่องมือด่วน (Google Classroom, Drive, Canva, ChatGPT, YouTube)
+- ส่วนข่าวสาร + ส่วน AI
+
+### 2. เช็คชื่อ ม.6/1 (`attendance.html`)
+- สถานะ 4 แบบ: มา / สาย / ลา / ขาด
+- อัปโหลดรูปนักเรียน (มีการย่อขนาดด้วย canvas ก่อนส่ง)
+- ตั้งสถานะทั้งหมดในคลิกเดียว
+- สถิติเรียลไทม์
+
+### 3. เช็คชื่อรายวิชา ม.1-6 (`subject-checkin.html`)
+- เลือกระดับชั้น (ม.1 ถึง ม.6) + วิชา
+- ใช้งานเหมือนเช็คชื่อ ม.6/1 แต่รองรับทุกห้อง
+
+### 4. ควิซออนไลน์ ม.4 (`quiz.html`)
+- ทำแบบทดสอบท้ายบท สุ่มข้อ + สับตัวเลือก
+- จับเวลา + ตรวจคำตอบอัตโนมัติ
+- รีวิวคำตอบหลังส่ง
+- **Anti-cheat** — ตรวจจับการแท็บหลุด
+
+### 5. ข้อสอบท้ายบท + แผงผู้สอน (`exam.html`)
+- **โหมดนักเรียน**: ทำข้อสอบ + ส่งคะแนน (`exam_save`)
+- **โหมดครู**: ดูคะแนนทั้งหมดแบบเรียลไทม์ (`exam_get`) + ส่งออก CSV
+- ตรวจจับ "ตรวจพบทุจริต" เมื่อแท็บหลุดเกิน 3 ครั้ง
+
+### 6. เกรด & ผลการเรียน (`grades.html`)
+- **โหมดครู**: บันทึก/แก้ไขเกรด, คำนวณเกรด 4.0 อัตโนมัติ
+- **โหมดนักเรียน**: ค้นหาผลการเรียนตามห้อง/ชื่อ/เลขที่
+
+### 7. ติดตามการส่งงาน (`submit-work.html`)
+- สร้างงานใหม่ + ติดตามสถานะรายคน
+- สถานะ: ส่งแล้ว / ส่งช้า / ยังไม่ส่ง / ต้องแก้ไข
+- กรองตามห้อง/สถานะ + ค้นหา
+
+### 8. เงินห้อง ม.6/1 (`class-fund.html`)
+- บัญชีรายรับ-รายจ่าย พร้อมยอดคงเหลือ
+- บันทึกธุรกรรมใหม่ผ่าน modal
+- กรองตามเดือน/ประเภท + ค้นหา
 
 ---
 
-## Troubleshooting
+## 🔌 API Endpoints
 
-### ❌ กดบันทึกแล้ว Sheets ว่าง / มือถือเห็นไม่ได้
+ไฟล์ `js/api.js` เก็บค่าคงที่ทั้งหมด:
 
-**สาเหตุ:** `pushToSheets` ส่งไม่สำเร็จ
-
-ตรวจสอบ:
-1. ดู toast หลังบันทึก — ต้องขึ้น **"💾 บันทึกสำเร็จ!"** ไม่ใช่ "⚠️"
-2. ตรวจ Deploy settings: Who has access ต้องเป็น **Anyone**
-3. Deploy **New version** ทุกครั้งที่แก้โค้ด (แค่ Save ไม่พอ)
-
----
-
-### ❌ เปิดใหม่แล้วข้อมูลหาย
-
-**สาเหตุ:** ใช้ incognito mode (localStorage ล้างทุกครั้งที่ปิด window)
-
-แก้: ใช้ **บราวเซอร์ปกติ** เสมอ (ไม่ใช่ incognito)
-
-ถ้าข้อมูลถึง Sheets แล้ว → เปิดบราวเซอร์ใหม่ → กด 🔄 ซิงค์ → ข้อมูลกลับมา
+```javascript
+const API = {
+  ATTENDANCE:       "https://script.google.com/macros/s/AKfycbx1yUYxuSgF2xsOZF872ohwjIvD56NQwbZ4BXizSG-dm00Rypu6nVO_YwE-BZJ2F6X4/exec",
+  EXAM:             "https://script.google.com/macros/s/AKfycbw3eNbBuhg-P-dLxBeZkYIggp0FW9GM1TdL1wVd1XeyxvwRTzw4BcMNiPBEyyWH1le-/exec",
+  GRADES:           "https://script.google.com/macros/s/AKfycbyrdVll59hQVArQGjBTPPfovFBZ0eG5mjTWn93R2GJ_Xwl3wBTjMttgjrNW6Nr-ZfbF/exec",
+  SUBMIT_WORK:      "https://script.google.com/macros/s/AKfycbyt0HfLY6ZvCc12rFdJI74KGim_wmLapTKNlvhe7U3O3LlNaaCq97iHkZQ-51mLLVKY/exec",
+  SUBJECT_CHECKIN:  "https://script.google.com/macros/s/AKfycbxAyuZYgGo97MWZrWo53-HV1pHKqdjzGDMS7JjBatdloLavF1Txwtz13dlHybbBhMPkTw/exec",
+  CLASS_FUND:       "https://script.google.com/macros/s/AKfycbz-F0PVMgQel2G7PIutsmvIW_D7UeSwXau39cGn4G8gnKHK2O_AXJnofNu5X5AMmdDafQ/exec",
+};
+```
 
 ---
 
-### ❌ Safari iPhone เปิดไม่ได้ "ไม่สามารถเปิดไฟล์ได้"
+## 🔧 วิธีการเชื่อมต่อ API
 
-**สาเหตุ:** URL มี `/u/1/` → Safari ใช้ Google account ที่สอง
+### หลักการสำคัญ (CORS-safe)
 
-แก้: ล้าง cookies Safari → login ด้วย `damwat.new@gmail.com` ใหม่
+Google Apps Script Web App มีข้อจำกัด CORS ที่ต้องระวัง:
+
+| Method | Content-Type | ทำงานข้าม Domain | หมายเหตุ |
+|--------|--------------|------------------|----------|
+| **GET** | — | ✅ ได้ทันที | ส่ง parameter ทาง query string |
+| **POST** | `text/plain` | ✅ ได้ | หลีก preflight ที่ GAS ตอบไม่ได้ |
+| POST | `application/json` | ❌ preflight fail | GAS ไม่ตอบ OPTIONS |
+
+### Helper functions ใน `js/api.js`
+
+```javascript
+// GET request
+await KNT_API.get(endpoint, { action: "save", room: "ม.6/1", ... });
+
+// POST request (ใช้ text/plain อัตโนมัติ)
+await KNT_API.post(endpoint, { action: "save" }, { key, data });
+
+// แปลงไฟล์เป็น Base64 (สำหรับรูปภาพ)
+const base64 = await KNT_API.fileToBase64(file);
+```
+
+### Domain helpers (ใช้งานง่ายในแต่ละหน้า)
+
+```javascript
+// เช็คชื่อ
+await KNT.attendance.save(room, date, { "1": "มา", "2": "ขาด" });
+await KNT.attendance.photoSave(studentId, base64);
+
+// ข้อสอบ/ควิซ
+await KNT.exam.quizSave({ room, no, name, lessonId, lessonTitle, score, total });
+await KNT.exam.examSave({ room, no, name, subject, score, total });
+await KNT.exam.examGet();
+
+// เกรด
+await KNT.grades.save("ม.6/1|ฟิสิกส์", { students: [...] });
+
+// เงินห้อง
+await KNT.classFund.getData();
+await KNT.classFund.saveTransaction({ date, type, amount, ... });
+```
+
+### Action ทั้งหมดที่ใช้
+
+| ระบบ | Action | Method | Parameter |
+|------|--------|--------|-----------|
+| เช็คชื่อ | `save` | GET | `room`, `date` (yyyy-MM-dd), `data` (JSON) |
+| เช็คชื่อ | `photo_save` | GET | `studentId`, `data` (Base64) |
+| ควิซ | `quiz_save` | GET | `room`, `no`, `name`, `lessonId`, `lessonTitle`, `score`, `total` |
+| ข้อสอบ | `exam_save` | GET | `room`, `no`, `name`, `subject`, `score`, `total` |
+| ข้อสอบ | `exam_get` | GET | — |
+| เกรด | `save` | POST/GET | `key` ("ห้อง\|วิชา"), `data` |
+| เงินห้อง | `get_data` | GET | — |
+| เงินห้อง | `save_transaction` | POST/GET | object ธุรกรรม |
 
 ---
 
-### ❌ เปิดจาก LINE แล้วหน้าขาว
+## 🚀 วิธีใช้งาน
 
-**สาเหตุ:** LINE browser มีข้อจำกัด
+### เปิดเว็บ
+เปิดไฟล์ `index.html` ในเบราว์เซอร์ หรืออัปโหลดทั้งโฟลเดอร์ขึ้น hosting ใดก็ได้
 
-แก้: กด **···** → **Open in Safari**
+### ตั้งค่า Google Apps Script
+
+⚠️ **สำคัญมาก** — ฝั่ง GAS Web App ต้องตั้งค่าดังนี้ไม่งั้น fetch จะ CORS fail:
+
+1. เปิด Apps Script Editor
+2. คลิก **Deploy → New deployment**
+3. เลือก type: **Web app**
+4. ตั้งค่า:
+   - **Execute as**: Me
+   - **Who has access**: **Anyone** ← สำคัญ!
+5. คลิก Deploy แล้วให้สิทธิ์
+6. คัดลอก URL ที่ได้
+
+### ทดสอบการเชื่อมต่อ
+
+เปิด Console ในเบราว์เซอร์แล้วลอง:
+
+```javascript
+// ทดสอบดึงคะแนนสอบ
+KNT.exam.examGet().then(console.log);
+
+// ทดสอบบันทึกเกรด
+KNT.grades.save("ม.6/1|ทดสอบ", { test: true }).then(console.log);
+```
 
 ---
 
-### ❌ ประวัติไม่แสดงข้อมูล (หน้าประวัติว่าง)
+## 🎨 การปรับแต่ง
 
-**สาเหตุ:** sync ยังไม่เสร็จตอนเปิดแท็บประวัติ
+### เปลี่ยนสีธีม
 
-แก้: กด 🔄 ซิงค์ก่อน แล้วสลับกลับมาแท็บประวัติ
+แก้ใน `styles.css` บนสุด:
+
+```css
+:root {
+  --red: #e0102f;        /* สีแดงหลัก */
+  --red-bright: #ff2d4a; /* แดงสว่าง */
+  --red-deep: #7a0c1c;   /* แดงเข้ม */
+  --carbon-0: #0a0a0b;   /* พื้นหลัง */
+}
+```
+
+### เพิ่มนักเรียนในระบบเช็คชื่อ
+
+แก้ `DEFAULT_ROSTER` ใน `attendance.html`:
+
+```javascript
+const DEFAULT_ROSTER = [
+  { no: 1, name: "นาย สมชาย ใจดี", photo: "" },
+  { no: 2, name: "นาย สมหญิง รักเรียน", photo: "" },
+  // ...
+];
+```
+
+### เพิ่มข้อสอบในควิซ
+
+แก้ `BANK` ใน `quiz.html` หรือ `exam.html`:
+
+```javascript
+{ q: "คำถาม?", o: ["ตัวเลือก 1","ตัวเลือก 2","ตัวเลือก 3","ตัวเลือก 4"], a: 0 }
+//                                                                     ↑ index ของคำตอบที่ถูก
+```
+
+### เปลี่ยนลิงก์เครื่องมือด่วน
+
+แก้ `TOOLS` array ใน `script.js`
 
 ---
 
-## Bug ที่แก้แล้ว (10 มิ.ย. 2569)
+## ❓ คำถามที่พบบ่อย
 
-| Bug | สาเหตุ | การแก้ |
-|-----|--------|--------|
-| กดบันทึกแล้วไม่บันทึก | `confirmPw()` ล้าง `_pwCallback` ก่อนเรียก callback | เก็บ reference ไว้ก่อน `hidePwModal()` |
-| เปิดหน้าใหม่ form ว่าง | `init()` ไม่ได้โหลด localStorage ก่อน sync | เพิ่ม `loadCheckDate()` ก่อน `syncNow()` |
-| sync ทับข้อมูลที่กำลังกรอก | `syncNow()` เรียก `loadCheckDate()` ทุกครั้ง | ตรวจ `hasCurrentChanges` ก่อน reload |
-| ประวัติไม่ refresh หลัง sync | `renderHistory()` ไม่ถูกเรียกหลัง sync | เพิ่ม `renderHistory()` ใน `syncNow()` |
-| timestamp key ปนกับ date key | ไม่มี filter ใน `getAllDatesLocal()` | เพิ่ม regex `/^\d{4}-\d{2}-\d{2}$/` |
+**Q: ทำไมบันทึกข้อมูลไม่เข้า?**
+A: ตรวจสอบว่า GAS deploy เป็น "Anyone" แล้ว ลองเปิดลิงก์ API ในเบราว์เซอร์โดยตรงก่อน เพื่อดูว่าตอบกลับปกติ
+
+**Q: รูปภาพอัปโหลดไม่ได้?**
+A: ระบบจะย่อขนาดรูปเหลือ 240px ก่อนส่ง ถ้ายังใหญ่เกิน อาจต้องลด quality ในฟังก์ชัน `resizeBase64`
+
+**Q: เปลี่ยนลิงก์ API ทีหลังได้ไหม?**
+A: ได้ แก้ใน `js/api.js` บรรทัด `const API = { ... }`
+
+**Q: ใช้กับห้องอื่นที่ไม่ใช่ ม.6/1 ได้ไหม?**
+A: ได้ หน้า subject-checkin รองรับทุกห้อง ส่วน attendance และ class-fund ออกแบบไว้สำหรับ ม.6/1 โดยเฉพาะ (แก้ `ROOM` constant ในแต่ละหน้าได้)
+
+**Q: รองรับมือถือไหม?**
+A: รองรับเต็มที่ ออกแบบแบบ Mobile First ทุกหน้า
 
 ---
 
-## รหัสผ่าน
+## 📄 License
 
-`newtron05` — แก้ได้ที่บรรทัด `const SAVE_PASSWORD = 'newtron05';` ในไฟล์ `index-appscript.html`
+© 2026 KNT · ครูนิวตรอน — สงวนลิขสิทธิ์
+
+**เวอร์ชัน**: 1.0.0 · Premium Dashboard
+**อัปเดตล่าสุด**: กรกฎาคม 2026

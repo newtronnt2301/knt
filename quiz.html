@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>ควิซออนไลน์ ม.4 · KNT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="container">
+
+      <div class="page-head reveal">
+        <div class="page-head-left">
+          <nav class="breadcrumb">
+            <a href="index.html">แดชบอร์ด</a><span class="sep">/</span><span>ควิซออนไลน์ ม.4</span>
+          </nav>
+          <h1 class="page-title">ควิซออนไลน์ <span class="grad">ม.4</span></h1>
+          <p class="page-desc">ทำแบบทดสอบท้ายบทเรียน ระบบตรวจคะแนนอัตโนมัติ และส่งคะแนนเข้าฐานข้อมูลทันที</p>
+        </div>
+      </div>
+
+      <div id="app">
+        <!-- SETUP SCREEN -->
+        <section class="panel reveal" id="setupScreen">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span>กรอกข้อมูลก่อนเริ่มทำควิซ</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">ห้อง <span class="req">*</span></label>
+              <select id="room" class="select"></select>
+            </div>
+            <div class="field">
+              <label class="field-label">เลขที่ <span class="req">*</span></label>
+              <input type="number" id="no" class="input" min="1" max="60" placeholder="เช่น 12" />
+            </div>
+            <div class="field" style="min-width:240px">
+              <label class="field-label">ชื่อ–สกุล <span class="req">*</span></label>
+              <input type="text" id="name" class="input" placeholder="นาย สมชาย ใจดี" />
+            </div>
+          </div>
+          <div class="field-row mt-2">
+            <div class="field">
+              <label class="field-label">บทเรียน</label>
+              <select id="lessonSelect" class="select"></select>
+            </div>
+            <div class="field">
+              <label class="field-label">จำนวนข้อ</label>
+              <select id="qCount" class="select">
+                <option value="5">5 ข้อ (ทดลอง)</option>
+                <option value="10" selected>10 ข้อ</option>
+                <option value="15">15 ข้อ</option>
+                <option value="20">20 ข้อ</option>
+              </select>
+            </div>
+          </div>
+          <div class="alert alert-info mt-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+            <div>เมื่อกด <strong>เริ่มทำควิซ</strong> จะนับเวลา และหากแท็บหลุดไปที่อื่นอาจมีการบันทึกพฤติกรรมได้ กรุณาตั้งใจทำข้อสอบ</div>
+          </div>
+          <div class="row mt-3" style="justify-content:flex-end">
+            <button class="btn btn-primary" id="startBtn">เริ่มทำควิซ →</button>
+          </div>
+        </section>
+
+        <!-- QUIZ SCREEN -->
+        <section class="panel reveal hidden" id="quizScreen">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span><span id="qProgress">ข้อที่ 1 / 10</span></div>
+            <div class="row gap-2">
+              <span class="badge red" id="timerBadge">⏱ 00:00</span>
+              <span class="panel-sub" id="lessonTag"></span>
+            </div>
+          </div>
+          <div class="score-bar mb-2"><span id="progressBar" style="width:10%"></span></div>
+          <div id="questionArea"></div>
+          <div class="row mt-3" style="justify-content:space-between">
+            <button class="btn btn-ghost" id="prevBtn">← ย้อนกลับ</button>
+            <span class="panel-sub" id="answeredCount">ตอบแล้ว 0 ข้อ</span>
+            <button class="btn btn-primary" id="nextBtn">ถัดไป →</button>
+          </div>
+        </section>
+
+        <!-- RESULT SCREEN -->
+        <section class="panel reveal hidden" id="resultScreen">
+          <div id="resultArea"></div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/students.js"></script>
+  <script>
+  /* =========================================================
+     Online Quiz ม.4 — EXAM_API (action=quiz_save)
+     ========================================================= */
+  (function () {
+    const S = window.KNTShell;
+    S.mount({ page: "quiz" });
+
+    // Populate room dropdown from student registry (ม.4 เป็นค่าเริ่มต้น)
+    const QUIZ_ROOMS = KNTStudents.ROOMS.filter((r) => r.startsWith("ม.4"));
+    const ROOM_SELECT = document.getElementById("room");
+    ROOM_SELECT.innerHTML = QUIZ_ROOMS.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    // auto-fill ชื่อจากเลขที่ + ห้อง
+    function autoFillName() {
+      const room = ROOM_SELECT.value;
+      const no = els.no.value.trim();
+      if (!room || !no) return;
+      const st = KNTStudents.findByNo(room, Number(no));
+      if (st) els.name.value = st.name;
+    }
+    ROOM_SELECT.addEventListener("change", autoFillName);
+
+    /* ---------- Demo question bank ---------- */
+    // In production this can be pulled from the sheet. Local fallback used here.
+    const LESSONS = [
+      { id: "phy-u1", title: "ฟิสิกส์ หน่วยที่ 1 · การวัด", subject: "ฟิสิกส์",
+        bank: [
+          { q: "หน่วยฐานของความยาวในระบบ SI คืออะไร", o: ["เซนติเมตร","เมตร","กิโลเมตร","มิลลิเมตร"], a: 1 },
+          { q: "1 กิโลเมตรเท่ากับกี่เมตร", o: ["100","1,000","10,000","100,000"], a: 1 },
+          { q: "หน่วยฐานของเวลาคือ", o: ["ชั่วโมง","นาที","วินาที","มิลลิวินาที"], a: 2 },
+          { q: "เครื่องมือวัดความยาวที่ละเอียดที่สุดคือ", o: ["ไม้บรรทัด","วงเวียน","ไมโครมิเตอร์","เมตรเทป"], a: 2 },
+          { q: "หน่วยอนุพัทธ์ของความเร็วคือ", o: ["m/s","kg","N","J"], a: 0 },
+          { q: "เลขนัยสำคัญของ 0.00540 คือกี่ตำแหน่ง", o: ["2","3","4","5"], a: 1 },
+          { q: "การวัดที่ใกล้ค่าจริงที่สุดเรียกว่า", o: ["ความแม่น","ความเที่ยง","ความละเอียด","ความคลาดเคลื่อน"], a: 0 },
+          { q: "1 ชั่วโมงเท่ากับกี่วินาที", o: ["60","600","3,600","36,000"], a: 2 },
+          { q: "หน่วยฐานของมวลใน SI คือ", o: ["กรัม","กิโลกรัม","ปอนด์","ตัน"], a: 1 },
+          { q: "การเขียนผลการวัดที่ถูกต้องต้องมี", o: ["ตัวเลขเท่านั้น","หน่วยเสมอ","เครื่องหมายเท่ากับ","จุดทศนิยม 2 ตำแหน่ง"], a: 1 },
+          { q: "หน่วยฐานของอุณหภูมิทางเทอร์โมไดนามิกคือ", o: ["เซลเซียส","เคลวิน","ฟาเรนไฮต์","เรอเมอร์"], a: 1 },
+          { q: "1 ลิตรเท่ากับกี่มิลลิลิตร", o: ["10","100","1,000","10,000"], a: 2 },
+          { q: "สัญลักษณ์หน่วยของกระแสไฟฟ้าคือ", o: ["V","A","W","Ω"], a: 1 },
+          { q: "ค่าคงที่ G เกี่ยวข้องกับ", o: ["แม่เหล็ก","ความโน้มถ่วง","ไฟฟ้า","แสง"], a: 1 },
+          { q: "หน่วยของพลังงานใน SI คือ", o: ["จูล","นิวตัน","วัตต์","ปาสคาล"], a: 0 },
+          { q: "เครื่องมือวัดมวลที่นิยมในห้องแล็บคือ", o: ["ตาชั่งดิจิทัล","ไม้บรรทัด","เทอร์โมมิเตอร์","สต็อปวอทช์"], a: 0 },
+          { q: "การวัดที่ให้ผลใกล้เคียงกันทุกครั้งเรียกว่า", o: ["ความแม่น","ความเที่ยง","ความแน่นอน","ความคลาดเคลื่อน"], a: 1 },
+          { q: "หน่วยเทียบของพื้นที่คือ", o: ["m²","m³","m/s","kg/m³"], a: 0 },
+          { q: "ขนาดของปริมาณที่วัดได้เรียกว่า", o: ["หน่วย","ค่าการวัด","มาตรา","สเกล"], a: 1 },
+        ]
+      },
+      { id: "chem-u1", title: "เคมี หน่วยที่ 1 · สสาร", subject: "เคมี",
+        bank: [
+          { q: "สสารที่เป็นของแข็งมีสมบัติอย่างไร", o: ["รูปร่างและปริมาตรคงที่","รูปร่างไม่คงที่","ไหลได้","ไม่มีมวล"], a: 0 },
+          { q: "สถานะของสสารที่อนุภาคอยู่ห่างกันที่สุดคือ", o: ["แข็ง","ของเหลว","ก๊าซ","พลาสมา"], a: 2 },
+          { q: "การเปลี่ยนสถานะจากของเหลวเป็นก๊าซเรียกว่า", o: ["หลอมเหลว","กลายเป็นไอ","ควบแน่น","ระเหิด"], a: 1 },
+          { q: "หน่วยพื้นฐานของสสารคือ", o: ["อะตอม","โมเลกุล","เซลล์","อณู"], a: 0 },
+          { q: "สารละลายน้ำเกลือมีตัวทำละลายคือ", o: ["เกลือ","น้ำ","ทั้งคู่","ไม่มี"], a: 1 },
+          { q: "สารบริสุทธิ์คือข้อใด", o: ["น้ำประปา","อากาศ","น้ำกลั่น","น้ำผลไม้"], a: 2 },
+          { q: "การเปลี่ยนจากก๊าซเป็นของเหลวเรียกว่า", o: ["ระเหย","ควบแน่น","กลายเป็นไอ","ระเหิด"], a: 1 },
+          { q: "สารผสมที่เห็นส่วนประกอบแยกจากกันได้คือ", o: ["สารละลาย","สารแขวนลอย","สารประกอบ","ธาตุ"], a: 1 },
+          { q: "หน่วยของมวลอะตอมคือ", o: ["u","kg","g","mol"], a: 0 },
+          { q: "ความหนาแน่น = มวล หารด้วย", o: ["ปริมาตร","พื้นที่","ความยาว","เวลา"], a: 0 },
+        ]
+      },
+    ];
+
+    const els = {
+      setup: document.getElementById("setupScreen"),
+      quiz: document.getElementById("quizScreen"),
+      result: document.getElementById("resultScreen"),
+      room: document.getElementById("room"),
+      no: document.getElementById("no"),
+      name: document.getElementById("name"),
+      lessonSelect: document.getElementById("lessonSelect"),
+      qCount: document.getElementById("qCount"),
+      startBtn: document.getElementById("startBtn"),
+      qProgress: document.getElementById("qProgress"),
+      timer: document.getElementById("timerBadge"),
+      lessonTag: document.getElementById("lessonTag"),
+      progressBar: document.getElementById("progressBar"),
+      questionArea: document.getElementById("questionArea"),
+      prevBtn: document.getElementById("prevBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      answeredCount: document.getElementById("answeredCount"),
+      resultArea: document.getElementById("resultArea"),
+    };
+
+    els.lessonSelect.innerHTML = LESSONS.map((l) => `<option value="${l.id}">${l.title}</option>`).join("");
+
+    // auto-fill ชื่อเมื่อกรอกเลขที่เสร็จ
+    els.no.addEventListener("blur", autoFillName);
+
+    const state = { lesson: null, questions: [], answers: {}, idx: 0, startedAt: 0, timerInt: null, tabBlurs: 0 };
+
+    /* ---------- Start ---------- */
+    els.startBtn.addEventListener("click", () => {
+      const no = els.no.value.trim();
+      const name = els.name.value.trim();
+      if (!no) return S.toast("กรุณาใส่เลขที่", "err");
+      if (!name) return S.toast("กรุณาใส่ชื่อ–สกุล", "err");
+      const lesson = LESSONS.find((l) => l.id === els.lessonSelect.value);
+      const count = Number(els.qCount.value);
+      // shuffle and slice
+      const shuffled = [...lesson.bank].sort(() => Math.random() - 0.5).slice(0, Math.min(count, lesson.bank.length));
+      // shuffle options too
+      state.questions = shuffled.map((q) => {
+        const correctText = q.o[q.a];
+        const opts = [...q.o].sort(() => Math.random() - 0.5);
+        return { q: q.q, o: opts, a: opts.indexOf(correctText) };
+      });
+      state.lesson = lesson;
+      state.answers = {};
+      state.idx = 0;
+      state.startedAt = Date.now();
+      state.tabBlurs = 0;
+      els.setup.classList.add("hidden");
+      els.quiz.classList.remove("hidden");
+      els.quiz.classList.add("in");
+      els.lessonTag.textContent = lesson.title;
+      startTimer();
+      renderQuestion();
+    });
+
+    /* ---------- Timer ---------- */
+    function startTimer() {
+      clearInterval(state.timerInt);
+      state.timerInt = setInterval(() => {
+        const s = Math.floor((Date.now() - state.startedAt) / 1000);
+        const m = String(Math.floor(s / 60)).padStart(2, "0");
+        const sec = String(s % 60).padStart(2, "0");
+        els.timer.textContent = `⏱ ${m}:${sec}`;
+      }, 1000);
+    }
+
+    /* ---------- Detect tab switch (anti-cheat) ---------- */
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && !els.quiz.classList.contains("hidden")) {
+        state.tabBlurs++;
+        if (state.tabBlurs >= 2) S.toast(`⚠ ตรวจพบการสลับแท็บ ${state.tabBlurs} ครั้ง`, "err");
+      }
+    });
+
+    /* ---------- Render question ---------- */
+    function renderQuestion() {
+      const i = state.idx;
+      const total = state.questions.length;
+      const q = state.questions[i];
+      els.qProgress.textContent = `ข้อที่ ${i + 1} / ${total}`;
+      els.progressBar.style.width = `${((i + 1) / total) * 100}%`;
+      els.prevBtn.disabled = i === 0;
+      els.nextBtn.textContent = i === total - 1 ? "ส่งคำตอบ ✓" : "ถัดไป →";
+      const chosen = state.answers[i];
+      els.questionArea.innerHTML = `
+        <div class="question-card">
+          <div class="q-no">ข้อ ${i + 1}</div>
+          <h3 class="q-text">${S.escapeHTML(q.q)}</h3>
+          <div class="q-options">
+            ${q.o.map((opt, idx) => `
+              <button class="q-opt ${chosen === idx ? "selected" : ""}" data-idx="${idx}">
+                <span class="q-letter">${String.fromCharCode(65 + idx)}</span>
+                <span>${S.escapeHTML(opt)}</span>
+                ${chosen === idx ? `<span class="q-check">${"✓"}</span>` : ""}
+              </button>`).join("")}
+          </div>
+        </div>`;
+      const answered = Object.keys(state.answers).length;
+      els.answeredCount.textContent = `ตอบแล้ว ${answered} / ${total} ข้อ`;
+    }
+
+    els.questionArea.addEventListener("click", (e) => {
+      const b = e.target.closest(".q-opt");
+      if (!b) return;
+      state.answers[state.idx] = Number(b.dataset.idx);
+      renderQuestion();
+    });
+
+    els.prevBtn.addEventListener("click", () => { if (state.idx > 0) { state.idx--; renderQuestion(); } });
+    els.nextBtn.addEventListener("click", async () => {
+      if (state.idx < state.questions.length - 1) { state.idx++; renderQuestion(); return; }
+      // Last question → submit
+      const unanswered = state.questions.length - Object.keys(state.answers).length;
+      if (unanswered > 0) {
+        const ok = await S.confirmBox(`ยังไม่ได้ตอบ ${unanswered} ข้อ ต้องส่งคำตอบหรือไม่?`, { confirmLabel: "ส่งคำตอบ" });
+        if (!ok) return;
+      }
+      await submit();
+    });
+
+    /* ---------- Submit & save score ---------- */
+    async function submit() {
+      clearInterval(state.timerInt);
+      let score = 0;
+      state.questions.forEach((q, i) => { if (state.answers[i] === q.a) score++; });
+      const total = state.questions.length;
+      const seconds = Math.floor((Date.now() - state.startedAt) / 1000);
+
+      els.quiz.classList.add("hidden");
+      els.result.classList.remove("hidden");
+      els.result.classList.add("in");
+      els.resultArea.innerHTML = S.loaderHTML("กำลังตรวจคำตอบและส่งคะแนน…");
+
+      // Build name (append fraud note if many tab blurs)
+      let nameOut = els.name.value.trim();
+      if (state.tabBlurs >= 3) nameOut = `${nameOut} ตรวจพบทุจริต`;
+
+      try {
+        await KNT.exam.quizSave({
+          room: els.room.value,
+          no: els.no.value.trim(),
+          name: nameOut,
+          lessonId: state.lesson.id,
+          lessonTitle: state.lesson.title,
+          score, total,
+        });
+        renderResult(score, total, seconds, true);
+      } catch (err) {
+        renderResult(score, total, seconds, false, err);
+      }
+    }
+
+    function renderResult(score, total, seconds, saved, err) {
+      const pct = Math.round((score / total) * 100);
+      const grade = pct >= 80 ? "4" : pct >= 70 ? "3.5" : pct >= 60 ? "3" : pct >= 50 ? "2" : pct >= 40 ? "1" : "0";
+      const pass = pct >= 50;
+      const min = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const sec = String(seconds % 60).padStart(2, "0");
+      els.resultArea.innerHTML = `
+        <div class="result-hero ${pass ? "pass" : "fail"}">
+          <div class="result-ring"><span>${pct}<small>%</small></span></div>
+          <div class="result-summary">
+            <div class="result-status">${pass ? "ผ่าน" : "ยังไม่ผ่าน"} ${pass ? "🎉" : "💪"}</div>
+            <h2>ได้ ${score} / ${total} คะแนน</h2>
+            <div class="result-meta">
+              <span>เกรด <strong>${grade}</strong></span>
+              <span>·</span>
+              <span>ใช้เวลา ${min}:${sec}</span>
+              <span>·</span>
+              <span>${state.lesson.title}</span>
+            </div>
+            ${state.tabBlurs >= 3 ? `<div class="alert alert-warn mt-2">⚠ ตรวจพบการสลับแท็บ ${state.tabBlurs} ครั้ง — ระบบได้บันทึกหมายเหตุไว้</div>` : ""}
+            ${saved ? `<div class="alert alert-ok mt-1">✓ บันทึกคะแนนเข้าระบบเรียบร้อย</div>` : `<div class="alert alert-error mt-1">✕ บันทึกคะแนนไม่สำเร็จ: ${S.escapeHTML(err?.message || "")}</div>`}
+          </div>
+        </div>
+        <div class="grid-2 mt-3">
+          <div class="panel" style="padding:20px">
+            <div class="panel-title mb-2">รีวิวคำตอบ</div>
+            <div class="review-list">
+              ${state.questions.map((q, i) => {
+                const ua = state.answers[i];
+                const correct = ua === q.a;
+                return `<div class="review-item ${correct ? "ok" : "wrong"}">
+                  <div class="ri-no">${correct ? "✓" : "✕"}</div>
+                  <div><div class="ri-q">${i+1}. ${S.escapeHTML(q.q)}</div>
+                  <div class="ri-a">ตอบ: ${ua != null ? S.escapeHTML(q.o[ua]) : "—"} ${correct ? "" : `<span class="ri-correct">(ถูก: ${S.escapeHTML(q.o[q.a])})</span>`}</div></div>
+                </div>`;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3" style="justify-content:center;gap:12px">
+          <button class="btn btn-ghost" id="retryBtn">ทำใหม่อีกครั้ง</button>
+          <a class="btn btn-primary" href="index.html">กลับแดชบอร์ด</a>
+        </div>`;
+      document.getElementById("retryBtn").addEventListener("click", () => location.reload());
+    }
+  })();
+  </script>
+
+  <style>
+    .question-card { padding: 8px 0; }
+    .q-no { display:inline-block; font-family:var(--mono); font-size:.78rem; color:var(--red-bright); background:var(--red-soft); padding:4px 10px; border-radius:100px; margin-bottom:14px; }
+    .q-text { font-size:1.15rem; font-weight:600; line-height:1.5; margin-bottom:22px; }
+    .q-options { display:flex; flex-direction:column; gap:10px; }
+    .q-opt { display:flex; align-items:center; gap:14px; padding:15px 18px; border-radius:13px; text-align:left; width:100%;
+      background:rgba(0,0,0,.2); border:1px solid var(--line-strong); color:var(--text); font-size:.95rem; transition:all .2s var(--ease); }
+    [data-theme="light"] .q-opt { background:rgba(0,0,0,.03); }
+    .q-opt:hover { border-color:var(--red); transform:translateX(3px); }
+    .q-opt.selected { border-color:var(--red); background:var(--red-soft); box-shadow:0 0 0 3px var(--red-soft); }
+    .q-letter { width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-family:var(--mono);
+      background:var(--carbon-3);color:var(--text-dim);flex-shrink:0;border:1px solid var(--line-strong); }
+    .q-opt.selected .q-letter { background:var(--red);color:#fff;border-color:var(--red); }
+    .q-check { margin-left:auto;color:var(--red-bright);font-weight:700; }
+    .result-hero { display:flex;gap:30px;align-items:center;padding:30px;border-radius:var(--radius-lg);background:var(--glass-bg);border:1px solid var(--glass-brd);flex-wrap:wrap }
+    .result-ring { width:130px;height:130px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+      background:conic-gradient(var(--red) var(--pct,50%), var(--carbon-3) 0);position:relative; }
+    .result-ring::before { content:"";position:absolute;inset:8px;border-radius:50%;background:var(--carbon-2); }
+    .result-ring span { position:relative;font-size:2rem;font-weight:700;font-family:var(--mono); }
+    .result-ring small { font-size:1rem; }
+    .result-hero.pass .result-ring { background:conic-gradient(#2ee07c var(--pct,50%), var(--carbon-3) 0); }
+    .result-hero.pass .result-ring span { color:#2ee07c; }
+    .result-hero.fail .result-ring span { color:var(--red-bright); }
+    .result-status { font-size:.9rem;color:var(--text-mute);font-family:var(--mono); }
+    .result-summary h2 { font-size:1.8rem;margin:6px 0 10px; }
+    .result-meta { display:flex;gap:8px;flex-wrap:wrap;color:var(--text-dim);font-size:.9rem; }
+    .review-list { display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;padding-right:6px; }
+    .review-item { display:flex;gap:12px;padding:12px 14px;border-radius:11px;border:1px solid var(--line); }
+    .review-item.ok { background:rgba(46,224,124,.05);border-color:rgba(46,224,124,.2); }
+    .review-item.wrong { background:var(--red-soft);border-color:rgba(224,16,47,.2); }
+    .ri-no { width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:700;flex-shrink:0; }
+    .review-item.ok .ri-no { background:#2ee07c;color:#0a0a0b; }
+    .review-item.wrong .ri-no { background:var(--red);color:#fff; }
+    .ri-q { font-weight:500;font-size:.92rem; }
+    .ri-a { font-size:.82rem;color:var(--text-dim);margin-top:3px; }
+    .ri-correct { color:#2ee07c; }
+    @media (max-width:640px) {
+      .result-hero { flex-direction:column;text-align:center; }
+      .q-text { font-size:1rem; }
+      .q-opt { padding:13px 14px;font-size:.9rem; }
+    }
+  </style>
+</body>
+</html>

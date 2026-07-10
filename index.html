@@ -3,1154 +3,1419 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🏠 ครูนิวตรอน.com - ศูนย์รวมระบบจัดการเรียนการสอน</title>
-  
-  <!-- Google Fonts: Kanit (สำหรับภาษาไทยที่อ่านง่าย) และ Outfit (สำหรับตัวเลขและอังกฤษดีไซน์หรู) -->
+  <title>ครูนิวตรอน.com — KNT Neural Interface</title>
+
+  <!-- Fonts: Kanit (ไทย) + Orbitron (HUD/ตัวเลขอังกฤษ) + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            kanit: ['Kanit', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif'],
-            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-          },
-          colors: {
-            spacebg: '#01061E', // สีกรมท่าอวกาศเข้มเกือบดำ
-            cream: '#EFF4FF',   // สีขาวสว่างนวลตา
-            neon: '#6FFF00',    // สีเขียวนีออนสะท้อนแสงเน้นดีไซน์
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
-    /* Global Base Styles */
-    html, body {
-      background-color: #01061E;
-      color: #EFF4FF;
-      font-family: 'Kanit', sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
+    /* ========== DESIGN TOKENS ========== */
+    :root {
+      --bg-0: #06060a;
+      --bg-1: #0c0c12;
+      --bg-2: #12121c;
+      --bg-3: #1a1a28;
+      --line: rgba(255, 60, 80, 0.12);
+      --line-bright: rgba(255, 60, 80, 0.35);
+      --line-faint: rgba(255, 255, 255, 0.04);
+      --red: #ff2040;
+      --red-bright: #ff3d5a;
+      --red-deep: #c80820;
+      --red-glow: rgba(255, 32, 64, 0.5);
+      --red-soft: rgba(255, 32, 64, 0.08);
+      --gold: #ffb800;
+      --text: #e8e8f0;
+      --text-dim: #8888a0;
+      --text-mute: #555568;
+      --font-thai: 'Kanit', sans-serif;
+      --font-hud: 'Orbitron', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* ========== RESET ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-thai);
+      background: var(--bg-0);
+      color: var(--text);
       overflow-x: hidden;
-      box-sizing: border-box;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    ::selection { background: var(--red); color: #fff; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-0); }
+    ::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+    /* ========== BACKGROUND LAYERS ========== */
+    /* Radial red glow */
+    .bg-glow {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(800px 600px at 50% 0%, rgba(255, 32, 64, 0.08), transparent 60%),
+        radial-gradient(600px 400px at 20% 100%, rgba(200, 8, 32, 0.06), transparent 70%),
+        radial-gradient(500px 400px at 90% 50%, rgba(255, 32, 64, 0.04), transparent 65%);
+    }
+    /* Grid overlay */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 60, 80, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 60, 80, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 120% 100% at 50% 50%, #000 30%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 120% 100% at 50% 50%, #000 30%, transparent 90%);
+    }
+    /* Scanline overlay */
+    .bg-scan {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(255, 32, 64, 0.015) 3px, rgba(255, 32, 64, 0.015) 4px);
+    }
+    /* Particle canvas */
+    #particles {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
     }
 
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
+    /* ========== BOOT SEQUENCE ========== */
+    #boot-sequence {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg-0);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
     }
-    ::-webkit-scrollbar-track {
-      background: #01061E;
+    #boot-sequence.done { opacity: 0; visibility: hidden; pointer-events: none; }
+    .boot-mark {
+      width: 120px; height: 120px;
+      filter: drop-shadow(0 0 16px var(--red-glow));
     }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 99px;
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    .boot-text {
+      font-family: var(--font-hud);
+      font-size: 0.8rem; letter-spacing: 0.4em;
+      color: var(--red);
+      text-transform: uppercase;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.15);
+    .boot-bar {
+      width: 200px; height: 2px; background: var(--bg-3); border-radius: 99px; overflow: hidden;
     }
+    .boot-bar-fill {
+      height: 100%; width: 0; background: var(--red); box-shadow: 0 0 10px var(--red-glow);
+      animation: boot-fill 1.6s ease forwards;
+    }
+    @keyframes boot-fill { to { width: 100%; } }
 
-    /* PREMIUM LIQUID GLASS EFFECT WITH NEON GLOW */
-    .liquid-glass {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 
-        inset 0 1px 1px rgba(255, 255, 255, 0.15), 
-        0 15px 35px rgba(0, 0, 0, 0.4);
+    /* ========== HUD TOP BAR ========== */
+    .hud-topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 56px;
+      background: rgba(6, 6, 10, 0.85);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+    }
+    .hud-topbar::after {
+      content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0.6;
+    }
+    .hud-left { display: flex; align-items: center; gap: 16px; }
+    .hud-menu-btn {
+      width: 38px; height: 38px;
+      display: grid; place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      transition: all 0.3s;
       position: relative;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
-    .liquid-glass::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1.2px;
-      background: linear-gradient(180deg,
-        rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 30%,
-        rgba(255,255,255,0) 50%, rgba(255,255,255,0) 70%,
-        rgba(255,255,255,0.05) 80%, rgba(255,255,255,0.25) 100%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+    .hud-menu-btn:hover {
+      border-color: var(--red);
+      background: var(--red-soft);
+      box-shadow: 0 0 12px var(--red-glow);
+    }
+    .hud-menu-btn svg { width: 18px; height: 18px; stroke: var(--text); stroke-width: 2; fill: none; }
+    .hud-menu-btn:hover svg { stroke: var(--red-bright); }
+
+    .hud-brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hud-brand-logo {
+      width: 28px; height: 28px;
+      position: relative;
+    }
+    .hud-brand-logo svg { width: 100%; height: 100%; }
+    .hud-brand-text {
+      font-family: var(--font-hud);
+      font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--text);
+    }
+    .hud-brand-text span { color: var(--red-bright); }
+
+    .hud-right { display: flex; align-items: center; gap: 14px; }
+    .hud-status-item {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem; color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+    .hud-status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 6px var(--red-glow);
+      animation: hud-pulse 2s infinite;
+    }
+    .hud-status-dot.green { background: #2ee07c; box-shadow: 0 0 6px rgba(46,224,124,0.5); }
+    @keyframes hud-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hud-clock {
+      font-family: var(--font-hud);
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--red-bright);
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 8px var(--red-glow);
+    }
+    .hud-divider { width: 1px; height: 20px; background: var(--line); }
+
+    /* ========== SIDEBAR DRAWER ========== */
+    .sidebar-drawer {
+      position: fixed; inset-y: 0; left: 0; top: 0; bottom: 0;
+      width: 340px; max-width: 85vw;
+      background: rgba(6, 6, 10, 0.96);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid var(--line-bright);
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column;
+      box-shadow: 15px 0 50px rgba(0,0,0,0.8);
+    }
+    .sidebar-drawer.open { transform: translateX(0); }
+    .sidebar-drawer::before {
+      content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+      background: linear-gradient(180deg, transparent, var(--red) 30%, var(--red) 70%, transparent);
+      opacity: 0.5;
+    }
+    .sidebar-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-header-left { display: flex; align-items: center; gap: 12px; }
+    .sidebar-header-logo {
+      width: 36px; height: 36px;
+      border: 1px solid var(--line-bright);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      position: relative;
+    }
+    .sidebar-header-logo svg { width: 20px; height: 20px; }
+    .sidebar-header-text {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .sidebar-header-text .title {
+      font-family: var(--font-hud);
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.1em; color: var(--red-bright);
+    }
+    .sidebar-header-text .sub {
+      font-family: var(--font-mono);
+      font-size: 0.62rem; color: var(--text-mute);
+      letter-spacing: 0.05em;
+    }
+    .sidebar-close {
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .sidebar-close:hover { border-color: var(--red); color: var(--red-bright); }
+    .sidebar-close svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    .sidebar-body {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .sidebar-section-label {
+      font-family: var(--font-hud);
+      font-size: 0.6rem; font-weight: 600;
+      letter-spacing: 0.25em; color: var(--red);
+      text-transform: uppercase;
+      padding: 16px 12px 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--line);
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .sidebar-link:hover {
+      border-color: var(--line-bright);
+      background: var(--red-soft);
+    }
+    .sidebar-link::before {
+      content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 0; background: var(--red); border-radius: 0 2px 2px 0;
+      transition: height 0.25s;
+    }
+    .sidebar-link:hover::before { height: 60%; box-shadow: 0 0 8px var(--red-glow); }
+    .sidebar-link-icon {
+      width: 32px; height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      transition: all 0.25s;
+    }
+    .sidebar-link:hover .sidebar-link-icon {
+      border-color: var(--red);
+      background: var(--red-soft);
+    }
+    .sidebar-link-icon img {
+      width: 18px; height: 18px; object-fit: contain;
+      filter: brightness(0) invert(0.7);
+      transition: filter 0.25s;
+    }
+    .sidebar-link:hover .sidebar-link-icon img { filter: brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(335deg); }
+    .sidebar-link-icon svg { width: 16px; height: 16px; stroke: var(--text-dim); stroke-width: 1.6; fill: none; transition: stroke 0.25s; }
+    .sidebar-link:hover .sidebar-link-icon svg { stroke: var(--red-bright); }
+    .sidebar-link-text { flex: 1; min-width: 0; }
+    .sidebar-link-text .title {
+      font-size: 0.78rem; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-link-text .sub {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; color: var(--text-mute);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .sidebar-link-num {
+      font-family: var(--font-hud);
+      font-size: 0.6rem; color: var(--text-mute);
+      font-weight: 600;
+    }
+    .sidebar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+    }
+    .sidebar-footer span {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; color: var(--text-mute);
+      letter-spacing: 0.1em;
+    }
+
+    .drawer-backdrop {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.4s, visibility 0.4s;
+    }
+    .drawer-backdrop.open { opacity: 1; visibility: visible; }
+
+    /* ========== MAIN LAYOUT ========== */
+    .main-container {
+      position: relative; z-index: 10;
+      padding-top: 56px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    /* ========== HERO SECTION ========== */
+    .hero {
+      padding: 48px 32px 32px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    .hero-rings {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      width: 360px; height: 360px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    .hero-rings svg { width: 100%; height: 100%; }
+    .ring-outer { animation: ring-rotate 20s linear infinite; transform-origin: center; }
+    .ring-inner { animation: ring-rotate 14s linear infinite reverse; transform-origin: center; }
+    @keyframes ring-rotate { to { transform: rotate(360deg); } }
+
+    .hero-logo-wrap {
+      position: relative;
+      width: 150px; height: 150px;
+      margin-bottom: 20px;
+    }
+    .hero-logo-wrap .hero-knt-mark {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 0 20px var(--red-glow));
+      animation: logo-float 5s ease-in-out infinite;
+    }
+    @keyframes logo-float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-6px) scale(1.03); }
+    }
+    .hero-logo-rings {
+      position: absolute; inset: -20px;
       pointer-events: none;
     }
+    .hero-logo-rings svg { width: 100%; height: 100%; }
 
-    /* Mesh Gradients animation */
-    @keyframes float-glow-1 {
-      0%, 100% { transform: translate(0px, 0px) scale(1); }
-      50% { transform: translate(40px, -60px) scale(1.1); }
+    .hero-title {
+      font-family: var(--font-hud);
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 20%, var(--red-bright) 80%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      margin-bottom: 8px;
+      position: relative; z-index: 2;
     }
-    @keyframes float-glow-2 {
-      0%, 100% { transform: translate(0px, 0px) scale(1); }
-      50% { transform: translate(-50px, 40px) scale(1.15); }
+    .hero-subtitle {
+      font-size: 0.85rem; color: var(--text-dim);
+      max-width: 440px; line-height: 1.6;
+      font-weight: 300;
+      position: relative; z-index: 2;
     }
-    .animate-glow-1 {
-      animation: float-glow-1 15s ease-in-out infinite;
+    .hero-tags {
+      display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; justify-content: center;
+      position: relative; z-index: 2;
     }
-    .animate-glow-2 {
-      animation: float-glow-2 18s ease-in-out infinite;
+    .hero-tag {
+      font-family: var(--font-mono);
+      font-size: 0.62rem; font-weight: 600;
+      padding: 4px 10px; border-radius: 4px;
+      border: 1px solid var(--line-bright);
+      color: var(--red-bright);
+      background: var(--red-soft);
+      letter-spacing: 0.1em;
+    }
+    .hero-tag.gold { border-color: rgba(255,184,0,0.3); color: var(--gold); background: rgba(255,184,0,0.06); }
+
+    /* ========== HUD STATS BAR ========== */
+    .hud-stats {
+      display: flex; gap: 0; margin: 24px 32px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(12, 12, 18, 0.6);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      position: relative;
+    }
+    .hud-stats::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0.5;
+    }
+    .hud-stat {
+      flex: 1; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 2px;
+      border-right: 1px solid var(--line);
+      position: relative;
+    }
+    .hud-stat:last-child { border-right: none; }
+    .hud-stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; color: var(--text-mute);
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .hud-stat-value {
+      font-family: var(--font-hud);
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--red-bright);
+      text-shadow: 0 0 10px var(--red-glow);
+    }
+    .hud-stat-value.green { color: #2ee07c; text-shadow: 0 0 10px rgba(46,224,124,0.3); }
+
+    /* ========== CARDS SECTION ========== */
+    .cards-section {
+      padding: 8px 32px 32px;
+      max-width: 1400px; margin: 0 auto; width: 100%;
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .section-header-left { display: flex; flex-direction: column; gap: 4px; }
+    .section-header-tag {
+      font-family: var(--font-hud);
+      font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.3em; color: var(--red);
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-header-tag::before {
+      content: ''; width: 16px; height: 1px; background: var(--red);
+    }
+    .section-header-title {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text);
+    }
+    .section-header-right {
+      font-family: var(--font-mono);
+      font-size: 0.68rem; color: var(--text-mute);
     }
 
-    /* Mascot floating animation */
-    @keyframes float-breath {
-      0%, 100% {
-        transform: translateY(0) scale(1) rotate(0deg);
-      }
-      50% {
-        transform: translateY(-10px) scale(1.02) rotate(0.6deg);
-      }
-    }
-    .animate-float-breath {
-      animation: float-breath 6s ease-in-out infinite;
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 16px;
     }
 
-    /* Cosmic Logo Pulse & Color Glow Animation (No border, glow pulses between cyan and purple) */
-    @keyframes logo-pulse-glow {
-      0%, 100% {
-        transform: translateY(0) scale(1);
-        filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.45));
-      }
-      50% {
-        transform: translateY(-8px) scale(1.03);
-        filter: drop-shadow(0 0 24px rgba(168, 85, 247, 0.7));
-      }
+    /* ========== JARVIS CARD ========== */
+    .jarvis-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(18, 18, 28, 0.8) 0%, rgba(12, 12, 18, 0.6) 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px 20px 20px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      min-height: 180px;
+      overflow: hidden;
+      opacity: 0; transform: translateY(16px);
+      animation: card-in 0.6s var(--ease, ease-out) forwards;
     }
-    .animate-logo-pulse {
-      animation: logo-pulse-glow 6s ease-in-out infinite;
+    @keyframes card-in { to { opacity: 1; transform: translateY(0); } }
+
+    /* Corner brackets */
+    .jarvis-card::before,
+    .jarvis-card::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      border: 1.5px solid var(--red);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .jarvis-card::before {
+      top: 6px; left: 6px;
+      border-right: none; border-bottom: none;
+      border-top-left-radius: 4px;
+    }
+    .jarvis-card::after {
+      bottom: 6px; right: 6px;
+      border-left: none; border-top: none;
+      border-bottom-right-radius: 4px;
+    }
+    .jarvis-card:hover::before,
+    .jarvis-card:hover::after {
+      opacity: 1;
     }
 
-    /* Status dot pulse animation */
-    @keyframes status-pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; transform: scale(1.1); }
+    /* Scan line effect on hover */
+    .jarvis-card .scan-line {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-    .animate-pulse-dot {
-      animation: status-pulse 2s infinite ease-in-out;
+    .jarvis-card:hover .scan-line {
+      opacity: 1;
+      animation: scan-sweep 1.5s ease-in-out infinite;
+    }
+    @keyframes scan-sweep {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(170px); }
     }
 
-    /* Shiny Text Effect (Cosmic Gradient) */
-    .shiny-text {
-      background: linear-gradient(135deg, #EFF4FF 20%, #a5b4fc 55%, #00E5FF 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    /* Card number */
+    .card-num {
+      position: absolute; top: 10px; right: 14px;
+      font-family: var(--font-hud);
+      font-size: 0.58rem; font-weight: 600;
+      color: var(--text-mute);
+      letter-spacing: 0.1em;
+    }
+
+    .jarvis-card:hover {
+      border-color: var(--line-bright);
+      background: linear-gradient(135deg, rgba(26, 26, 40, 0.9) 0%, rgba(18, 18, 28, 0.7) 100%);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 32, 64, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .card-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-icon {
+      width: 44px; height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      background: rgba(255, 32, 64, 0.04);
+      transition: all 0.3s;
+      position: relative;
+    }
+    .card-icon::after {
+      content: ''; position: absolute; inset: -1px;
+      border-radius: 10px; opacity: 0;
+      border: 1px solid var(--red);
+      transition: opacity 0.3s;
+    }
+    .jarvis-card:hover .card-icon { background: var(--red-soft); }
+    .jarvis-card:hover .card-icon::after { opacity: 1; box-shadow: 0 0 12px var(--red-glow); }
+    .card-icon img {
+      width: 24px; height: 24px; object-fit: contain;
+      filter: brightness(0) invert(0.6);
+      transition: filter 0.3s;
+    }
+    .jarvis-card:hover .card-icon img { filter: brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(335deg) brightness(1.2); }
+    .card-icon svg { width: 22px; height: 22px; stroke: var(--text-dim); stroke-width: 1.6; fill: none; transition: stroke 0.3s; }
+    .jarvis-card:hover .card-icon svg { stroke: var(--red-bright); }
+
+    .card-badge {
+      font-family: var(--font-mono);
+      font-size: 0.58rem; font-weight: 600;
+      padding: 3px 8px; border-radius: 4px;
+      border: 1px solid var(--line-bright);
+      color: var(--red-bright);
+      background: var(--red-soft);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .card-title {
+      font-size: 0.92rem; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      transition: color 0.3s;
+    }
+    .jarvis-card:hover .card-title { color: var(--red-bright); }
+
+    .card-desc {
+      font-size: 0.76rem; color: var(--text-dim);
+      font-weight: 300; line-height: 1.5;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .card-action {
+      font-family: var(--font-hud);
+      font-size: 0.62rem; font-weight: 600;
+      color: var(--red-bright);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .card-action svg {
+      width: 12px; height: 12px;
+      stroke: var(--red-bright); stroke-width: 2; fill: none;
+      transition: transform 0.2s;
+    }
+    .jarvis-card:hover .card-action svg { transform: translateX(3px); }
+
+    .card-status {
+      font-family: var(--font-mono);
+      font-size: 0.56rem; color: var(--text-mute);
+      letter-spacing: 0.1em;
+    }
+    .card-status::before {
+      content: '●'; color: #2ee07c; margin-right: 4px;
+      font-size: 0.5rem;
+    }
+
+    /* QR card with sub-buttons */
+    .card-qr-buttons {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      margin-top: 14px;
+    }
+    .card-qr-btn {
+      text-align: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.7rem; font-weight: 600;
+      color: var(--text-dim);
+      transition: all 0.25s;
+    }
+    .card-qr-btn:hover {
+      border-color: var(--red);
+      color: var(--red-bright);
+      background: var(--red-soft);
+    }
+
+    /* ========== NOTEPAD ========== */
+    .notepad {
+      margin: 0 32px 32px;
+      max-width: 1400px; margin-left: auto; margin-right: auto;
+      background: rgba(12, 12, 18, 0.6);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+      position: relative;
+    }
+    .notepad::before {
+      content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0.4;
+    }
+    .notepad-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .notepad-header-left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .notepad-header-left .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+      box-shadow: 0 0 6px var(--red-glow);
+      animation: hud-pulse 2s infinite;
+    }
+    .notepad-header-left .label {
+      font-family: var(--font-hud);
+      font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.2em; color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .notepad-status {
+      font-family: var(--font-mono);
+      font-size: 0.6rem; color: var(--red-bright);
+    }
+    .notepad textarea {
+      width: 100%;
+      background: transparent; border: none; outline: none; resize: none;
+      font-family: var(--font-mono);
+      font-size: 0.78rem; color: var(--text);
+      min-height: 80px; line-height: 1.6;
+    }
+    .notepad textarea::placeholder { color: var(--text-mute); }
+    .notepad-count {
+      font-family: var(--font-mono);
+      font-size: 0.56rem; color: var(--text-mute);
+      text-align: right; margin-top: 4px;
+    }
+
+    /* ========== FOOTER ========== */
+    .footer {
+      text-align: center; padding: 24px;
+      border-top: 1px solid var(--line);
+      margin-top: auto;
+    }
+    .footer-text {
+      font-family: var(--font-mono);
+      font-size: 0.62rem; color: var(--text-mute);
+      letter-spacing: 0.15em;
+    }
+    .footer-text span { color: var(--red); }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .hud-status-item:not(.essential) { display: none; }
+      .hud-brand-text { font-size: 0.72rem; }
+      .hero { padding: 32px 16px 24px; }
+      .hero-rings { width: 280px; height: 280px; }
+      .hud-stats { margin: 16px; flex-wrap: wrap; }
+      .hud-stat { min-width: 45%; }
+      .cards-section { padding: 8px 16px 24px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .notepad { margin: 0 16px 24px; }
+      .hud-topbar { padding: 0 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
-<body class="select-none font-kanit">
+<body>
 
-  <!-- ปุ่มเมนูสามขีด (Floating Hamburger Menu Button) -->
-  <button id="menu-toggle-btn" class="fixed top-6 left-6 z-40 w-12 h-12 rounded-full backdrop-blur-md bg-white/5 border border-white/10 flex items-center justify-center text-white hover:text-neon hover:border-blue-500/40 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all duration-300 active:scale-95" aria-label="เปิดเมนูทางลัด">
-    <svg class="w-5 h-5 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
-      <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- ========== BOOT SEQUENCE ========== -->
+  <div id="boot-sequence">
+    <svg class="boot-mark" viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="46" stroke="rgba(255,32,64,0.15)" stroke-width="1"/>
+      <path d="M50 4 A46 46 0 0 1 96 50" stroke="#ff2040" stroke-width="2" stroke-linecap="round" style="animation: boot-spin 1.2s linear infinite; transform-origin: 50px 50px;"/>
+      <path d="M50 96 A46 46 0 0 1 4 50" stroke="rgba(255,32,64,0.4)" stroke-width="1" stroke-linecap="round" style="animation: boot-spin 1.8s linear infinite reverse; transform-origin: 50px 50px;"/>
+      <text x="50" y="58" text-anchor="middle" font-family="Orbitron, sans-serif" font-weight="800" font-size="28" fill="#ff2040" letter-spacing="6">KNT</text>
+      <circle cx="50" cy="50" r="2" fill="#ff2040"/>
     </svg>
-  </button>
+    <div class="boot-text">KNT CORE // BOOT SEQUENCE</div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+  </div>
 
-  <!-- แถบเมนูด้านซ้ายแบบสไลด์ (Slide-out Sidebar Drawer) -->
-  <div id="sidebar-drawer" class="fixed inset-y-0 left-0 w-[320px] max-w-[85vw] bg-[#01061E]/95 backdrop-blur-2xl border-r border-white/10 z-50 transform -translate-x-full transition-transform duration-500 ease-in-out flex flex-col shadow-[15px_0_40px_rgba(0,0,0,0.7)]">
-    <!-- Header -->
-    <div class="p-5 border-b border-white/10 flex justify-between items-center bg-black/20">
-      <div class="flex items-center gap-3">
-        <img src="images/logo.png" alt="โลโก้" class="w-10 h-10 object-contain">
-        <div class="flex flex-col text-left">
-          <span class="text-sm font-black shiny-text font-kanit leading-none">ครูนิวตรอน.com</span>
-          <span class="text-[9px] text-cream/55 font-light tracking-wide mt-0.5">เมนูระบบงานทั้งหมด</span>
+  <!-- ========== BACKGROUND ========== -->
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-scan"></div>
+  <canvas id="particles"></canvas>
+
+  <!-- ========== HUD TOP BAR ========== -->
+  <div class="hud-topbar">
+    <div class="hud-left">
+      <button class="hud-menu-btn" id="menuToggle" aria-label="เปิดเมนู">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+      </button>
+      <div class="hud-brand">
+        <div class="hud-brand-logo">
+          <svg viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="12" stroke="rgba(255,32,64,0.3)" stroke-width="1"/>
+            <path d="M14 2 A12 12 0 0 1 26 14" stroke="#ff2040" stroke-width="1.5" stroke-linecap="round"/>
+            <text x="14" y="18" text-anchor="middle" font-family="'Orbitron', sans-serif" font-weight="800" font-size="11" fill="#ff2040" letter-spacing="2">KNT</text>
+          </svg>
+        </div>
+        <div class="hud-brand-text">KNT <span>OS</span></div>
+      </div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-status-item essential">
+        <span class="hud-status-dot"></span>
+        <span>SYSTEM ONLINE</span>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-status-item">
+        <span class="hud-status-dot green"></span>
+        <span>ALL SYSTEMS NOMINAL</span>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-clock" id="hudClock">--:--:--</div>
+    </div>
+  </div>
+
+  <!-- ========== SIDEBAR DRAWER ========== -->
+  <div class="sidebar-drawer" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-header-left">
+        <div class="sidebar-header-logo">
+          <svg viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="16" stroke="rgba(255,32,64,0.3)" stroke-width="1"/>
+            <path d="M18 2 A16 16 0 0 1 34 18" stroke="#ff2040" stroke-width="1.5" stroke-linecap="round"/>
+            <text x="18" y="22" text-anchor="middle" font-family="'Orbitron', sans-serif" font-weight="800" font-size="12" fill="#ff2040" letter-spacing="2">KNT</text>
+          </svg>
+        </div>
+        <div class="sidebar-header-text">
+          <div class="title">KNT NEURAL</div>
+          <div class="sub">MODULE INDEX</div>
         </div>
       </div>
-      <button id="menu-close-btn" class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-cream/70 hover:text-white hover:bg-white/5 transition-all duration-200" aria-label="ปิดเมนู">
-        <svg class="w-4 h-4 stroke-current stroke-[2]" viewBox="0 0 24 24" fill="none">
-          <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <button class="sidebar-close" id="menuClose" aria-label="ปิดเมนู">
+        <svg viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round"/></svg>
       </button>
     </div>
-    
-    <!-- Body: รายการลิงก์ระบบทั้งหมด -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-2.5 custom-scrollbar">
-      
-      <a href="เช็คชื่อรายวิชา/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-blue-500/10 hover:border-blue-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300">
-          <img src="images/grad-cap.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+    <div class="sidebar-body">
+      <div class="sidebar-section-label">CORE SYSTEMS</div>
+
+      <a href="เช็คชื่อรายวิชา/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/grad-cap.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">เช็คชื่อเข้าเรียนรายวิชา</div><div class="sub">บันทึกเวลาเรียนรายคาบ</div></div>
+        <div class="sidebar-link-num">01</div>
+      </a>
+      <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/gear.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div><div class="sub">ห้องเรียนพิเศษ 3 ห้อง</div></div>
+        <div class="sidebar-link-num">02</div>
+      </a>
+      <a href="ส่งงาน/index-ส่งงาน.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/beaker.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">ระบบติดตามส่งงาน/ข้อสอบ</div><div class="sub">ติดตามการบ้าน/คะแนนเก็บ</div></div>
+        <div class="sidebar-link-num">03</div>
+      </a>
+      <a href="สุ่มเลขที่/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/dice.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div><div class="sub">กิจกรรมสุ่มเลขที่สนุก</div></div>
+        <div class="sidebar-link-num">04</div>
+      </a>
+      <a href="boardgame/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/dice.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">บอร์ดเกมคลับพัฒนาทักษะ</div><div class="sub">ฝึกตรรกะและความคิด</div></div>
+        <div class="sidebar-link-num">05</div>
+      </a>
+      <a href="learning/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon"><img src="images/atom.png" alt=""></div>
+        <div class="sidebar-link-text"><div class="title">คลังคณิตศาสตร์เพิ่มเติม</div><div class="sub">บทเรียนและโจทย์ออนไลน์</div></div>
+        <div class="sidebar-link-num">06</div>
+      </a>
+      <a href="exam/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>
         </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">1. เช็คชื่อเข้าเรียนรายวิชา</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">บันทึกเวลาเรียนรายคาบ/ห้องเรียน</div>
+        <div class="sidebar-link-text"><div class="title">ระบบสอบเก็บคะแนนท้ายบท</div><div class="sub">สุ่มสลับข้อสอบอัตโนมัติ</div></div>
+        <div class="sidebar-link-num">07</div>
+      </a>
+      <a href="plickers/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
+        <div class="sidebar-link-text"><div class="title">ระบบสแกนการ์ด Plickers</div><div class="sub">สแกนการ์ด ArUco ผ่านกล้อง</div></div>
+        <div class="sidebar-link-num">08</div>
+      </a>
+      <a href="คะแนนเกรด/index-เกรด.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="sidebar-link-text"><div class="title">ระบบจัดการคะแนน/ตัดเกรด</div><div class="sub">คำนวณเกรด 8 ระดับ</div></div>
+        <div class="sidebar-link-num">09</div>
+      </a>
+      <a href="ประกาศผลสอบ/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        </div>
+        <div class="sidebar-link-text"><div class="title">ประกาศผลสอบ/ตามงานค้าง</div><div class="sub">คะแนนรายคนและเกรด 0</div></div>
+        <div class="sidebar-link-num">10</div>
+      </a>
+      <a href="เก็บเงินเพื่อน/index.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="sidebar-link-text"><div class="title">บัญชีเงินห้องเรียน ม.6/1</div><div class="sub">รายรับ-รายจ่าย โปร่งใส</div></div>
+        <div class="sidebar-link-num">11</div>
       </a>
 
-      <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
-          <img src="images/gear.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+      <div class="sidebar-section-label">QR UTILITIES</div>
+      <a href="ส่งงาน/qr-card.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3M14 21h7"/></svg>
         </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">2. เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ระบบเช็คห้องเรียนพิเศษ 3 ห้องเรียน</div>
-        </div>
+        <div class="sidebar-link-text"><div class="title">พิมพ์การ์ดสแกนเช็คชื่อ</div><div class="sub">การ์ด QR Code รายบุคคล</div></div>
+        <div class="sidebar-link-num">12</div>
       </a>
-
-      <a href="ส่งงาน/index-ส่งงาน.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-purple-500/10 hover:border-purple-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-500/40 transition-all duration-300">
-          <img src="images/beaker.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
+      <a href="ส่งงาน/qr-generator.html" class="sidebar-link">
+        <div class="sidebar-link-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3M14 21h7"/></svg>
         </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">3. ระบบติดตามส่งงาน/ข้อสอบ</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ติดตามการบ้าน/คะแนนเก็บของเด็ก</div>
-        </div>
+        <div class="sidebar-link-text"><div class="title">สร้าง QR Code อิสระ</div><div class="sub">เจนคิวอาร์โค้ดอเนกประสงค์</div></div>
+        <div class="sidebar-link-num">13</div>
       </a>
-
-      <a href="สุ่มเลขที่/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-yellow-500/10 hover:border-yellow-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-yellow-500/20 group-hover:border-yellow-500/40 transition-all duration-300">
-          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">4. สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กิจกรรมสุ่มเลขที่ผ่านเกมวิ่งแข่งสุดสนุก</div>
-        </div>
-      </a>
-
-      <a href="boardgame/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-pink-500/10 hover:border-pink-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-pink-500/20 group-hover:border-pink-500/40 transition-all duration-300">
-          <img src="images/dice.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">5. บอร์ดเกมคลับพัฒนาทักษะ</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">คลังบอร์ดเกมเล่นง่ายพัฒนาทักษะตรรกะ</div>
-        </div>
-      </a>
-
-      <a href="learning/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-indigo-500/10 hover:border-indigo-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-300">
-          <img src="images/atom.png" class="w-5.5 h-5.5 object-contain" style="mix-blend-mode: screen;">
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">6. คลังคณิตศาสตร์เพิ่มเติม ม.4</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ศูนย์รวมบทเรียนและทำโจทย์ออนไลน์</div>
-        </div>
-      </a>
-
-      <a href="exam/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-red-500/10 hover:border-red-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-red-500/20 group-hover:border-red-500/40 transition-all duration-300">
-          <svg viewBox="0 0 24 24" class="w-5.5 h-5.5 stroke-red-400 stroke-[2] fill-none">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
-            <path d="M9 12L11 14L15 10" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">7. ระบบสอบเก็บคะแนนท้ายบท</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">สุ่มสลับข้อสอบ / ตรวจประเมินอัตโนมัติ</div>
-        </div>
-      </a>
-
-      <a href="plickers/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-purple-500/10 hover:border-purple-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/20 group-hover:border-purple-500/40 transition-all duration-300">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-purple-400 stroke-[2] fill-none">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor"/>
-            <circle cx="12" cy="13" r="4" stroke="currentColor"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">8. ระบบสแกนการ์ด Plickers</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กิจกรรมสแกนตอบคำถามด้วยการ์ด ArUco</div>
-        </div>
-      </a>
-
-      <a href="คะแนนเกรด/index-เกรด.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-emerald-400 stroke-[2] fill-none">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor"/>
-            <polyline points="14 2 14 8 20 8" stroke="currentColor"/>
-            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor"/>
-            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">9. ระบบจัดการคะแนน / ตัดเกรด</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">กรอกคะแนน คำนวณตัดเกรด 8 ระดับ (ครู)</div>
-        </div>
-      </a>
-
-      <a href="ประกาศผลสอบ/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-blue-500/10 hover:border-blue-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-blue-400 stroke-[2] fill-none">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor"/>
-            <circle cx="9" cy="7" r="4" stroke="currentColor"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">10. ประกาศผลสอบ / ตามงานค้าง</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">ประกาศคะแนนสอบรายคนและตามเกรด 0</div>
-        </div>
-      </a>
-
-      <a href="เก็บเงินเพื่อน/index.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-emerald-500/10 hover:border-emerald-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-all duration-300">
-          <svg viewBox="0 0 24 24" class="w-5 h-5 stroke-emerald-400 stroke-[2.5] fill-none">
-            <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">11. บัญชีเงินห้องเรียน ม.6/1</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">รายงานยอดสะสมและประวัติรายรับ-รายจ่าย</div>
-        </div>
-      </a>
-
-      <!-- แบ่งประเภทส่วน QR Code -->
-      <div class="pt-4 pb-1.5 px-1 text-left">
-        <span class="text-[9px] font-extrabold tracking-widest text-teal-400 uppercase">ชุดจัดการ QR Code / การ์ด</span>
-      </div>
-
-      <a href="ส่งงาน/qr-card.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
-          <span class="text-sm group-hover:scale-110 transition-transform duration-200">🖨️</span>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">พิมพ์การ์ดสแกนเช็คชื่อ</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">จัดพิมพ์การ์ดเช็คชื่อนักเรียนรายบุคคล</div>
-        </div>
-      </a>
-
-      <a href="ส่งงาน/qr-generator.html" class="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-teal-500/10 hover:border-teal-500/30 text-cream/80 hover:text-white transition-all duration-300 group">
-        <div class="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/20 group-hover:border-teal-500/40 transition-all duration-300">
-          <span class="text-sm group-hover:scale-110 transition-transform duration-200">✨</span>
-        </div>
-        <div class="flex-1 min-w-0 text-left">
-          <div class="text-xs font-bold truncate group-hover:text-neon transition-colors duration-200">สร้าง QR Code อิสระ</div>
-          <div class="text-[9px] text-cream/40 font-light truncate mt-0.5">เจนคิวอาร์โค้ดปรับแต่งอเนกประสงค์</div>
-        </div>
-      </a>
-
     </div>
-    
-    <!-- Footer -->
-    <div class="p-4 border-t border-white/10 bg-black/20 text-center">
-      <span class="text-[9px] text-cream/35">ครูนิวตรอน.com &copy; 2026 - Space Portal</span>
+    <div class="sidebar-footer">
+      <span>KNT OS v2.0 · NEURAL INTERFACE</span>
     </div>
   </div>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
 
-  <!-- Backdrop Overlayสำหรับคลิกปิด -->
-  <div id="drawer-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+  <!-- ========== MAIN CONTENT ========== -->
+  <div class="main-container">
 
-  <!-- TEXTURE OVERLAY (ฟิลเตอร์ภาพฟิล์มสไตล์โรงภาพยนตร์) -->
-  <div class="fixed inset-0 z-50 pointer-events-none opacity-[0.06] mix-blend-lighten" style="background-image: url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E&quot;); background-size: cover;"></div>
+    <!-- HERO -->
+    <div class="hero">
+      <!-- Decorative rotating rings -->
+      <div class="hero-rings">
+        <svg viewBox="0 0 360 360" fill="none">
+          <g class="ring-outer">
+            <circle cx="180" cy="180" r="170" stroke="rgba(255,32,64,0.15)" stroke-width="1"/>
+            <circle cx="180" cy="180" r="170" stroke="rgba(255,32,64,0.4)" stroke-width="1.5" stroke-dasharray="60 180" stroke-linecap="round"/>
+            <circle cx="180" cy="10" r="2" fill="#ff2040"/>
+          </g>
+          <g class="ring-inner">
+            <circle cx="180" cy="180" r="130" stroke="rgba(255,32,64,0.1)" stroke-width="1"/>
+            <circle cx="180" cy="180" r="130" stroke="rgba(255,32,64,0.3)" stroke-width="1" stroke-dasharray="30 120" stroke-linecap="round"/>
+            <circle cx="310" cy="180" r="2" fill="#ff2040"/>
+          </g>
+          <circle cx="180" cy="180" r="90" stroke="rgba(255,32,64,0.06)" stroke-width="1"/>
+        </svg>
+      </div>
 
-  <!-- MAIN CONTAINER LAYOUT -->
-  <div class="w-full min-h-screen bg-spacebg flex flex-col lg:flex-row relative overflow-hidden">
-    
-    <!-- Background Looping Space Video (ดาวอวกาศลึกเคลื่อนไหวเบาๆ ด้านหลัง) -->
-    <video autoplay loop muted playsinline class="fixed inset-0 w-full h-full object-cover z-0 opacity-[0.38] pointer-events-none">
-      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_151551_992053d1-3d3e-4b8c-abac-45f22158f411.mp4" type="video/mp4">
-    </video>
-
-    <!-- Starfield Interactive Canvas -->
-    <canvas id="starfield" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
-    
-    <!-- Ambient Moving Mesh Glows -->
-    <div class="absolute top-[10%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-blue-500/10 blur-[130px] pointer-events-none z-0 animate-glow-1"></div>
-    <div class="absolute bottom-[10%] right-[5%] w-[40vw] h-[40vw] rounded-full bg-emerald-500/8 blur-[130px] pointer-events-none z-0 animate-glow-2"></div>
-
-    <!-- ========================================================
-         ฝั่งซ้าย: โลโก้, มาสคอตแมว 3D หรูหรา, และการ์ดนาฬิกาเรืองแสง
-         ======================================================== -->
-    <div class="w-full lg:w-[35%] xl:w-[32%] lg:h-screen lg:sticky lg:top-0 p-8 sm:p-12 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-white/10 bg-black/5 backdrop-blur-sm z-10">
-      
-      <!-- ส่วนแบรนดิ้งแบบไม่มีขอบและกระพริบเรืองแสงสีฟ้านีออน -->
-      <div class="flex flex-col items-center text-center gap-1 relative z-10 w-full">
-        <div class="relative cursor-pointer">
-          <!-- โลโก้ขนาดใหญ่เรืองแสงกะพริบเป็นสีน้ำเงิน/ม่วงอวกาศ (ไม่มีขอบและพื้นหลังดำ) -->
-          <img src="images/logo.png" alt="ครูนิวตรอน.com โลโก้" class="w-44 h-44 sm:w-52 sm:h-52 object-contain animate-logo-pulse pointer-events-none">
-        </div>
-        
-        <div class="space-y-2 -mt-6">
-          <h1 class="shiny-text font-black text-4xl sm:text-[2.6rem] lg:text-[2.8rem] xl:text-[3.2rem] tracking-tight leading-none font-kanit drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
-            ครูนิวตรอน.com
-          </h1>
-          <p class="text-cream/85 font-light text-xs sm:text-sm max-w-[320px] sm:max-w-[380px] leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-            พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา<br>ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
-          </p>
+      <!-- KNT Geometric Monogram -->
+      <div class="hero-logo-wrap">
+        <svg viewBox="0 0 160 160" fill="none" class="hero-knt-mark">
+          <!-- Outer hex frame -->
+          <g opacity="0.3">
+            <path d="M80 12 L136 44 L136 108 L80 140 L24 108 L24 44 Z" stroke="#ff2040" stroke-width="1"/>
+          </g>
+          <!-- Mid tech ring -->
+          <circle cx="80" cy="76" r="52" stroke="rgba(255,32,64,0.2)" stroke-width="0.8" stroke-dasharray="4 8"/>
+          <!-- Inner ring -->
+          <circle cx="80" cy="76" r="42" stroke="rgba(255,32,64,0.12)" stroke-width="0.5"/>
+          <!-- Corner accent dots -->
+          <circle cx="80" cy="12" r="2" fill="#ff2040" opacity="0.6"/>
+          <circle cx="136" cy="76" r="2" fill="#ff2040" opacity="0.6"/>
+          <circle cx="80" cy="140" r="2" fill="#ff2040" opacity="0.6"/>
+          <circle cx="24" cy="76" r="2" fill="#ff2040" opacity="0.6"/>
+          <!-- K N T letterforms -->
+          <text x="80" y="86" text-anchor="middle" font-family="'Orbitron', sans-serif" font-weight="800" font-size="50" fill="#ff2040" letter-spacing="10">KNT</text>
+          <!-- Glow underlay -->
+          <text x="80" y="86" text-anchor="middle" font-family="'Orbitron', sans-serif" font-weight="800" font-size="50" fill="none" stroke="#ff2040" stroke-width="0.4" opacity="0.3" letter-spacing="10">KNT</text>
+          <!-- Top arc accent -->
+          <path d="M32 76 A48 48 0 0 1 128 76" stroke="#ff2040" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+        <div class="hero-logo-rings">
+          <svg viewBox="0 0 160 160" fill="none">
+            <g class="ring-outer" style="animation-duration: 8s;">
+              <circle cx="80" cy="80" r="76" stroke="rgba(255,32,64,0.2)" stroke-width="1" stroke-dasharray="40 80" stroke-linecap="round"/>
+            </g>
+            <g class="ring-inner" style="animation-duration: 6s;">
+              <circle cx="80" cy="80" r="66" stroke="rgba(255,32,64,0.15)" stroke-width="0.5" stroke-dasharray="20 50" stroke-linecap="round"/>
+            </g>
+          </svg>
         </div>
       </div>
 
+      <h1 class="hero-title">ครูนิวตรอน.com</h1>
+      <p class="hero-subtitle">
+        พอร์ตทัลอัจฉริยะรวบรวมระบบจัดการชั้นเรียน เช็คชื่อรายวิชา<br>
+        ส่งการบ้าน วัดประเมินเกรด และกิจกรรมบอร์ดเกม
+      </p>
+      <div class="hero-tags">
+        <span class="hero-tag">NEURAL INTERFACE v2.0</span>
+        <span class="hero-tag gold">13 MODULES ACTIVE</span>
+      </div>
     </div>
 
-    <!-- ========================================================
-         ฝั่งขวา: เมนูหลัก 6 การ์ดเครื่องมือ (เล่นแอนิเมชันเมื่อเอาเมาส์ชี้เท่านั้น)
-         ======================================================== -->
-    <div class="w-full lg:w-[65%] xl:w-[68%] p-6 sm:p-10 lg:p-12 lg:overflow-y-auto lg:h-screen z-10 flex flex-col justify-between">
-      
-      <div>
-        <!-- หัวข้อฝั่งขวา -->
-        <div class="mb-8 flex justify-between items-end border-b border-white/5 pb-4">
-          <div class="flex flex-col">
-            <span class="text-[10px] tracking-widest text-neon uppercase font-extrabold">CLASSROOM PORTAL</span>
-            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">คลังเครื่องมือจัดการชั้นเรียนและระบบช่วยสอน</h2>
-          </div>
-        </div>
-
-        <!-- การ์ดระบบงาน 6 ตัว (ดีไซน์นิ่งคลีนอ่านง่าย แต่ขยับลูปไฮเทคหลังการ์ดเมื่อโฮเวอร์) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          
-          <!-- การ์ด 1: เช็คชื่อรายวิชา -->
-          <a href="เช็คชื่อรายวิชา/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_15px_30px_rgba(59,130,246,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด (แสดงเฉพาะตอนโฮเวอร์เพื่อความคลีนและปุ่มเด่นชัด) -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/grad-cap.png" 
-                    alt="เช็คชื่อรายวิชา" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-blue-400/40 text-blue-300 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                  เช็คผ่านกล้อง 📷
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบเช็คชื่อเข้าเรียนรายวิชา
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                บันทึกเวลาเรียน ขาด ลา มาสาย รายคาบและรายห้องเรียนอย่างเป็นระเบียบ
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 2: เช็คชื่อ เตรียมวิศวะ -->
-          <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/gear.png" 
-                    alt="เช็คชื่อ เตรียมวิศวะ" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                  ม.4 - ม.6 🚀
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                ระบบบันทึกการเข้าเรียนออนไลน์ ห้องเรียนพิเศษเตรียมวิศวกรรมศาสตร์ 3 ห้องเรียน
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 3: ระบบติดตามส่งงาน -->
-          <a href="ส่งงาน/index-ส่งงาน.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-purple-500/40 hover:shadow-[0_15px_30px_rgba(139,92,246,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/beaker.png" 
-                    alt="ระบบติดตามส่งงาน" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-purple-400/40 text-purple-300 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-                  สแกนส่งงาน 📝
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบติดตามส่งงาน/ข้อสอบ
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                บันทึกความก้าวหน้าการส่งการบ้านและข้อสอบอย่างรวดเร็ว รองรับสแกนคิวอาร์การ์ดเด็ก
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 4: สุ่มเลขที่เป็ดแข่งวิ่ง -->
-          <a href="สุ่มเลขที่/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-yellow-500/40 hover:shadow-[0_15px_30px_rgba(245,158,11,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-yellow-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/dice.png" 
-                    alt="สุ่มเลขที่เป็ดแข่งวิ่ง" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-yellow-400/40 text-yellow-300 bg-yellow-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                  กิจกรรม 🦆
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                สุ่มเลขที่เป็ดแข่งวิ่ง 3D
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                สร้างความสนุกด้วยการวิ่งแข่งสุ่มเลขที่ของเด็กนักเรียนผ่านโมเดลเป็ดสามมิติสุดเร้าใจ
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 5: บอร์ดเกมคลับพัฒนาทักษะ -->
-          <a href="boardgame/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-pink-500/40 hover:shadow-[0_15px_30px_rgba(236,72,153,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-pink-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/dice.png" 
-                    alt="บอร์ดเกมคลับพัฒนาทักษะ" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-pink-400/40 text-pink-300 bg-pink-500/10 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
-                  สันทนาการ 🧩
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                บอร์ดเกมคลับพัฒนาทักษะ
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                คลังบอร์ดเกมเล่นง่ายพัฒนาตรรกะและความคิดสร้างสรรค์ เช่น Werewolf, Connect4, Othello
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 6: คลังคณิตศาสตร์เพิ่มเติม -->
-          <a href="learning/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-indigo-500/40 hover:shadow-[0_15px_30px_rgba(99,102,241,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors duration-300">
-                  <img 
-                    src="images/atom.png" 
-                    alt="คลังคณิตศาสตร์เพิ่มเติม" 
-                    class="w-8 h-8 object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
-                    style="mix-blend-mode: screen;"
-                  />
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-indigo-400/40 text-indigo-300 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
-                  แบบฝึกหัด 📚
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                คลังคณิตศาสตร์เพิ่มเติม
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                ศูนย์รวมบทเรียนวิชาคณิตศาสตร์ เพิ่มข้อสอบเป็น 20 ข้อต่อบท และระบบบันทึกคะแนน
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 7: ระบบสอบเก็บคะแนนท้ายบท -->
-          <a href="exam/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-red-500/40 hover:shadow-[0_15px_30px_rgba(239,68,68,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-red-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-red-400 stroke-[2]">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor"/>
-                    <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-red-400/40 text-red-300 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-                  ห้องสอบเก็บคะแนน 📝
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบสอบเก็บคะแนนท้ายบท
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                ห้องสอบทางการจำกัด 20 ข้อแบบสุ่มสลับ พร้อมตรรกะระบบป้องกันเปิดดูข้อมูล (Anti-Cheating Reset) ยืดหยุ่นสูงสุด
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เข้าสู่ห้องสอบ
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 8: ชุดจัดการ QR Code เช็คชื่อเด็ก -->
-          <div class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] group hover:border-teal-500/40 hover:shadow-[0_15px_30px_rgba(20,184,166,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-teal-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-teal-400 stroke-[2]">
-                    <path d="M12 4H4v8h8V4zM20 4h-8v8h8V4zM12 12H4v8h8v-8zM20 16h-4v4h4v-4z" stroke="currentColor"/>
-                    <path d="M20 12h-2v2h2v-2zM16 12h-2v2h2v-2zM14 20h2v-2h-2v2z" stroke="currentColor"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-teal-400/40 text-teal-300 bg-teal-500/10 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
-                  QR UTILS 🖨️
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ชุดจัดการ QR Code เช็คชื่อเด็ก
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                จัดพิมพ์การ์ดเช็คชื่อรายบุคคลของนักเรียนตามทะเบียนห้อง หรือสร้างคิวอาร์โค้ดปรับแต่งอเนกประสงค์
-              </p>
-            </div>
-            
-            <div class="relative z-10 grid grid-cols-2 gap-3 mt-5">
-              <a href="ส่งงาน/qr-card.html" class="text-center bg-white/[0.03] hover:bg-teal-500/20 hover:text-neon border border-white/10 hover:border-teal-500/40 rounded-xl py-2 text-xs font-bold transition-all duration-300">
-                🖨️ พิมพ์การ์ดสแกน
-              </a>
-              <a href="ส่งงาน/qr-generator.html" class="text-center bg-white/[0.03] hover:bg-teal-500/20 hover:text-neon border border-white/10 hover:border-teal-500/40 rounded-xl py-2 text-xs font-bold transition-all duration-300">
-                ✨ เจน QR Code
-              </a>
-            </div>
-          </div>
-
-          <!-- การ์ด 9: ระบบสแกนการ์ดตอบคำถาม (Plickers) -->
-          <a href="plickers/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-purple-500/40 hover:shadow-[0_15px_30px_rgba(139,92,246,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_053923_22c0a6a5-313c-474c-85ff-3b50d25e944a.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-7 h-7 fill-none stroke-purple-400 stroke-[2]">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor"/>
-                    <circle cx="12" cy="13" r="4" stroke="currentColor"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-purple-400/40 text-purple-300 bg-purple-500/10 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-                  สแกนกล้อง 📷
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบสแกนการ์ดตอบคำถาม (Plickers)
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                จัดกิจกรรมตอบคำถามในห้องเรียนโดยใช้การ์ด ArUco สแกนผลลัพธ์ผ่านกล้องครูได้ทันที
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 10: ระบบจัดการคะแนน / ตัดเกรด -->
-          <a href="คะแนนเกรด/index-เกรด.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-emerald-400 stroke-[2]">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor"/>
-                    <polyline points="14 2 14 8 20 8" stroke="currentColor"/>
-                    <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor"/>
-                    <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor"/>
-                    <polyline points="10 9 9 9 8 9" stroke="currentColor"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                  สำหรับคุณครู 🧑‍🏫
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบจัดการคะแนน / ตัดเกรด
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                กรอกคะแนน คำนวณตัดเกรดอัตโนมัติ 8 ระดับตามมาตรฐาน และสรุปรายงานห้องเรียน
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 11: ประกาศผลสอบ & ติดตามเกรด 0 -->
-          <a href="ประกาศผลสอบ/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_15px_30px_rgba(59,130,246,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_054411_511c1b7a-fb2f-42ef-bf6c-32c0b1a06e79.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-blue-400 stroke-[2]">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor"/>
-                    <circle cx="9" cy="7" r="4" stroke="currentColor"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-blue-400/40 text-blue-300 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                  สำหรับนักเรียน 🧑‍🎓
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ประกาศผลสอบ & ติดตามเกรด 0
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                ระบบสืบค้นผลคะแนนรายคน ค้นหาข้อมูลผลการเรียน และติดตามงานค้างสำหรับนักเรียน
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-          <!-- การ์ด 12: ระบบบัญชีเงินห้องเรียน ม.6/1 -->
-          <a href="เก็บเงินเพื่อน/index.html" class="liquid-glass p-6 rounded-[28px] flex flex-col justify-between min-h-[170px] cursor-pointer group hover:-translate-y-1.5 hover:border-emerald-500/40 hover:shadow-[0_15px_30px_rgba(16,185,129,0.15)] transition-all duration-300">
-            <!-- วิดีโอโฮโลแกรมอวกาศหลังการ์ด -->
-            <div class="absolute inset-0 z-0 opacity-0 group-hover:opacity-[0.22] transition-opacity duration-500 rounded-[28px] overflow-hidden">
-              <video autoplay loop muted playsinline class="w-full h-full object-cover">
-                <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260331_055427_ac7035b5-9f3b-4289-86fc-941b2432317d.mp4" type="video/mp4">
-              </video>
-            </div>
-            <div class="absolute inset-0 bg-spacebg/40 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-            <div class="relative z-10">
-              <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-emerald-500/10 transition-colors duration-300">
-                  <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-emerald-400 stroke-[2.5]" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor"/>
-                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor"/>
-                  </svg>
-                </div>
-                <span class="text-[9px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                  โปร่งใส 100% 💰
-                </span>
-              </div>
-              <h3 class="font-extrabold text-sm sm:text-base text-white group-hover:text-neon transition-colors duration-300 tracking-wide">
-                ระบบบัญชีเงินห้องเรียน ม.6/1
-              </h3>
-              <p class="text-[11px] sm:text-xs text-cream/55 font-light mt-1.5 leading-relaxed">
-                รายงานสถิติ ยอดสะสม ประวัติรายรับ-รายจ่าย และตรวจสอบสลิปหลักฐานโอนเงินเพื่อความไว้วางใจ
-              </p>
-            </div>
-            <div class="relative z-10 flex items-center gap-1.5 text-xs font-bold text-neon tracking-wider mt-5">
-              เปิดใช้งาน
-              <svg class="w-3.5 h-3.5 fill-none stroke-current stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </a>
-
-        </div>
+    <!-- HUD STATS BAR -->
+    <div class="hud-stats">
+      <div class="hud-stat">
+        <div class="hud-stat-label">MODULES</div>
+        <div class="hud-stat-value">13</div>
       </div>
-
-      <!-- ส่วนท้าย: กล่องจดบันทึกช่วยจำ (Notepad) -->
-      <div class="liquid-glass rounded-[24px] p-6 mt-8 hover:border-neon/20 transition-all duration-300">
-        <div class="flex justify-between items-center mb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-neon"></span>
-            <span class="text-xs font-bold text-cream tracking-wide uppercase">สมุดบันทึกช่วยจำของคุณครู</span>
-          </div>
-          <span id="memo-status" class="text-[10px] text-neon/80 tracking-wider">บันทึกอัตโนมัติ</span>
-        </div>
-        <textarea id="memo-input" class="w-full bg-transparent border-none outline-none resize-none font-mono text-xs sm:text-sm text-cream/90 placeholder-cream/35 min-h-[100px] leading-relaxed" placeholder="พิมพ์บันทึกตารางเรียน ข้อมูลสำคัญ หรือจดเตือนความจำที่นี่ได้เลยครับ..."></textarea>
-        <div id="memo-count" class="text-[9px] text-cream/40 font-mono text-right mt-1">0 ตัวอักษร</div>
+      <div class="hud-stat">
+        <div class="hud-stat-label">STATUS</div>
+        <div class="hud-stat-value green">ONLINE</div>
       </div>
-
+      <div class="hud-stat">
+        <div class="hud-stat-label">UPTIME</div>
+        <div class="hud-stat-value" id="uptime">00:00:00</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-stat-label">SESSION</div>
+        <div class="hud-stat-value" id="sessionDate">--</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-stat-label">CORE TEMP</div>
+        <div class="hud-stat-value" id="coreTemp">36.5°</div>
+      </div>
     </div>
+
+    <!-- CARDS -->
+    <div class="cards-section">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-header-tag">MODULE INDEX</div>
+          <div class="section-header-title">คลังเครื่องมือจัดการชั้นเรียนและระบบช่วยสอน</div>
+        </div>
+        <div class="section-header-right">// SELECT MODULE TO INITIATE</div>
+      </div>
+
+      <div class="cards-grid" id="cardsGrid">
+
+        <!-- Card 01: เช็คชื่อรายวิชา -->
+        <a href="เช็คชื่อรายวิชา/index.html" class="jarvis-card" style="animation-delay:0ms">
+          <div class="scan-line"></div>
+          <div class="card-num">001</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/grad-cap.png" alt=""></div>
+            <span class="card-badge">📷 LIVE SCAN</span>
+          </div>
+          <div class="card-title">ระบบเช็คชื่อเข้าเรียนรายวิชา</div>
+          <div class="card-desc">บันทึกเวลาเรียน ขาด ลา มาสาย รายคาบและรายห้องเรียนอย่างเป็นระเบียบ</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 02: เช็คชื่อ เตรียมวิศวะ -->
+        <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="jarvis-card" style="animation-delay:60ms">
+          <div class="scan-line"></div>
+          <div class="card-num">002</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/gear.png" alt=""></div>
+            <span class="card-badge">🚀 ม.4-ม.6</span>
+          </div>
+          <div class="card-title">เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div>
+          <div class="card-desc">ระบบบันทึกการเข้าเรียนออนไลน์ ห้องเรียนพิเศษเตรียมวิศวกรรมศาสตร์ 3 ห้องเรียน</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 03: ระบบติดตามส่งงาน -->
+        <a href="ส่งงาน/index-ส่งงาน.html" class="jarvis-card" style="animation-delay:120ms">
+          <div class="scan-line"></div>
+          <div class="card-num">003</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/beaker.png" alt=""></div>
+            <span class="card-badge">📝 TRACK</span>
+          </div>
+          <div class="card-title">ระบบติดตามส่งงาน/ข้อสอบ</div>
+          <div class="card-desc">บันทึกความก้าวหน้าการส่งการบ้านและข้อสอบอย่างรวดเร็ว รองรับสแกนคิวอาร์การ์ดเด็ก</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 04: สุ่มเลขที่เป็ดแข่งวิ่ง -->
+        <a href="สุ่มเลขที่/index.html" class="jarvis-card" style="animation-delay:180ms">
+          <div class="scan-line"></div>
+          <div class="card-num">004</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/dice.png" alt=""></div>
+            <span class="card-badge">🦆 3D RACE</span>
+          </div>
+          <div class="card-title">สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div>
+          <div class="card-desc">สร้างความสนุกด้วยการวิ่งแข่งสุ่มเลขที่ของเด็กนักเรียนผ่านโมเดลเป็ดสามมิติสุดเร้าใจ</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 05: บอร์ดเกม -->
+        <a href="boardgame/index.html" class="jarvis-card" style="animation-delay:240ms">
+          <div class="scan-line"></div>
+          <div class="card-num">005</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/dice.png" alt=""></div>
+            <span class="card-badge">🧩 GAME</span>
+          </div>
+          <div class="card-title">บอร์ดเกมคลับพัฒนาทักษะ</div>
+          <div class="card-desc">คลังบอร์ดเกมเล่นง่ายพัฒนาตรรกะและความคิดสร้างสรรค์ เช่น Werewolf, Connect4, Othello</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 06: คลังคณิตศาสตร์ -->
+        <a href="learning/index.html" class="jarvis-card" style="animation-delay:300ms">
+          <div class="scan-line"></div>
+          <div class="card-num">006</div>
+          <div class="card-top">
+            <div class="card-icon"><img src="images/atom.png" alt=""></div>
+            <span class="card-badge">📚 LEARN</span>
+          </div>
+          <div class="card-title">คลังคณิตศาสตร์เพิ่มเติม ม.4</div>
+          <div class="card-desc">ศูนย์รวมบทเรียนวิชาคณิตศาสตร์ เพิ่มข้อสอบเป็น 20 ข้อต่อบท และระบบบันทึกคะแนน</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 07: ระบบสอบ -->
+        <a href="exam/index.html" class="jarvis-card" style="animation-delay:360ms">
+          <div class="scan-line"></div>
+          <div class="card-num">007</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>
+            </div>
+            <span class="card-badge">📝 EXAM</span>
+          </div>
+          <div class="card-title">ระบบสอบเก็บคะแนนท้ายบท</div>
+          <div class="card-desc">ห้องสอบทางการจำกัด 20 ข้อแบบสุ่มสลับ พร้อมระบบป้องกันการทุจริต (Anti-Cheating Reset)</div>
+          <div class="card-footer">
+            <div class="card-action">ENTER EXAM <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 08: Plickers -->
+        <a href="plickers/index.html" class="jarvis-card" style="animation-delay:420ms">
+          <div class="scan-line"></div>
+          <div class="card-num">008</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <span class="card-badge">📸 SCAN</span>
+          </div>
+          <div class="card-title">ระบบสแกนการ์ด Plickers</div>
+          <div class="card-desc">จัดกิจกรรมตอบคำถามในห้องเรียนโดยใช้การ์ด ArUco สแกนผลลัพธ์ผ่านกล้องครูได้ทันที</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 09: คะแนน/เกรด -->
+        <a href="คะแนนเกรด/index-เกรด.html" class="jarvis-card" style="animation-delay:480ms">
+          <div class="scan-line"></div>
+          <div class="card-num">009</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <span class="card-badge">📊 GRADES</span>
+          </div>
+          <div class="card-title">ระบบจัดการคะแนน/ตัดเกรด</div>
+          <div class="card-desc">กรอกคะแนน คำนวณตัดเกรดอัตโนมัติ 8 ระดับตามมาตรฐาน และสรุปรายงานห้องเรียน</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 10: ประกาศผลสอบ -->
+        <a href="ประกาศผลสอบ/index.html" class="jarvis-card" style="animation-delay:540ms">
+          <div class="scan-line"></div>
+          <div class="card-num">010</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </div>
+            <span class="card-badge">📢 PUBLISH</span>
+          </div>
+          <div class="card-title">ประกาศผลสอบ & ติดตามเกรด 0</div>
+          <div class="card-desc">ระบบสืบค้นผลคะแนนรายคน ค้นหาข้อมูลผลการเรียน และติดตามงานค้างสำหรับนักเรียน</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 11: เงินห้อง -->
+        <a href="เก็บเงินเพื่อน/index.html" class="jarvis-card" style="animation-delay:600ms">
+          <div class="scan-line"></div>
+          <div class="card-num">011</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <span class="card-badge">💰 FUND</span>
+          </div>
+          <div class="card-title">ระบบบัญชีเงินห้องเรียน ม.6/1</div>
+          <div class="card-desc">รายงานสถิติ ยอดสะสม ประวัติรายรับ-รายจ่าย และตรวจสอบสลิปหลักฐานโอนเงิน</div>
+          <div class="card-footer">
+            <div class="card-action">INITIATE <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ACTIVE</div>
+          </div>
+        </a>
+
+        <!-- Card 12: QR Utils -->
+        <div class="jarvis-card" style="animation-delay:660ms">
+          <div class="scan-line"></div>
+          <div class="card-num">012</div>
+          <div class="card-top">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 4H4v8h8V4zM20 4h-8v8h8V4zM12 12H4v8h8v-8zM20 16h-4v4h4v-4z"/></svg>
+            </div>
+            <span class="card-badge">🖨️ QR UTILS</span>
+          </div>
+          <div class="card-title">ชุดจัดการ QR Code</div>
+          <div class="card-desc">จัดพิมพ์การ์ดเช็คชื่อรายบุคคลของนักเรียน หรือสร้างคิวอาร์โค้ดปรับแต่งอเนกประสงค์</div>
+          <div class="card-qr-buttons">
+            <a href="ส่งงาน/qr-card.html" class="card-qr-btn">🖨️ พิมพ์การ์ด</a>
+            <a href="ส่งงาน/qr-generator.html" class="card-qr-btn">✨ สร้าง QR</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- NOTEPAD -->
+    <div class="notepad">
+      <div class="notepad-header">
+        <div class="notepad-header-left">
+          <span class="dot"></span>
+          <span class="label">NEURAL NOTEPAD</span>
+        </div>
+        <span class="notepad-status" id="memoStatus">AUTO-SAVED</span>
+      </div>
+      <textarea id="memoInput" placeholder="// พิมพ์บันทึกตารางเรียน ข้อมูลสำคัญ หรือจดเตือนความจำที่นี่..."></textarea>
+      <div class="notepad-count" id="memoCount">0 chars</div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-text">KNT OS v2.0 · NEURAL INTERFACE · <span>ครูนิวตรอน.com</span> © 2026</div>
+    </div>
+
   </div>
 
-  <!-- JAVASCRIPT FOR FUNCTIONALITY -->
+  <!-- ========== JAVASCRIPT ========== -->
   <script>
     // ==========================================
-    //  Starfield Interactive Background (ดวงดาวกะพริบ)
-    // ==========================================
+    //  BOOT SEQUENCE
     (function() {
-      const canvas = document.getElementById('starfield');
+      const boot = document.getElementById('boot-sequence');
+      setTimeout(() => boot.classList.add('done'), 1800);
+    })();
+
+    // ==========================================
+    //  HUD CLOCK
+    (function() {
+      const el = document.getElementById('hudClock');
+      if (!el) return;
+      const tick = () => {
+        const d = new Date();
+        const p = n => String(n).padStart(2, '0');
+        el.textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      };
+      tick(); setInterval(tick, 1000);
+    })();
+
+    // ==========================================
+    //  UPTIME COUNTER
+    (function() {
+      const el = document.getElementById('uptime');
+      const dateEl = document.getElementById('sessionDate');
+      const tempEl = document.getElementById('coreTemp');
+      if (!el) return;
+      const start = Date.now();
+      const tick = () => {
+        const elapsed = Math.floor((Date.now() - start) / 1000);
+        const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+        const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        el.textContent = `${h}:${m}:${s}`;
+      };
+      tick(); setInterval(tick, 1000);
+
+      // Session date
+      if (dateEl) {
+        const d = new Date();
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        dateEl.textContent = `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]}`;
+      }
+
+      // Core temp fluctuation (decorative)
+      if (tempEl) {
+        setInterval(() => {
+          const t = (36.2 + Math.random() * 0.8).toFixed(1);
+          tempEl.textContent = `${t}°`;
+        }, 3000);
+      }
+    })();
+
+    // ==========================================
+    //  PARTICLE NETWORK BACKGROUND
+    (function() {
+      const canvas = document.getElementById('particles');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      
-      let animationFrameId;
-      let currentWidth = 0;
-      let currentHeight = 0;
-      
-      const resizeCanvas = () => {
-        currentWidth = window.innerWidth;
-        currentHeight = window.innerHeight;
-        canvas.width = currentWidth;
-        canvas.height = currentHeight;
+      let W, H, particles = [], mouse = { x: -1000, y: -1000 };
+
+      const resize = () => {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
       };
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-      
-      const stars = [];
-      const numStars = 120;
-      for (let i = 0; i < numStars; i++) {
-        stars.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 1.6 + 0.4,
-          speed: Math.random() * 0.04 + 0.015,
-          alpha: Math.random(),
-          fade: Math.random() > 0.5 ? 1 : -1
+      resize();
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+      const count = Math.min(70, Math.floor(W * H / 20000));
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          r: Math.random() * 1.5 + 0.5
         });
       }
-      
+
       const render = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        stars.forEach(star => {
-          ctx.fillStyle = `rgba(239, 244, 255, ${star.alpha})`;
+        ctx.clearRect(0, 0, W, H);
+
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0 || p.x > W) p.vx *= -1;
+          if (p.y < 0 || p.y > H) p.vy *= -1;
+
+          // Mouse repulsion
+          const dx = p.x - mouse.x, dy = p.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            p.x += dx / dist * 0.8;
+            p.y += dy / dist * 0.8;
+          }
+
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 32, 64, 0.4)';
           ctx.fill();
-          
-          star.y -= star.speed;
-          if (star.y < 0) {
-            star.y = canvas.height;
-            star.x = Math.random() * canvas.width;
-          }
-          
-          star.alpha += 0.007 * star.fade;
-          if (star.alpha > 0.95) {
-            star.alpha = 0.95;
-            star.fade = -1;
-          } else if (star.alpha < 0.1) {
-            star.alpha = 0.1;
-            star.fade = 1;
-          }
         });
-        
-        animationFrameId = requestAnimationFrame(render);
+
+        // Draw connections
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 130) {
+              const alpha = (1 - dist / 130) * 0.15;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(255, 32, 64, ${alpha})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+
+        requestAnimationFrame(render);
       };
       render();
     })();
 
     // ==========================================
-    //  Classroom Activity Timer & Stopwatch
-    // ==========================================
+    //  SIDEBAR DRAWER
     (function() {
-      let timerDuration = 300; // default 5 minutes (300 seconds)
-      let timeRemaining = timerDuration;
-      let timerInterval = null;
-      let isRunning = false;
+      const toggle = document.getElementById('menuToggle');
+      const close = document.getElementById('menuClose');
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('drawerBackdrop');
 
-      const timerDisplay = document.getElementById('timer-display');
-      const toggleBtn = document.getElementById('btn-timer-toggle');
-      const statusDot = document.getElementById('timer-status-dot');
-
-      const formatTime = (secs) => {
-        const m = String(Math.floor(secs / 60)).padStart(2, '0');
-        const s = String(secs % 60).padStart(2, '0');
-        return `${m}:${s}`;
+      const openDrawer = () => {
+        sidebar.classList.add('open');
+        backdrop.classList.add('open');
+      };
+      const closeDrawer = () => {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('open');
       };
 
-      const updateDisplay = () => {
-        if (timerDisplay) {
-          timerDisplay.textContent = formatTime(timeRemaining);
-        }
-      };
+      toggle.addEventListener('click', openDrawer);
+      close.addEventListener('click', closeDrawer);
+      backdrop.addEventListener('click', closeDrawer);
 
-      window.setTimerPreset = (secs) => {
-        clearInterval(timerInterval);
-        isRunning = false;
-        timerDuration = secs;
-        timeRemaining = secs;
-        if (toggleBtn) {
-          toggleBtn.textContent = 'เริ่ม';
-          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
-        }
-        if (statusDot) {
-          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
-          statusDot.style.animation = 'none';
-        }
-        if (timerDisplay) {
-          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
-        }
-        updateDisplay();
-      };
+      sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
 
-      window.toggleTimer = () => {
-        if (isRunning) {
-          // Pause timer
-          clearInterval(timerInterval);
-          isRunning = false;
-          if (toggleBtn) toggleBtn.textContent = 'ทำต่อ';
-          if (statusDot) {
-            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
-            statusDot.style.animation = 'none';
-          }
-        } else {
-          // Start timer
-          isRunning = true;
-          if (toggleBtn) toggleBtn.textContent = 'หยุด';
-          if (statusDot) {
-            statusDot.className = 'w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_10px_#6FFF00]';
-            statusDot.style.animation = 'status-pulse 2s infinite ease-in-out';
-          }
-          
-          timerInterval = setInterval(() => {
-            if (timeRemaining > 0) {
-              timeRemaining--;
-              updateDisplay();
-              
-              // Warning state when under 10 seconds
-              if (timeRemaining <= 10 && timerDisplay) {
-                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]';
-              }
-            } else {
-              // Timer Finished
-              clearInterval(timerInterval);
-              isRunning = false;
-              if (toggleBtn) {
-                toggleBtn.textContent = 'เริ่มใหม่';
-                toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
-              }
-              if (statusDot) {
-                statusDot.className = 'w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_10px_#EF4444] animate-ping';
-              }
-              if (timerDisplay) {
-                timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]';
-              }
-              // Play audio beep
-              try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.3);
-              } catch(e) {}
-            }
-          }, 1000);
-        }
-      };
-
-      window.resetTimer = () => {
-        clearInterval(timerInterval);
-        isRunning = false;
-        timeRemaining = timerDuration;
-        if (toggleBtn) {
-          toggleBtn.textContent = 'เริ่ม';
-          toggleBtn.className = 'flex-1 max-w-[90px] py-1.5 text-xs font-extrabold rounded-xl bg-neon text-spacebg shadow-[0_0_15px_rgba(111,255,0,0.3)] hover:brightness-110 active:scale-95 transition-all duration-200';
-        }
-        if (statusDot) {
-          statusDot.className = 'w-1.5 h-1.5 rounded-full bg-cream/30';
-          statusDot.style.animation = 'none';
-        }
-        if (timerDisplay) {
-          timerDisplay.className = 'font-outfit text-3xl sm:text-4xl font-extrabold tracking-widest text-cream drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]';
-        }
-        updateDisplay();
-      };
-
-      updateDisplay();
+      // ESC to close
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeDrawer();
+      });
     })();
 
-
     // ==========================================
-    //  Notepad Auto-Save Memo Pad
-    // ==========================================
+    //  NOTEPAD AUTO-SAVE
     (function() {
-      const memoInput = document.getElementById('memo-input');
-      const memoStatus = document.getElementById('memo-status');
-      const memoCount = document.getElementById('memo-count');
-      const MEMO_STORAGE_KEY = 'teacher_neutron_portal_memo';
-      let saveTimer = null;
-      
-      if (!memoInput) return;
-      
-      const saved = localStorage.getItem(MEMO_STORAGE_KEY);
-      if (saved !== null) {
-        memoInput.value = saved;
-        if (memoCount) memoCount.textContent = `${saved.length} ตัวอักษร`;
-      }
-      
-      memoInput.addEventListener('input', (e) => {
-        const val = e.target.value;
-        localStorage.setItem(MEMO_STORAGE_KEY, val);
-        if (memoCount) memoCount.textContent = `${val.length} ตัวอักษร`;
-        
-        if (memoStatus) {
-          memoStatus.textContent = "กำลังบันทึก...";
-          memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-amber-400";
-        }
-        
-        if (saveTimer) clearTimeout(saveTimer);
-        
-        saveTimer = setTimeout(() => {
-          if (memoStatus) {
-            memoStatus.textContent = "บันทึกอัตโนมัติแล้ว";
-            memoStatus.className = "transition-colors duration-300 font-medium text-[10px] text-neon";
-          }
+      const input = document.getElementById('memoInput');
+      const status = document.getElementById('memoStatus');
+      const count = document.getElementById('memoCount');
+      if (!input) return;
+
+      const KEY = 'knt_neural_notepad';
+      const saved = localStorage.getItem(KEY);
+      if (saved) { input.value = saved; count.textContent = `${saved.length} chars`; }
+
+      let timer;
+      input.addEventListener('input', () => {
+        const v = input.value;
+        localStorage.setItem(KEY, v);
+        count.textContent = `${v.length} chars`;
+        status.textContent = 'SAVING...';
+        status.style.color = '#ffb800';
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          status.textContent = 'AUTO-SAVED';
+          status.style.color = '';
         }, 500);
       });
-      // ==========================================
-      //  Sidebar Drawer Navigation Logic
-      // ==========================================
-      const menuToggleBtn = document.getElementById('menu-toggle-btn');
-      const menuCloseBtn = document.getElementById('menu-close-btn');
-      const sidebarDrawer = document.getElementById('sidebar-drawer');
-      const drawerBackdrop = document.getElementById('drawer-backdrop');
-
-      function openDrawer() {
-        if (!sidebarDrawer || !drawerBackdrop) return;
-        sidebarDrawer.classList.remove('-translate-x-full');
-        drawerBackdrop.classList.remove('hidden');
-        // Force reflow
-        drawerBackdrop.offsetWidth;
-        drawerBackdrop.classList.add('opacity-100');
-      }
-
-      function closeDrawer() {
-        if (!sidebarDrawer || !drawerBackdrop) return;
-        sidebarDrawer.classList.add('-translate-x-full');
-        drawerBackdrop.classList.remove('opacity-100');
-        setTimeout(() => {
-          drawerBackdrop.classList.add('hidden');
-        }, 300);
-      }
-
-      if (menuToggleBtn && menuCloseBtn && sidebarDrawer && drawerBackdrop) {
-        menuToggleBtn.addEventListener('click', openDrawer);
-        menuCloseBtn.addEventListener('click', closeDrawer);
-        drawerBackdrop.addEventListener('click', closeDrawer);
-        
-        // Close drawer on clicking any links inside it
-        const drawerLinks = sidebarDrawer.querySelectorAll('a');
-        drawerLinks.forEach(link => {
-          link.addEventListener('click', closeDrawer);
-        });
-      }
     })();
   </script>
 </body>

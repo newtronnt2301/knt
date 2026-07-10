@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>เกรด & ผลการเรียน · KNT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="container">
+
+      <div class="page-head reveal">
+        <div class="page-head-left">
+          <nav class="breadcrumb">
+            <a href="index.html">แดชบอร์ด</a><span class="sep">/</span><span>เกรด &amp; ผลการเรียน</span>
+          </nav>
+          <h1 class="page-title">เกรด &amp;<span class="grad">ผลการเรียน</span></h1>
+          <p class="page-desc">บันทึกเกรดและผลการเรียนรายวิชา พร้อมระบบค้นหาผลสอบสำหรับนักเรียน</p>
+        </div>
+        <div class="page-head-actions">
+          <div class="segmented" id="roleSwitch">
+            <button data-role="teacher" class="active">ครู (จัดการ)</button>
+            <button data-role="student">นักเรียน (ค้นหา)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TEACHER MODE ===== -->
+      <section id="teacherRole">
+        <div class="panel reveal" style="margin-bottom:18px">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span>บันทึก/แก้ไขเกรด</div>
+            <button class="btn btn-ghost btn-sm" id="loadExisting"><span class="ico"></span> โหลดเกรดเดิม</button>
+            <button class="btn btn-ghost btn-sm" id="loadRoster"><span class="ico"></span> โหลดทะเบียนนักเรียน</button>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">ห้อง</label>
+              <select id="g_room" class="select"></select>
+            </div>
+            <div class="field" style="flex:1;min-width:200px">
+              <label class="field-label">วิชา</label>
+              <input type="text" id="g_subject" class="input" placeholder="เช่น ฟิสิกส์" value="ฟิสิกส์" />
+            </div>
+            <div class="field">
+              <label class="field-label">เทอม</label>
+              <select id="g_term" class="select">
+                <option>เทอม 1</option><option>เทอม 2</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel reveal" style="margin-bottom:18px">
+          <div class="panel-head">
+            <div class="panel-title">ตารางเกรด</div>
+            <div class="row gap-1">
+              <button class="btn btn-ghost btn-sm" id="addRow"><span class="ico"></span> เพิ่มแถว</button>
+              <button class="btn btn-ghost btn-sm" id="calcGrade"><span class="ico"></span> คำนวณเกรด</button>
+            </div>
+          </div>
+          <div id="gradeTable"></div>
+        </div>
+
+        <div class="row reveal" style="justify-content:flex-end;gap:12px">
+          <button class="btn btn-ghost" id="clearBtn">ล้างทั้งหมด</button>
+          <button class="btn btn-primary" id="saveGrades"><span class="ico"></span> บันทึกเกรดเข้าระบบ</button>
+        </div>
+      </section>
+
+      <!-- ===== STUDENT MODE ===== -->
+      <section id="studentRole" class="hidden">
+        <div class="panel reveal">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot"></span>ค้นหาผลการเรียน</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">ห้อง</label>
+              <select id="sr_room" class="select"></select>
+            </div>
+            <div class="field" style="flex:1;min-width:220px">
+              <label class="field-label">เลขที่ หรือ ชื่อ</label>
+              <input type="text" id="sr_query" class="input" placeholder="เช่น 12 หรือ สมชาย" />
+            </div>
+            <div class="field" style="align-self:flex-end">
+              <button class="btn btn-primary" id="sr_search"><span class="ico"></span> ค้นหา</button>
+            </div>
+          </div>
+          <div id="sr_result" class="mt-3"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/students.js"></script>
+  <script>
+  /* =========================================================
+     Grades & results — GRADES_API
+     POST {action:'save', key:'ห้อง|วิชา', data}
+     ========================================================= */
+  (function () {
+    const S = window.KNTShell;
+    S.mount({ page: "grades" });
+    ["loadExisting","addRow","calcGrade","clearBtn","saveGrades","sr_search","loadRoster"].forEach((id) => {
+      const b = document.getElementById(id);
+      const ico = b?.querySelector(".ico"); if (ico) {
+        ico.innerHTML = id === "addRow" ? S.icons.plus
+          : id === "saveGrades" ? S.icons.save
+          : id === "sr_search" ? S.icons.search
+          : id === "loadRoster" ? S.icons.download
+          : S.icons.refresh;
+      }
+    });
+
+    // Populate room dropdowns from KNTStudents
+    const allRooms = KNTStudents.ROOMS;
+    document.getElementById("g_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
+    document.getElementById("sr_room").innerHTML = allRooms.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    /* ---------- Role switch ---------- */
+    document.getElementById("roleSwitch").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-role]");
+      if (!b) return;
+      document.querySelectorAll("#roleSwitch button").forEach((x) => x.classList.remove("active"));
+      b.classList.add("active");
+      const r = b.dataset.role;
+      document.getElementById("teacherRole").classList.toggle("hidden", r !== "teacher");
+      document.getElementById("studentRole").classList.toggle("hidden", r !== "student");
+    });
+
+    /* ---------- Grade table ---------- */
+    const SUBJECTS_HINT = ["ฟิสิกส์","เคมี","ชีววิทยา","คณิตศาสตร์","อังกฤษ","ไทย","สังคม"];
+    let rows = makeRows(10);
+    function makeRows(n) {
+      return Array.from({ length: n }, (_, i) => ({ no: i + 1, name: "", score: "", grade: "" }));
+    }
+
+    const gradeTable = document.getElementById("gradeTable");
+    function renderRows() {
+      gradeTable.innerHTML = `<div class="table-wrap"><table class="knt-table">
+        <thead><tr>
+          <th style="width:60px">เลขที่</th>
+          <th>ชื่อ–สกุล</th>
+          <th style="width:100px" class="num">คะแนน</th>
+          <th style="width:100px" class="num">เต็ม</th>
+          <th style="width:90px" class="center">เกรด</th>
+          <th style="width:60px"></th>
+        </tr></thead>
+        <tbody>${rows.map((r, i) => `
+          <tr data-i="${i}">
+            <td class="num"><input type="number" class="input btn-sm" style="padding:6px 8px;width:54px" data-k="no" value="${r.no}" /></td>
+            <td><input type="text" class="input btn-sm" style="padding:6px 10px" data-k="name" value="${S.escapeHTML(r.name)}" placeholder="ชื่อนักเรียน" /></td>
+            <td class="num"><input type="number" class="input btn-sm" style="padding:6px 8px;width:80px" data-k="score" value="${r.score}" step="0.5" /></td>
+            <td class="num"><input type="number" class="input btn-sm" style="padding:6px 8px;width:70px" data-k="max" value="${r.max ?? 100}" /></td>
+            <td class="center"><span class="grade-cell" data-grade>${r.grade || "—"}</span></td>
+            <td><button class="btn btn-ghost btn-sm del-row" title="ลบ" data-i="${i}">✕</button></td>
+          </tr>`).join("")}</tbody></table></div>`;
+    }
+
+    gradeTable.addEventListener("input", (e) => {
+      const tr = e.target.closest("tr"); if (!tr) return;
+      const i = Number(tr.dataset.i);
+      const k = e.target.dataset.k;
+      if (!k) return;
+      rows[i][k] = e.target.value;
+      if (k === "score" || k === "max") updateGrade(i);
+    });
+    gradeTable.addEventListener("click", (e) => {
+      const d = e.target.closest(".del-row");
+      if (!d) return;
+      const i = Number(d.dataset.i);
+      rows.splice(i, 1);
+      rows.forEach((r, idx) => (r.no = idx + 1));
+      renderRows();
+    });
+
+    function gradeFromPct(p) {
+      if (p >= 80) return "4";
+      if (p >= 75) return "3.5";
+      if (p >= 70) return "3";
+      if (p >= 65) return "2.5";
+      if (p >= 60) return "2";
+      if (p >= 55) return "1.5";
+      if (p >= 50) return "1";
+      return "0";
+    }
+    function gradeColor(g) {
+      const n = parseFloat(g);
+      if (n >= 3) return "green";
+      if (n >= 2) return "blue";
+      if (n >= 1) return "yellow";
+      return "red";
+    }
+    function updateGrade(i) {
+      const r = rows[i];
+      const sc = parseFloat(r.score), mx = parseFloat(r.max || 100);
+      if (isNaN(sc)) { r.grade = ""; gradeTable.querySelector(`tr[data-i="${i}"] [data-grade]`).textContent = "—"; return; }
+      const pct = (sc / (mx || 100)) * 100;
+      r.grade = gradeFromPct(pct);
+      const cell = gradeTable.querySelector(`tr[data-i="${i}"] [data-grade]`);
+      cell.innerHTML = `<span class="badge ${gradeColor(r.grade)}">${r.grade}</span>`;
+    }
+
+    document.getElementById("addRow").addEventListener("click", () => {
+      rows.push({ no: rows.length + 1, name: "", score: "", max: 100, grade: "" });
+      renderRows();
+    });
+    document.getElementById("calcGrade").addEventListener("click", () => {
+      rows.forEach((_, i) => updateGrade(i));
+      S.toast("คำนวณเกรดเรียบร้อย", "ok");
+    });
+    document.getElementById("clearBtn").addEventListener("click", async () => {
+      const ok = await S.confirmBox("ล้างตารางทั้งหมด?", { confirmLabel: "ล้างทั้งหมด" });
+      if (!ok) return;
+      rows = makeRows(10);
+      renderRows();
+    });
+
+    document.getElementById("loadExisting").addEventListener("click", async () => {
+      const key = `${document.getElementById("g_room").value}|${document.getElementById("g_subject").value}`;
+      S.toast("กำลังโหลดเกรดเดิม…");
+      try {
+        const res = await KNT.grades.loadKey(key);
+        const data = Array.isArray(res) ? res : (res?.students || res?.data || res?.rows || []);
+        if (data.length) { rows = data; renderRows(); S.toast(`โหลดเกรด ${data.length} รายการ`, "ok"); }
+        else S.toast("ยังไม่มีข้อมูลเกรดเดิม", "err");
+      } catch (err) { S.toast("โหลดไม่สำเร็จ: " + (err.message||""), "err"); }
+    });
+
+    /* ---------- Save grades (POST) ---------- */
+    document.getElementById("saveGrades").addEventListener("click", async () => {
+      const room = document.getElementById("g_room").value;
+      const subject = document.getElementById("g_subject").value.trim();
+      const term = document.getElementById("g_term").value;
+      if (!subject) return S.toast("กรุณาระบุวิชา", "err");
+      // auto-calc grades first
+      rows.forEach((_, i) => updateGrade(i));
+      const data = rows
+        .filter((r) => r.name || r.score)
+        .map((r) => ({ no: Number(r.no), name: r.name, score: Number(r.score || 0), max: Number(r.max || 100), grade: r.grade }));
+      if (!data.length) return S.toast("ไม่มีข้อมูลให้บันทึก", "err");
+      const key = `${room}|${subject}|${term}`;
+      const btn = document.getElementById("saveGrades");
+      btn.disabled = true;
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<div class="loader" style="width:18px;height:18px;border-width:2px"></div> กำลังบันทึก…`;
+      try {
+        await KNT.grades.save(key, { room, subject, term, savedAt: new Date().toISOString(), students: data });
+        S.toast(`บันทึกเกรด ${subject} (${room}) สำเร็จ — ${data.length} คน`, "ok");
+      } catch (err) {
+        // Fallback to GET method
+        try {
+          await KNT.grades.saveGet(key, { room, subject, term, students: data });
+          S.toast(`บันทึกเกรดสำเร็จ (GET fallback)`, "ok");
+        } catch (e2) {
+          S.toast("บันทึกไม่สำเร็จ: " + (e2.message||""), "err");
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    });
+
+    /* ---------- Student search ---------- */
+    document.getElementById("sr_search").addEventListener("click", async () => {
+      const room = document.getElementById("sr_room").value;
+      const q = document.getElementById("sr_query").value.trim();
+      const out = document.getElementById("sr_result");
+      if (!q) return S.toast("กรุณาใส่เลขที่หรือชื่อ", "err");
+      out.innerHTML = S.loaderHTML("กำลังค้นหาผลการเรียน…");
+      try {
+        // Try fetching all stored grades and filter client-side
+        const res = await KNT.grades.loadAll();
+        const all = Array.isArray(res) ? res : (res?.data || res?.items || []);
+        const key = room;
+        const subjectEntries = all.filter((e) => {
+          const k = e.key || e.ห้อง || "";
+          return k.startsWith(room) || k.includes(room);
+        });
+        if (!subjectEntries.length) { out.innerHTML = S.emptyHTML("ยังไม่พบผลการเรียน", `ห้อง ${room} ยังไม่มีข้อมูลในระบบ`); return; }
+        // Aggregate matches per subject
+        const matches = [];
+        subjectEntries.forEach((e) => {
+          const students = e.data?.students || e.students || [];
+          students.forEach((st) => {
+            const hit = String(st.no) === q || (st.name || "").toLowerCase().includes(q.toLowerCase());
+            if (hit) matches.push({ subject: e.data?.subject || e.subject, term: e.data?.term || e.term, ...st });
+          });
+        });
+        if (!matches.length) { out.innerHTML = S.emptyHTML("ไม่พบผลการเรียน", `ไม่พบ "${q}" ในห้อง ${room}`); return; }
+        out.innerHTML = `<div class="panel" style="padding:0">
+          <div class="panel-head" style="padding:18px 20px"><div class="panel-title"><span class="dot"></span>ผลการเรียนของ "${S.escapeHTML(q)}" — ${room}</div></div>
+          <div class="table-wrap"><table class="knt-table">
+            <thead><tr><th>วิชา</th><th>เทอม</th><th class="num">คะแนน</th><th class="center">เกรด</th></tr></thead>
+            <tbody>${matches.map((m) => `
+              <tr>
+                <td class="strong">${S.escapeHTML(m.subject || "—")}</td>
+                <td><span class="badge gray">${S.escapeHTML(m.term || "—")}</span></td>
+                <td class="num strong">${m.score}${m.max?` <span class="text-mute">/ ${m.max}</span>`:""}</td>
+                <td class="center"><span class="badge ${gradeColor(m.grade)}">${m.grade || "—"}</span></td>
+              </tr>`).join("")}</tbody>
+          </table></div></div>`;
+      } catch (err) {
+        out.innerHTML = `<div class="alert alert-error"><strong>ค้นหาไม่สำเร็จ</strong><div class="hint">${S.escapeHTML(err.message||"")}</div></div>`;
+      }
+    });
+
+    /* ---------- Load roster from student registry ---------- */
+    document.getElementById("loadRoster").addEventListener("click", () => {
+      const room = document.getElementById("g_room").value;
+      const roster = KNTStudents.get(room);
+      if (!roster.length) { S.toast(`ไม่พบทะเบียนห้อง ${room}`, "err"); return; }
+      rows = roster.map((s) => ({ no: s.no, name: s.name, score: "", max: 100, grade: "" }));
+      renderRows();
+      S.toast(`โหลดทะเบียน ${room} สำเร็จ — ${roster.length} คน`, "ok");
+    });
+
+    renderRows();
+  })();
+  </script>
+  <style>
+    .grade-cell { font-weight:700; }
+    .knt-table input.input { background:transparent;border:1px solid transparent;color:var(--text); }
+    .knt-table input.input:focus { border-color:var(--red);background:var(--red-soft); }
+  </style>
+</body>
+</html>

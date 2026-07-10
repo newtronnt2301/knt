@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>เงินห้อง ม.6/1 · KNT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="container">
+
+      <div class="page-head reveal">
+        <div class="page-head-left">
+          <nav class="breadcrumb">
+            <a href="index.html">แดชบอร์ด</a><span class="sep">/</span><span>เงินห้อง ม.6/1</span>
+          </nav>
+          <h1 class="page-title">ระบบบัญชี<span class="grad">เงินห้อง</span> ม.6/1</h1>
+          <p class="page-desc">บันทึกรายรับ–รายจ่ายเงินห้อง สรุปยอดคงเหลือ และประวัติธุรกรรมแบบเรียลไทม์</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost btn-sm" id="refreshBtn"><span class="ico"></span> รีเฟรช</button>
+          <button class="btn btn-primary" id="newTxBtn"><span class="ico"></span> บันทึกธุรกรรม</button>
+        </div>
+      </div>
+
+      <!-- Balance hero + stats -->
+      <div class="grid-2 reveal" style="margin-bottom:18px">
+        <div class="panel balance-card">
+          <div class="balance-label">ยอดคงเหลือปัจจุบัน</div>
+          <div class="balance-amt" id="balance">฿ 0</div>
+          <div class="balance-row">
+            <div><span class="text-mute">รายรับรวม</span><br><span class="text-mono" style="color:#2ee07c;font-weight:600" id="totalIn">+฿0</span></div>
+            <div><span class="text-mute">รายจ่ายรวม</span><br><span class="text-mono" style="color:var(--red-bright);font-weight:600" id="totalOut">-฿0</span></div>
+          </div>
+        </div>
+        <div class="grid-auto" style="grid-template-columns:1fr 1fr;gap:14px">
+          <div class="stat-tile"><div class="label">ธุรกรรมทั้งหมด</div><div class="value" id="txCount">0</div></div>
+          <div class="stat-tile"><div class="label">เดือนนี้</div><div class="value" id="txMonth">0</div></div>
+          <div class="stat-tile"><div class="label">รายรับล่าสุด</div><div class="value" style="font-size:1.2rem;background:linear-gradient(120deg,var(--text),#2ee07c);-webkit-background-clip:text;background-clip:text;color:transparent" id="lastIn">—</div></div>
+          <div class="stat-tile"><div class="label">รายจ่ายล่าสุด</div><div class="value" style="font-size:1.2rem;background:linear-gradient(120deg,var(--text),var(--red-bright));-webkit-background-clip:text;background-clip:text;color:transparent" id="lastOut">—</div></div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="panel reveal" style="margin-bottom:18px">
+        <div class="field-row" style="align-items:flex-end">
+          <div class="field">
+            <label class="field-label">ประเภท</label>
+            <select id="f_type" class="select">
+              <option value="">ทั้งหมด</option>
+              <option value="รายรับ">รายรับ</option>
+              <option value="รายจ่าย">รายจ่าย</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">เดือน</label>
+            <select id="f_month" class="select"></select>
+          </div>
+          <div class="field" style="flex:1;min-width:200px">
+            <label class="field-label">ค้นหา</label>
+            <input type="text" id="f_search" class="input" placeholder="รายการ / ผู้บันทึก…" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction list -->
+      <div class="panel reveal">
+        <div class="panel-head">
+          <div class="panel-title"><span class="dot"></span>ประวัติธุรกรรม</div>
+          <span class="panel-sub" id="txMeta">—</span>
+        </div>
+        <div id="txList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script>
+  /* =========================================================
+     Class Fund ม.6/1 — CLASS_FUND_API
+     actions: get_data, save_transaction
+     ========================================================= */
+  (function () {
+    const S = window.KNTShell;
+    S.mount({ page: "class-fund" });
+    document.getElementById("refreshBtn").querySelector(".ico").innerHTML = S.icons.refresh;
+    document.getElementById("newTxBtn").querySelector(".ico").innerHTML = S.icons.plus;
+
+    // Demo seed
+    let txs = [
+      { id:"t1", date:"2026-07-01", type:"รายรับ", category:"ค่าขนมกลุ่ม", detail:"ขายขนนมรอบเปิดเทอม", amount:850, by:"เหรัญญิก" },
+      { id:"t2", date:"2026-07-02", type:"รายจ่าย", category:"อุปกรณ์ทำความสะอาด", detail:"ไม้กวาด ไม้ถูพื้น น้ำยา", amount:320, by:"เหรัญญิก" },
+      { id:"t3", date:"2026-07-04", type:"รายรับ", category:"เก็บค่าห้อง", detail:"เก็บค่าห้องรอบเปิดเทอม 40 คน × 50", amount:2000, by:"เหรัญญิก" },
+      { id:"t4", date:"2026-07-05", type:"รายจ่าย", category:"ประดับบอร์ด", detail:"กระดาษสี สติ๊กเกอร์", amount:180, by:"สมาชิก" },
+    ];
+
+    const els = {
+      balance: document.getElementById("balance"),
+      totalIn: document.getElementById("totalIn"),
+      totalOut: document.getElementById("totalOut"),
+      txCount: document.getElementById("txCount"),
+      txMonth: document.getElementById("txMonth"),
+      lastIn: document.getElementById("lastIn"),
+      lastOut: document.getElementById("lastOut"),
+      list: document.getElementById("txList"),
+      meta: document.getElementById("txMeta"),
+      fType: document.getElementById("f_type"),
+      fMonth: document.getElementById("f_month"),
+      fSearch: document.getElementById("f_search"),
+    };
+    const filter = { type:"", month:"", q:"" };
+
+    /* ---------- Month dropdown ---------- */
+    function fillMonths() {
+      const set = new Set();
+      txs.forEach((t) => set.add(t.date.slice(0,7)));
+      els.fMonth.innerHTML = `<option value="">ทุกเดือน</option>` +
+        [...set].sort().reverse().map((m) => `<option value="${m}">${S.thaiDate(m+"-01").split(" ").slice(1).join(" ")}</option>`).join("");
+    }
+
+    /* ---------- Load from API ---------- */
+    async function loadFromSheet() {
+      els.list.innerHTML = S.loaderHTML("กำลังโหลดข้อมูลเงินห้อง…");
+      try {
+        const res = await KNT.classFund.getData();
+        // adapter แปลงจาก Sheet → รูปแบบเว็บแล้ว (รายรับ/รายจ่าย, date ISO)
+        txs = res.transactions || [];
+        fillMonths();
+        render();
+      } catch (e) {
+        fillMonths();
+        render();
+        S.toast("โหลดจากระบบไม่ได้ — แสดงข้อมูลในเครื่อง", "err");
+      }
+    }
+
+    /* ---------- Render ---------- */
+    function render() {
+      const tin = txs.filter((t) => t.type === "รายรับ").reduce((s,t) => s + Number(t.amount||0), 0);
+      const tout = txs.filter((t) => t.type === "รายจ่าย").reduce((s,t) => s + Number(t.amount||0), 0);
+      const bal = tin - tout;
+      els.balance.textContent = "฿ " + S.formatMoney(bal);
+      els.totalIn.textContent = "+฿" + S.formatMoney(tin);
+      els.totalOut.textContent = "-฿" + S.formatMoney(tout);
+      els.txCount.textContent = txs.length;
+      const nowMonth = S.todayISO().slice(0,7);
+      els.txMonth.textContent = txs.filter((t) => t.date.slice(0,7) === nowMonth).length;
+
+      const ins = txs.filter((t) => t.type === "รายรับ").sort((a,b) => b.date.localeCompare(a.date));
+      const outs = txs.filter((t) => t.type === "รายจ่าย").sort((a,b) => b.date.localeCompare(a.date));
+      els.lastIn.textContent = ins[0] ? "฿" + S.formatMoney(ins[0].amount) : "—";
+      els.lastOut.textContent = outs[0] ? "฿" + S.formatMoney(outs[0].amount) : "—";
+
+      // filtered list
+      const q = filter.q.toLowerCase();
+      const list = txs
+        .filter((t) => !filter.type || t.type === filter.type)
+        .filter((t) => !filter.month || t.date.slice(0,7) === filter.month)
+        .filter((t) => !q || (t.detail||"").toLowerCase().includes(q) || (t.category||"").toLowerCase().includes(q) || (t.by||"").toLowerCase().includes(q))
+        .sort((a,b) => b.date.localeCompare(a.date));
+
+      if (!list.length) { els.list.innerHTML = S.emptyHTML("ยังไม่มีธุรกรรม", "บันทึกรายรับ–รายจ่ายเพื่อเริ่มต้น"); els.meta.textContent = "0 รายการ"; return; }
+      els.meta.textContent = `${list.length} รายการ`;
+      els.list.innerHTML = `<div class="table-wrap"><table class="knt-table">
+        <thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th>ผู้บันทึก</th><th class="num">จำนวน</th></tr></thead>
+        <tbody>${list.map((t) => `
+          <tr>
+            <td class="text-mono text-mute" style="font-size:.82rem">${S.thaiDate(t.date)}</td>
+            <td class="strong">${S.escapeHTML(t.detail || "—")}</td>
+            <td><span class="badge ${t.type==="รายรับ"?"green":"red"}">${S.escapeHTML(t.category || t.type)}</span></td>
+            <td class="text-dim" style="font-size:.84rem">${S.escapeHTML(t.by || "—")}</td>
+            <td class="num strong ${t.type==="รายรับ"?"text-money-in":"text-money-out"}">${t.type==="รายรับ"?"+":"-"}฿${S.formatMoney(t.amount)}</td>
+          </tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+
+    /* ---------- Filters ---------- */
+    els.fType.addEventListener("change", () => { filter.type = els.fType.value; render(); });
+    els.fMonth.addEventListener("change", () => { filter.month = els.fMonth.value; render(); });
+    els.fSearch.addEventListener("input", () => { filter.q = els.fSearch.value; render(); });
+    document.getElementById("refreshBtn").addEventListener("click", loadFromSheet);
+
+    /* ---------- New transaction ---------- */
+    document.getElementById("newTxBtn").addEventListener("click", () => {
+      S.modal({
+        title: "บันทึกธุรกรรมใหม่",
+        body: `
+          <div class="stack">
+            <div class="segmented" id="tx_type" style="align-self:flex-start">
+              <button data-v="รายรับ" class="active">รายรับ</button>
+              <button data-v="รายจ่าย">รายจ่าย</button>
+            </div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">วันที่</label><input type="date" id="tx_date" class="input" value="${S.todayISO()}" /></div>
+              <div class="field" style="min-width:160px"><label class="field-label">จำนวนเงิน <span class="req">*</span></label><input type="number" id="tx_amount" class="input" placeholder="0" min="0" step="0.5" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">หมวดหมู่</label><input type="text" id="tx_category" class="input" placeholder="เช่น ค่าขนม, อุปกรณ์ห้อง" list="cat-list" />
+                <datalist id="cat-list">${[...new Set(txs.map(t=>t.category))].map(c=>`<option value="${S.escapeHTML(c||"")}">`).join("")}</datalist>
+              </div>
+              <div class="field"><label class="field-label">ผู้บันทึก</label><input type="text" id="tx_by" class="input" placeholder="เหรัญญิก" value="เหรัญญิก" /></div>
+            </div>
+            <div class="field"><label class="field-label">รายละเอียด</label><textarea id="tx_detail" class="textarea" placeholder="รายละเอียดเพิ่มเติม…"></textarea></div>
+          </div>`,
+        actions: [
+          { label: "ยกเลิก", cls: "btn-ghost", onClick: (_, c) => c() },
+          { label: "บันทึก", cls: "btn-primary", onClick: async (el, c) => {
+            const type = el.querySelector("#tx_type button.active").dataset.v;
+            const date = el.querySelector("#tx_date").value;
+            const amount = Number(el.querySelector("#tx_amount").value);
+            if (!amount || amount <= 0) { S.toast("ใส่จำนวนเงินที่ถูกต้อง", "err"); return true; }
+            const tx = {
+              date,
+              type, // "รายรับ" or "รายจ่าย" — adapter จะแปลงเป็น income/expense อัตโนมัติ
+              category: el.querySelector("#tx_category").value.trim() || (type==="รายรับ"?"รายรับอื่นๆ":"รายจ่ายอื่นๆ"),
+              detail: el.querySelector("#tx_detail").value.trim(),
+              amount, by: el.querySelector("#tx_by").value.trim() || "ไม่ระบุ",
+            };
+            try {
+              await KNT.classFund.saveTransaction(tx);
+              S.toast("บันทึกธุรกรรมสำเร็จ", "ok");
+            } catch (e) {
+              S.toast("บันทึกลงระบบไม่ได้ — เก็บในเครื่องชั่วคราว", "err");
+            }
+            txs.push(tx);
+            fillMonths();
+            c(); render();
+          }},
+        ],
+      });
+      // wire segmented inside modal
+      setTimeout(() => {
+        document.querySelectorAll("#tx_type button").forEach((b) => {
+          b.addEventListener("click", () => {
+            document.querySelectorAll("#tx_type button").forEach((x) => x.classList.remove("active"));
+            b.classList.add("active");
+          });
+        });
+      }, 0);
+    });
+
+    loadFromSheet();
+  })();
+  </script>
+  <style>
+    .balance-card { background:radial-gradient(circle at 100% 0%, var(--red-soft), transparent 60%), var(--glass-bg); border:1px solid rgba(224,16,47,.25); position:relative; overflow:hidden; }
+    .balance-label { font-size:.82rem;color:var(--text-mute);font-family:var(--mono);margin-bottom:10px; }
+    .balance-amt { font-size:clamp(2.2rem,7vw,3.2rem);font-weight:700;font-family:var(--mono);line-height:1;
+      background:linear-gradient(120deg,var(--text),var(--red-bright));-webkit-background-clip:text;background-clip:text;color:transparent; }
+    .balance-row { display:flex;gap:30px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line); }
+    .balance-row > div { font-size:.9rem; }
+    .text-money-in { color:#2ee07c; }
+    .text-money-out { color:var(--red-bright); }
+    @media (max-width:640px) {
+      .balance-row { gap:18px;flex-direction:column; }
+      .grid-2 > .grid-auto { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</body>
+</html>

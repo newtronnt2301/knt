@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" class="bg-spacebg text-cream">
+<html lang="th" class="bg-carbon text-white/90">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,9 +21,9 @@
             outfit: ['Outfit', 'sans-serif'],
           },
           colors: {
-            spacebg: '#01061E',
-            cream: '#EFF4FF',
-            neon: '#6FFF00',
+            spacebg: '#0a0a0b',
+            cream: '#f4f4f6',
+            neon: '#e0102f',
             darkcard: '#090D2A',
           }
         }
@@ -43,8 +43,8 @@
 
   <style>
     html, body {
-      background-color: #01061E;
-      color: #EFF4FF;
+      background-color: #0a0a0b;
+      color: #f4f4f6;
       font-family: 'Kanit', sans-serif;
       margin: 0;
       padding: 0;
@@ -58,7 +58,7 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #01061E;
+      background: #0a0a0b;
     }
     ::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.08);
@@ -97,7 +97,7 @@
     }
 
     .shiny-text {
-      background: linear-gradient(135deg, #EFF4FF 20%, #a5b4fc 55%, #6FFF00 100%);
+      background: linear-gradient(135deg, #f4f4f6 20%, #ff7a8a 55%, #e0102f 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -108,13 +108,13 @@
       50% { box-shadow: 0 0 20px rgba(111,255,0,0.35), inset 0 0 10px rgba(111,255,0,0.15); }
     }
     .scanned-active {
-      border-color: #6FFF00 !important;
+      border-color: #e0102f !important;
       animation: neonPulse 1.8s infinite;
       background: rgba(111,255,0,0.04) !important;
     }
   </style>
 </head>
-<body class="select-none font-kanit bg-spacebg text-cream min-h-screen">
+<body class="select-none font-kanit bg-carbon text-white/90 min-h-screen">
 
   <!-- Main Container -->
   <div class="w-full min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-[1600px] mx-auto">
@@ -122,24 +122,24 @@
     <!-- Top Header Navigation -->
     <header class="w-full flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-white/5 pb-4">
       <div class="flex items-center gap-3">
-        <a href="../index.html" class="p-3 bg-white/5 border border-white/10 rounded-2xl text-white hover:text-neon hover:border-neon/40 hover:shadow-[0_0_20px_rgba(111,255,0,0.2)] transition-all duration-300 active:scale-95">
+        <a href="../index.html" class="p-3 bg-white/5 border border-white/10 rounded-2xl text-white hover:text-red-400 hover:border-red-400/40 hover:shadow-[0_0_20px_rgba(111,255,0,0.2)] transition-all duration-300 active:scale-95">
           <svg class="w-5 h-5 fill-none stroke-current stroke-[2.5]" viewBox="0 0 24 24">
             <path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </a>
         <div>
           <h1 class="text-xl font-black shiny-text leading-none uppercase">ครูนิวตรอน.com</h1>
-          <span class="text-[10px] text-cream/55 font-light tracking-widest uppercase mt-0.5 block">Camera Plickers Quiz Scanner</span>
+          <span class="text-[10px] text-white/90/55 font-light tracking-widest uppercase mt-0.5 block">Camera Plickers Quiz Scanner</span>
         </div>
       </div>
       
       <!-- Room & Quiz selection -->
       <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-        <select id="roomSelect" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-neon transition-colors w-full sm:w-[180px]">
+        <select id="roomSelect" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-red-400 transition-colors w-full sm:w-[180px]">
           <option value="" disabled selected>กำลังโหลดห้องเรียน...</option>
         </select>
         
-        <a href="print-cards.html" target="_blank" class="px-4 py-2 border border-white/10 bg-white/5 hover:border-neon/30 hover:bg-neon/10 hover:text-neon rounded-xl text-xs font-bold transition-all text-center w-full sm:w-auto">
+        <a href="print-cards.html" target="_blank" class="px-4 py-2 border border-white/10 bg-white/5 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-400 rounded-xl text-xs font-bold transition-all text-center w-full sm:w-auto">
           🖨️ พิมพ์การ์ดเด็ก
         </a>
       </div>
@@ -154,13 +154,13 @@
         <!-- Video Stream Container -->
         <div class="liquid-glass rounded-3xl p-4 flex flex-col gap-3 relative">
           <div class="flex justify-between items-center">
-            <h3 class="text-sm font-bold text-neon tracking-wide flex items-center gap-2">
+            <h3 class="text-sm font-bold text-red-400 tracking-wide flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
               กล้องสแกนกระดาษคำตอบ
             </h3>
             
             <!-- Camera Device Selector -->
-            <select id="cameraSelect" class="bg-black/60 border border-white/10 rounded-lg px-2.5 py-1 text-[11px] text-white/80 focus:outline-none focus:border-neon max-w-[180px]">
+            <select id="cameraSelect" class="bg-black/60 border border-white/10 rounded-lg px-2.5 py-1 text-[11px] text-white/80 focus:outline-none focus:border-red-400 max-w-[180px]">
               <option value="">เลือกกล้อง...</option>
             </select>
           </div>
@@ -179,13 +179,13 @@
           <!-- Camera Feed Controls -->
           <div class="flex items-center justify-between gap-3 text-xs">
             <div class="flex gap-2">
-              <button id="toggleCamBtn" onclick="toggleCamera()" class="px-4 py-2 bg-neon text-black font-extrabold rounded-xl transition-all hover:bg-emerald-400 active:scale-95 shadow-md shadow-neon/10">
+              <button id="toggleCamBtn" onclick="toggleCamera()" class="px-4 py-2 bg-red-500 text-black font-extrabold rounded-xl transition-all hover:bg-red-400 active:scale-95 shadow-md shadow-neon/10">
                 🎥 เปิดกล้อง
               </button>
             </div>
             
             <!-- Mirror and Audio options -->
-            <div class="flex items-center gap-4 text-cream/70">
+            <div class="flex items-center gap-4 text-white/90/70">
               <label class="flex items-center gap-2 cursor-pointer select-none">
                 <input type="checkbox" id="mirrorFeed" class="w-3.5 h-3.5 accent-neon bg-black/40 border-white/10 rounded" checked>
                 <span>กลับซ้าย-ขวา</span>
@@ -206,15 +206,15 @@
             
             <div class="flex items-center gap-1.5 font-outfit text-xs font-semibold bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
               <span>ข้อที่:</span>
-              <button onclick="changeQuestion(-1)" class="text-neon hover:text-emerald-400">◀</button>
+              <button onclick="changeQuestion(-1)" class="text-red-400 hover:text-red-400">◀</button>
               <span id="questionNumText" class="text-white px-1">1</span>
-              <button onclick="changeQuestion(1)" class="text-neon hover:text-emerald-400">▶</button>
+              <button onclick="changeQuestion(1)" class="text-red-400 hover:text-red-400">▶</button>
             </div>
           </div>
 
           <!-- Answer Key Selector -->
           <div class="flex flex-col gap-2">
-            <span class="text-xs text-cream/60">เฉลยคำตอบที่ถูกต้อง (Answer Key)</span>
+            <span class="text-xs text-white/90/60">เฉลยคำตอบที่ถูกต้อง (Answer Key)</span>
             <div class="grid grid-cols-4 gap-2">
               <button onclick="setCorrectAnswer('A')" id="btn-ans-A" class="ans-btn bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 text-sm font-bold transition-all font-outfit">A</button>
               <button onclick="setCorrectAnswer('B')" id="btn-ans-B" class="ans-btn bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 text-sm font-bold transition-all font-outfit">B</button>
@@ -225,33 +225,33 @@
 
           <!-- Action Buttons -->
           <div class="grid grid-cols-2 gap-3 mt-1">
-            <button onclick="revealAnswers()" id="revealBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10">
+            <button onclick="revealAnswers()" id="revealBtn" class="bg-blue-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10">
               📊 เฉลย & สรุปผล
             </button>
-            <button onclick="clearCurrentAnswers()" class="bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 hover:border-red-500/30 text-cream/80 font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95">
+            <button onclick="clearCurrentAnswers()" class="bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 hover:border-red-500/30 text-white/90/80 font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95">
               🔄 เคลียร์สแกนใหม่
             </button>
           </div>
 
           <!-- Score summary bar -->
-          <div id="statsSummary" class="hidden flex items-center justify-between bg-black/40 border border-white/5 rounded-xl p-3.5 text-xs text-cream/70 leading-relaxed transition-all">
+          <div id="statsSummary" class="hidden flex items-center justify-between bg-black/40 border border-white/5 rounded-xl p-3.5 text-xs text-white/90/70 leading-relaxed transition-all">
             <div>
-              สแกนได้: <span id="statAnsweredCount" class="font-bold text-neon font-outfit">0</span> / <span id="statTotalStudents" class="font-outfit">0</span> คน
+              สแกนได้: <span id="statAnsweredCount" class="font-bold text-red-400 font-outfit">0</span> / <span id="statTotalStudents" class="font-outfit">0</span> คน
             </div>
             <div id="correctRatioText" class="text-right">
-              ตอบถูก: <span id="statCorrectPercent" class="font-bold text-blue-400 font-outfit">0%</span>
+              ตอบถูก: <span id="statCorrectPercent" class="font-bold text-red-400 font-outfit">0%</span>
             </div>
           </div>
           
           <!-- Simple CSS Bar Chart for responses (only shown after reveal) -->
           <div id="barChartContainer" class="hidden flex flex-col gap-2 bg-black/20 border border-white/5 rounded-xl p-4 text-xs">
-            <span class="font-bold text-cream/80 mb-1">ผลสรุปตัวเลือก (Response Stats):</span>
+            <span class="font-bold text-white/90/80 mb-1">ผลสรุปตัวเลือก (Response Stats):</span>
             <div class="flex flex-col gap-2.5">
               <!-- A -->
               <div class="flex items-center gap-3">
                 <span class="font-bold w-4 text-center">A</span>
                 <div class="flex-1 bg-white/5 h-4 rounded-full overflow-hidden relative border border-white/5">
-                  <div id="bar-A" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                  <div id="bar-A" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <span id="count-A" class="w-10 text-right font-outfit text-white/70">0 คน</span>
               </div>
@@ -259,7 +259,7 @@
               <div class="flex items-center gap-3">
                 <span class="font-bold w-4 text-center">B</span>
                 <div class="flex-1 bg-white/5 h-4 rounded-full overflow-hidden relative border border-white/5">
-                  <div id="bar-B" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                  <div id="bar-B" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <span id="count-B" class="w-10 text-right font-outfit text-white/70">0 คน</span>
               </div>
@@ -267,7 +267,7 @@
               <div class="flex items-center gap-3">
                 <span class="font-bold w-4 text-center">C</span>
                 <div class="flex-1 bg-white/5 h-4 rounded-full overflow-hidden relative border border-white/5">
-                  <div id="bar-C" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                  <div id="bar-C" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <span id="count-C" class="w-10 text-right font-outfit text-white/70">0 คน</span>
               </div>
@@ -275,7 +275,7 @@
               <div class="flex items-center gap-3">
                 <span class="font-bold w-4 text-center">D</span>
                 <div class="flex-1 bg-white/5 h-4 rounded-full overflow-hidden relative border border-white/5">
-                  <div id="bar-D" class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                  <div id="bar-D" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
                 <span id="count-D" class="w-10 text-right font-outfit text-white/70">0 คน</span>
               </div>
@@ -284,7 +284,7 @@
 
           <div class="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/5 pt-3">
             <div class="flex flex-wrap gap-3 w-full sm:w-auto">
-              <button onclick="exportToExcel()" class="text-[11.5px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 active:scale-95 transition-all">
+              <button onclick="exportToExcel()" class="text-[11.5px] font-bold text-red-400 hover:text-blue-300 flex items-center gap-1 active:scale-95 transition-all">
                 📥 ส่งออก Excel
               </button>
               <button id="lineShareBtn" onclick="shareToLine()" class="text-[11.5px] font-bold text-green-400 hover:text-green-300 flex items-center gap-1 active:scale-95 transition-all">
@@ -312,8 +312,8 @@
               <span class="text-white/60">ยังไม่สแกน</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-neon/20 border border-neon/50"></span>
-              <span class="text-neon">สแกนแล้ว</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500/20 border border-red-400/50"></span>
+              <span class="text-red-400">สแกนแล้ว</span>
             </div>
           </div>
         </div>
@@ -448,7 +448,7 @@
         if (correctAnswer) {
           const activeBtn = document.getElementById(`btn-ans-${correctAnswer}`);
           if (activeBtn) {
-            activeBtn.className = "ans-btn bg-neon/15 text-neon border border-neon/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
+            activeBtn.className = "ans-btn bg-red-500/15 text-red-400 border border-red-400/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
           }
         }
 
@@ -501,14 +501,14 @@
         if (correctAnswer) {
           const activeBtn = document.getElementById(`btn-ans-${correctAnswer}`);
           if (activeBtn) {
-            activeBtn.className = "ans-btn bg-neon/15 text-neon border border-neon/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
+            activeBtn.className = "ans-btn bg-red-500/15 text-red-400 border border-red-400/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
           }
         }
 
         // Reset Reveal Button
         const revealBtn = document.getElementById('revealBtn');
         revealBtn.textContent = '📊 เฉลย & สรุปผล';
-        revealBtn.className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
+        revealBtn.className = "bg-blue-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
         document.getElementById('statsSummary').classList.add('hidden');
         document.getElementById('barChartContainer').classList.add('hidden');
 
@@ -651,7 +651,7 @@
         // Stop Camera
         stopCamera();
         toggleCamBtn.textContent = '🎥 เปิดกล้อง';
-        toggleCamBtn.className = "px-4 py-2 bg-neon text-black font-extrabold rounded-xl transition-all hover:bg-emerald-400 active:scale-95 shadow-md shadow-neon/10";
+        toggleCamBtn.className = "px-4 py-2 bg-red-500 text-black font-extrabold rounded-xl transition-all hover:bg-red-400 active:scale-95 shadow-md shadow-neon/10";
       } else {
         // Start Camera
         if (!currentRoom) {
@@ -771,7 +771,7 @@
         
         // Draw polygon outline (green)
         ctx.beginPath();
-        ctx.strokeStyle = '#6FFF00';
+        ctx.strokeStyle = '#e0102f';
         ctx.lineWidth = 4;
         ctx.moveTo(corners[0].x, corners[0].y);
         ctx.lineTo(corners[1].x, corners[1].y);
@@ -800,12 +800,12 @@
           
           ctx.fillStyle = 'rgba(1, 6, 30, 0.85)';
           ctx.fillRect(cx - 50, cy - 25, 100, 22);
-          ctx.strokeStyle = '#6FFF00';
+          ctx.strokeStyle = '#e0102f';
           ctx.lineWidth = 1;
           ctx.strokeRect(cx - 50, cy - 25, 100, 22);
           
           ctx.font = 'bold 11px Kanit';
-          ctx.fillStyle = '#6FFF00';
+          ctx.fillStyle = '#e0102f';
           ctx.textAlign = 'center';
           ctx.fillText(text, cx, cy - 10);
         }
@@ -890,7 +890,7 @@
       card.classList.add('scanned-active');
       badge.classList.remove('hidden');
       badge.textContent = 'สแกนแล้ว';
-      badge.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full border border-neon/30 text-neon bg-neon/10';
+      badge.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full border border-red-400/30 text-red-400 bg-red-500/10';
       
       // Update choice inside the overlay (but keep overlay hidden until reveal)
       const overlay = document.getElementById(`card-choice-overlay-${studentNo}`);
@@ -930,7 +930,7 @@
           card.classList.add('scanned-active');
           badge.classList.remove('hidden');
           badge.textContent = 'สแกนแล้ว';
-          badge.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full border border-neon/30 text-neon bg-neon/10';
+          badge.className = 'text-[9px] font-bold px-2 py-0.5 rounded-full border border-red-400/30 text-red-400 bg-red-500/10';
           
           if (overlay) {
             overlay.querySelector('span').textContent = choice;
@@ -942,8 +942,8 @@
             if (correctAnswer) {
               if (choice === correctAnswer) {
                 // Correct answer! Glow green
-                overlay.className = 'absolute inset-0 flex items-center justify-center rounded-2xl bg-emerald-500/25 border border-emerald-500/40 backdrop-blur-[2px] transition-all';
-                overlay.querySelector('span').className = 'font-outfit font-black text-4xl text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]';
+                overlay.className = 'absolute inset-0 flex items-center justify-center rounded-2xl bg-red-500/25 border border-red-500/40 backdrop-blur-[2px] transition-all';
+                overlay.querySelector('span').className = 'font-outfit font-black text-4xl text-red-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]';
               } else {
                 // Wrong answer! Glow red
                 overlay.className = 'absolute inset-0 flex items-center justify-center rounded-2xl bg-red-500/20 border border-red-500/40 backdrop-blur-[2px] transition-all';
@@ -990,7 +990,7 @@
       
       if (correctAnswer) {
         document.getElementById('statCorrectPercent').textContent = `${pctCorrect}%`;
-        document.getElementById('correctRatioText').innerHTML = `ตอบถูก: <span class="font-bold text-emerald-400 font-outfit">${correctCount}</span> / <span class="font-outfit font-bold">${answeredCount}</span> คน (${pctCorrect}%)`;
+        document.getElementById('correctRatioText').innerHTML = `ตอบถูก: <span class="font-bold text-red-400 font-outfit">${correctCount}</span> / <span class="font-outfit font-bold">${answeredCount}</span> คน (${pctCorrect}%)`;
       } else {
         document.getElementById('statCorrectPercent').textContent = `N/A`;
         document.getElementById('correctRatioText').innerHTML = `ตอบถูก: <span class="text-white/40">(ยังไม่มีเฉลย)</span>`;
@@ -1012,9 +1012,9 @@
       ['A', 'B', 'C', 'D'].forEach(c => {
         const bar = document.getElementById(`bar-${c}`);
         if (isRevealed && correctAnswer && c === correctAnswer) {
-          bar.className = 'bg-emerald-400 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]';
+          bar.className = 'bg-red-400 h-full rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]';
         } else {
-          bar.className = 'bg-blue-500 h-full rounded-full transition-all duration-500';
+          bar.className = 'bg-red-500 h-full rounded-full transition-all duration-500';
         }
       });
     }
@@ -1035,7 +1035,7 @@
         const activeBtn = document.getElementById(`btn-ans-${ans}`);
         if (activeBtn) {
           // Highlight correct answer button in neon green
-          activeBtn.className = "ans-btn bg-neon/15 text-neon border border-neon/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
+          activeBtn.className = "ans-btn bg-red-500/15 text-red-400 border border-red-400/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
         }
       }
 
@@ -1057,7 +1057,7 @@
         // Hide
         isRevealed = false;
         revealBtn.textContent = '📊 เฉลย & สรุปผล';
-        revealBtn.className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
+        revealBtn.className = "bg-blue-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
         statsSummary.classList.add('hidden');
         barChartContainer.classList.add('hidden');
       } else {
@@ -1086,7 +1086,7 @@
         // Reset Reveal Button
         const revealBtn = document.getElementById('revealBtn');
         revealBtn.textContent = '📊 เฉลย & สรุปผล';
-        revealBtn.className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
+        revealBtn.className = "bg-blue-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
         document.getElementById('statsSummary').classList.add('hidden');
         document.getElementById('barChartContainer').classList.add('hidden');
 
@@ -1117,12 +1117,12 @@
       if (correctAnswer) {
         const activeBtn = document.getElementById(`btn-ans-${correctAnswer}`);
         if (activeBtn) {
-          activeBtn.className = "ans-btn bg-neon/15 text-neon border border-neon/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
+          activeBtn.className = "ans-btn bg-red-500/15 text-red-400 border border-red-400/50 rounded-xl py-3 text-sm font-bold transition-all font-outfit shadow-[0_0_15px_rgba(111,255,0,0.15)]";
         }
       }
 
       document.getElementById('revealBtn').textContent = '📊 เฉลย & สรุปผล';
-      document.getElementById('revealBtn').className = "bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
+      document.getElementById('revealBtn').className = "bg-blue-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all active:scale-95 shadow-md shadow-blue-600/10";
       document.getElementById('statsSummary').classList.add('hidden');
       document.getElementById('barChartContainer').classList.add('hidden');
 
@@ -1183,12 +1183,12 @@
       }
       
       if (type === 'success') {
-        toast.className = 'fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/90 text-emerald-400 font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100';
+        toast.className = 'fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl border border-red-500/40 bg-emerald-950/90 text-red-400 font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100';
       } else if (type === 'error') {
         toast.className = 'fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl border border-red-500/40 bg-red-950/90 text-red-400 font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100';
       } else {
         // loading/info
-        toast.className = 'fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl border border-blue-500/40 bg-blue-950/90 text-blue-400 font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100';
+        toast.className = 'fixed bottom-5 right-5 z-50 px-5 py-3 rounded-2xl border border-red-500/40 bg-blue-950/90 text-red-400 font-bold text-xs shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100';
       }
       
       toast.textContent = message;
@@ -1310,7 +1310,7 @@
                 <span class="text-lg font-black text-indigo-950 font-mono">${answeredCount} / ${totalCount} คน</span>
               </div>
               <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 flex flex-col gap-0.5">
-                <span class="text-[9px] font-bold text-emerald-500 uppercase">ตอบถูก</span>
+                <span class="text-[9px] font-bold text-red-500 uppercase">ตอบถูก</span>
                 <span class="text-lg font-black text-emerald-700 font-mono">${correctAnswer ? correctCount : '-'} คน</span>
               </div>
               <div class="bg-red-50 border border-red-100 rounded-2xl p-3 flex flex-col gap-0.5">

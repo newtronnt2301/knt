@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0b" />
+  <title>ติดตามส่งงาน · KNT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="container">
+
+      <div class="page-head reveal">
+        <div class="page-head-left">
+          <nav class="breadcrumb">
+            <a href="index.html">แดชบอร์ด</a><span class="sep">/</span><span>ติดตามส่งงาน</span>
+          </nav>
+          <h1 class="page-title">ติดตาม<span class="grad">การส่งงาน</span></h1>
+          <p class="page-desc">ระบบติดตามการส่งงานแบบ Cloud — นักเรียนส่งงาน ครูตรวจสอบและอัปเดตสถานะได้แบบเรียลไทม์</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost btn-sm" id="refreshBtn"><span class="ico"></span> รีเฟรช</button>
+          <button class="btn btn-primary" id="newAssignBtn"><span class="ico"></span> มอบหมายงานใหม่</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-auto reveal" style="margin-bottom:18px" id="stats"></div>
+
+      <!-- Filters -->
+      <div class="panel reveal" style="margin-bottom:18px">
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">ห้อง</label>
+              <select id="f_room" class="select">
+                <option value="">ทุกห้อง</option>
+              </select>
+          </div>
+          <div class="field">
+            <label class="field-label">สถานะ</label>
+            <select id="f_status" class="select">
+              <option value="">ทั้งหมด</option>
+              <option value="ส่งแล้ว">ส่งแล้ว</option>
+              <option value="ส่งช้า">ส่งช้า</option>
+              <option value="ยังไม่ส่ง">ยังไม่ส่ง</option>
+              <option value="แก้ไข">ต้องแก้ไข</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:220px">
+            <label class="field-label">ค้นหา</label>
+            <input type="text" id="f_search" class="input" placeholder="ชื่องาน / ชื่อนักเรียน…" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Assignments list -->
+      <div class="panel reveal">
+        <div class="panel-head">
+          <div class="panel-title"><span class="dot"></span>งานที่มอบหมาย</div>
+          <span class="panel-sub" id="assignMeta">—</span>
+        </div>
+        <div id="assignList"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/app-shell.js"></script>
+  <script src="js/students.js"></script>
+  <script>
+  /* =========================================================
+     Submit-work tracker — SUBMIT_WORK_API
+     ========================================================= */
+  (function () {
+    const S = window.KNTShell;
+    S.mount({ page: "submit-work" });
+    document.getElementById("refreshBtn").querySelector(".ico").innerHTML = S.icons.refresh;
+    document.getElementById("newAssignBtn").querySelector(".ico").innerHTML = S.icons.plus;
+
+    // Populate room dropdowns from student registry
+    const allRooms = KNTStudents.ROOMS;
+    els.fRoom.innerHTML = `<option value="">ทุกห้อง</option>` + allRooms.map((r) => `<option>${r}</option>`).join("");
+    document.getElementById("f_room").innerHTML = els.fRoom.innerHTML;
+
+    const STATUS_CLS = { "ส่งแล้ว":"green", "ส่งช้า":"yellow", "ยังไม่ส่ง":"red", "แก้ไข":"blue" };
+
+    // Seed with local demo data using real student names from ม.6/1
+    const demoRoster = KNTStudents.get("ม.6/1");
+    let assignments = [
+      { id:"a1", title:"แบบฝึกหัด ฟิสิกส์ บทที่ 1", room:"ม.6/1", subject:"ฟิสิกส์", due:"2026-07-10",
+        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===1?"ส่งแล้ว":s.no===2?"ส่งช้า":"ยังไม่ส่ง", note: s.no===2?"ส่งช้า 1 วัน":"", file:"" }))},
+      { id:"a2", title:"รายงานเคมี การทดลองที่ 2", room:"ม.6/1", subject:"เคมี", due:"2026-07-12",
+        students: demoRoster.slice(0,3).map((s) => ({ no:s.no, name:s.name, status: s.no===3?"แก้ไข":"ส่งแล้ว", note: s.no===3?"รายงานไม่ครบ":"", file:"" }))},
+    ];
+    const filter = { room:"", status:"", q:"" };
+
+    const els = {
+      stats: document.getElementById("stats"),
+      list: document.getElementById("assignList"),
+      meta: document.getElementById("assignMeta"),
+      fRoom: document.getElementById("f_room"),
+      fStatus: document.getElementById("f_status"),
+      fSearch: document.getElementById("f_search"),
+    };
+
+    /* ---------- Load from API (adapter แปลงจาก Sheet แล้ว) ---------- */
+    async function loadFromSheet() {
+      try {
+        const res = await KNT.submitWork.load();
+        if (res.assignments && res.assignments.length) {
+          assignments = res.assignments;
+        }
+      } catch (e) { /* keep local demo */ }
+      render();
+    }
+
+    /* ---------- Render ---------- */
+    function render() {
+      // stats
+      let total = 0, submitted = 0, late = 0, missing = 0, revise = 0;
+      assignments.forEach((a) => a.students.forEach((s) => {
+        total++;
+        if (s.status === "ส่งแล้ว") submitted++;
+        else if (s.status === "ส่งช้า") late++;
+        else if (s.status === "ยังไม่ส่ง") missing++;
+        else if (s.status === "แก้ไข") revise++;
+      }));
+      els.stats.innerHTML = `
+        <div class="stat-tile"><div class="label">งานทั้งหมด</div><div class="value">${assignments.length}</div></div>
+        <div class="stat-tile"><div class="label">นักเรียนที่เกี่ยวข้อง</div><div class="value">${total}</div></div>
+        <div class="stat-tile"><div class="label">ส่งแล้ว</div><div class="value" style="background:linear-gradient(120deg,var(--text),#2ee07c);-webkit-background-clip:text;background-clip:text;color:transparent">${submitted}</div></div>
+        <div class="stat-tile"><div class="label">ส่งช้า</div><div class="value" style="background:linear-gradient(120deg,var(--text),#ffc84d);-webkit-background-clip:text;background-clip:text;color:transparent">${late}</div></div>
+        <div class="stat-tile"><div class="label">ยังไม่ส่ง</div><div class="value" style="background:linear-gradient(120deg,var(--text),var(--red-bright));-webkit-background-clip:text;background-clip:text;color:transparent">${missing}</div></div>`;
+
+      // filtered assignments
+      const q = filter.q.toLowerCase();
+      const visible = assignments
+        .filter((a) => !filter.room || a.room === filter.room)
+        .map((a) => {
+          const sts = a.students.filter((s) => {
+            if (filter.status && s.status !== filter.status) return false;
+            if (q && !(s.name.toLowerCase().includes(q) || a.title.toLowerCase().includes(q))) return false;
+            return true;
+          });
+          return { ...a, _students: sts };
+        })
+        .filter((a) => a._students.length || (!filter.status && !q && (!filter.room || a.room === filter.room)));
+
+      if (!visible.length) { els.list.innerHTML = S.emptyHTML("ไม่พบงานที่ตรงเงื่อนไข"); els.meta.textContent = "0 งาน"; return; }
+
+      els.meta.textContent = `${visible.length} งาน · ${visible.reduce((s,a)=>s+a._students.length,0)} รายการ`;
+      els.list.innerHTML = visible.map((a) => assignCard(a)).join("");
+      S.observeReveal();
+    }
+
+    function assignCard(a) {
+      const tally = a._students.reduce((t,s) => (t[s.status]=(t[s.status]||0)+1,t), {});
+      const due = new Date(a.due); const overdue = due < new Date() && (tally["ยังไม่ส่ง"] || 0) > 0;
+      return `
+        <div class="assign-card" data-id="${a.id}">
+          <div class="assign-head">
+            <div>
+              <div class="assign-title">${S.escapeHTML(a.title)}</div>
+              <div class="assign-meta">
+                <span class="badge gray">${S.escapeHTML(a.room)}</span>
+                <span class="badge blue">${S.escapeHTML(a.subject)}</span>
+                <span class="${overdue?"text-red":""}">กำหนดส่ง: ${S.thaiDate(a.due)} ${overdue?"(เกิน)":""}</span>
+              </div>
+            </div>
+            <div class="assign-tally">
+              ${Object.entries(tally).map(([st,n]) => `<span class="badge ${STATUS_CLS[st]||"gray"}">${st} ${n}</span>`).join("")}
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="knt-table">
+              <thead><tr><th style="width:50px">เลขที่</th><th>ชื่อ–สกุล</th><th style="width:130px">สถานะ</th><th>หมายเหตุ</th><th style="width:100px"></th></tr></thead>
+              <tbody>
+                ${a._students.map((s) => `
+                  <tr data-no="${s.no}">
+                    <td class="num">${s.no}</td>
+                    <td class="strong">${S.escapeHTML(s.name)}</td>
+                    <td>
+                      <select class="select btn-sm st-sel" style="padding:5px 28px 5px 10px;font-size:.82rem">
+                        ${["ส่งแล้ว","ส่งช้า","ยังไม่ส่ง","แก้ไข"].map((o) => `<option ${s.status===o?"selected":""}>${o}</option>`).join("")}
+                      </select>
+                    </td>
+                    <td><input type="text" class="input btn-sm note-in" style="padding:5px 10px;font-size:.82rem" value="${S.escapeHTML(s.note||"")}" placeholder="—" /></td>
+                    <td>
+                      <button class="btn btn-ghost btn-sm save-one" data-id="${a.id}" data-no="${s.no}">${S.icons.check}</button>
+                    </td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    /* ---------- Interaction ---------- */
+    els.fRoom.addEventListener("change", () => { filter.room = els.fRoom.value; render(); });
+    els.fStatus.addEventListener("change", () => { filter.status = els.fStatus.value; render(); });
+    els.fSearch.addEventListener("input", () => { filter.q = els.fSearch.value; render(); });
+    document.getElementById("refreshBtn").addEventListener("click", loadFromSheet);
+
+    els.list.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".save-one");
+      if (!btn) return;
+      const aId = btn.dataset.id, no = Number(btn.dataset.no);
+      const tr = btn.closest("tr");
+      const status = tr.querySelector(".st-sel").value;
+      const note = tr.querySelector(".note-in").value.trim();
+      const a = assignments.find((x) => x.id === aId);
+      const st = a?.students.find((x) => x.no === no);
+      if (!st) return;
+      const prev = { ...st };
+      st.status = status; st.note = note;
+      btn.disabled = true; btn.innerHTML = `<div class="loader" style="width:14px;height:14px;border-width:2px"></div>`;
+      try {
+        await KNT.submitWork.updateStatus(aId, no, status, note);
+        S.toast("บันทึกสถานะเรียบร้อย", "ok");
+      } catch (err) {
+        // rollback
+        Object.assign(st, prev);
+        S.toast("บันทึกไม่สำเร็จ — เก็บในเครื่องชั่วคราว", "err");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = S.icons.check;
+        render();
+      }
+    });
+
+    /* ---------- New assignment modal ---------- */
+    document.getElementById("newAssignBtn").addEventListener("click", () => {
+      const m = S.modal({
+        title: "มอบหมายงานใหม่",
+        body: `
+          <div class="stack">
+            <div class="field"><label class="field-label">ชื่องาน <span class="req">*</span></label><input type="text" id="n_title" class="input" placeholder="เช่น แบบฝึกหัด บทที่ 3" /></div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">ห้อง</label>
+                <select id="n_room" class="select">${allRooms.map((r) => `<option>${r}</option>`).join("")}</select>
+              </div>
+              <div class="field"><label class="field-label">วิชา</label><input type="text" id="n_subject" class="input" value="ฟิสิกส์" /></div>
+              <div class="field"><label class="field-label">กำหนดส่ง</label><input type="date" id="n_due" class="input" value="${S.todayISO()}" /></div>
+            </div>
+          </div>`,
+        actions: [
+          { label: "ยกเลิก", cls: "btn-ghost", onClick: (_, c) => c() },
+          { label: "สร้างงาน", cls: "btn-primary", onClick: async (el, c) => {
+            const title = el.querySelector("#n_title").value.trim();
+            if (!title) { S.toast("ใส่ชื่องานก่อน", "err"); return true; }
+            const a = {
+              id: "a" + Date.now(),
+              title,
+              room: el.querySelector("#n_room").value,
+              subject: el.querySelector("#n_subject").value.trim() || "ทั่วไป",
+              due: el.querySelector("#n_due").value,
+              students: KNTStudents.get(el.querySelector("#n_room").value).map((s) => ({ no: s.no, name: s.name, status: "ยังไม่ส่ง", note: "", file: "" })),
+            };
+            try {
+              await KNT.submitWork.create(a);
+              S.toast("สร้างงานใหม่เรียบร้อย", "ok");
+            } catch (e) { S.toast("บันทึกลงระบบไม่ได้ — เก็บในเครื่องชั่วคราว", "err"); }
+            assignments.unshift(a);
+            c(); render();
+          }},
+        ],
+      });
+    });
+
+    loadFromSheet();
+  })();
+  </script>
+  <style>
+    .assign-card { border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:18px;background:rgba(0,0,0,.12); }
+    [data-theme="light"] .assign-card { background:rgba(0,0,0,.02); }
+    .assign-head { display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 20px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line);flex-wrap:wrap }
+    .assign-title { font-weight:600;font-size:1.05rem;margin-bottom:8px; }
+    .assign-meta { display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.82rem;color:var(--text-dim); }
+    .assign-tally { display:flex;gap:6px;flex-wrap:wrap; }
+    @media (max-width:640px) {
+      .assign-head { flex-direction:column; }
+    }
+  </style>
+</body>
+</html>
