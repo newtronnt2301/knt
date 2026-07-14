@@ -102,6 +102,22 @@
       border-color: #f43f5e;
       color: #FFFFFF;
     }
+    .math-frac {
+      display: inline-grid;
+      grid-template-rows: auto auto;
+      vertical-align: middle;
+      margin: 0 0.12em;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .math-frac > span:first-child {
+      border-bottom: 1px solid currentColor;
+      padding: 0 0.16em 0.08em;
+    }
+    .math-frac > span:last-child {
+      padding: 0.08em 0.16em 0;
+    }
     .no-select {
       user-select: none;
     }
@@ -654,6 +670,53 @@
           { q: "การตรวจสอบความเป็นฟังก์ชันแบบหนึ่งต่อหนึ่ง (1 to 1) ด้วยการลากเส้นขนานแกน X (Horizontal Line Test) เส้นตรงนั้นต้องตัดผ่านกราฟอย่างมากกี่จุด?", a: ["1 จุด", "2 จุด", "ไม่จำกัดจุด", "ไม่มีจุดตัดเลย"], correct: 0 },
           { q: "กำหนด f(x) = 3 ข้อใดคือค่าของ f(f(f(2)))?", a: ["3", "2", "9", "27"], correct: 0 }
         ]
+      },
+      {
+        id: "pre-midterm-2569",
+        grade: "pre-midterm",
+        title: "แบบทดสอบเก็บคะแนนก่อนกลางภาค: จำนวนจริง พหุนาม และเศษส่วนพหุนาม",
+        quiz: [
+          { q: "(a + b) + c = a + (b + c) เป็นสมบัติใดของจำนวนจริง?", a: ["การสลับที่", "การเปลี่ยนหมู่", "การแจกแจง", "อินเวอร์สการบวก"], correct: 1 },
+          { q: "ข้อใดเป็นจำนวนตรรกยะทั้งหมด?", a: ["−7, 0.125, √81", "√2, π, −4", "√3, 0.101001… , 1/2", "π, √16, √7"], correct: 0 },
+          { q: "ข้อใดเป็นจำนวนอตรรกยะ?", a: ["√49", "−0.75", "√12", "0.272727…"], correct: 2 },
+          { q: "−√5/3 + √5/3 = 0 แสดงสมบัติใด?", a: ["เอกลักษณ์การบวก", "อินเวอร์สการบวก", "เอกลักษณ์การคูณ", "อินเวอร์สการคูณ"], correct: 1 },
+          { q: "ถ้า a และ b เป็นจำนวนจริง ข้อใดถูกต้องเสมอ?", a: ["a − b เป็นจำนวนจริง", "a/b เป็นจำนวนจริงเสมอ", "√a เป็นจำนวนจริงเสมอ", "1/a เป็นจำนวนจริงเสมอ"], correct: 0 },
+          { q: "ข้อใดเป็นจำนวนตรรกยะ?", a: ["0.1010010001…", "0.363636…", "√10", "π"], correct: 1 },
+          { q: "ข้อใดไม่เป็นจำนวนจริง?", a: ["√25", "−√36", "√(−16)", "−9/4"], correct: 2 },
+          { q: "ข้อใดเป็นจำนวนอตรรกยะ?", a: ["−5 + 1/2", "√9 − √4", "√7 + 2", "0.1666…"], correct: 2 },
+          { q: "ข้อใดเป็นการแยกตัวประกอบของ x³ − 4x?", a: ["x(x − 2)(x + 2)", "x(x − 4)", "(x − 2)²(x + 2)", "(x + 2)³"], correct: 0 },
+          { q: "ข้อใดเป็นการแยกตัวประกอบของ x³ + 2x² − x − 2?", a: ["(x + 2)(x − 1)(x + 1)", "(x − 2)(x − 1)(x + 1)", "(x + 2)(x + 1)²", "(x − 2)(x − 1)²"], correct: 0 },
+          { q: "กำหนด P(x) = x³ − 3x² + 4x − 1 แล้ว P(2) มีค่าเท่าใด?", a: ["1", "2", "3", "5"], correct: 2 },
+          { q: "เศษจากการหาร x³ + 2x² − 5 ด้วย x + 1 เท่ากับเท่าใด?", a: ["−4", "−2", "2", "4"], correct: 0 },
+          { q: "ถ้า x − 2 เป็นตัวประกอบของ x² + kx − 6 แล้ว k เท่ากับเท่าใด?", a: ["−1", "0", "1", "2"], correct: 2 },
+          { q: "คำตอบของสมการ x² − 7x + 10 = 0 คือข้อใด?", a: ["x = 2, 5", "x = −2, −5", "x = 1, 10", "x = −1, −10"], correct: 0 },
+          { q: "ข้อใดเป็นการแยกตัวประกอบของ x³ − 3x² − 4x + 12?", a: ["(x − 3)(x − 2)(x + 2)", "(x + 3)(x − 2)(x + 2)", "(x − 3)(x − 2)²", "(x + 3)(x + 2)²"], correct: 0 },
+          { q: "ผลหารของ (2x³ − 3x² − 11x + 6) ÷ (x − 3) คือข้อใด?", a: ["2x² − 3x − 2", "2x² + 3x − 2", "2x² + 3x + 2", "2x² − 3x + 2"], correct: 1 },
+          { q: "เศษจากการหาร 2x³ − x + 4 ด้วย x − 2 เท่ากับเท่าใด?", a: ["12", "14", "16", "18"], correct: 3 },
+          { q: "กำหนด P(x) = x⁴ − 2x² + 3 แล้ว P(−1) มีค่าเท่าใด?", a: ["0", "1", "2", "4"], correct: 2 },
+          { q: "ข้อใดเป็นการแยกตัวประกอบของ x² + 6x + 9?", a: ["(x + 3)²", "(x − 3)²", "(x + 9)(x + 1)", "(x − 9)(x − 1)"], correct: 0 },
+          { q: "เซตคำตอบของ x³ − x² − 6x = 0 คือข้อใด?", a: ["{0, 3, −2}", "{0, −3, 2}", "{3, −2}", "{0, 6, −1}"], correct: 0 },
+          { q: "ถ้า x + 1 เป็นตัวประกอบของ x³ + ax² − x − 3 แล้ว a เท่ากับเท่าใด?", a: ["−3", "−1", "1", "3"], correct: 3 },
+          { q: "ดีกรีของพหุนาม 5x⁴ − 2x² + 7 คือเท่าใด?", a: ["2", "3", "4", "5"], correct: 2 },
+          { q: "ข้อใดเป็นการแยกตัวประกอบของ 3x² − 12x?", a: ["3x(x − 4)", "3(x − 4)", "x(3x − 4)", "3x(x + 4)"], correct: 0 },
+          { q: "คำตอบของสมการ x² + 2x − 15 = 0 คือข้อใด?", a: ["x = 3, −5", "x = −3, 5", "x = 3, 5", "x = −3, −5"], correct: 0 },
+          { q: "เศษจากการหาร x⁴ − 1 ด้วย x − 1 มีค่าเท่าใด?", a: ["−1", "0", "1", "4"], correct: 1 },
+          { q: "ถ้า x = 3 เป็นรากของสมการ x² + kx − 18 = 0 แล้ว k เท่ากับเท่าใด?", a: ["−9", "−3", "3", "9"], correct: 0 },
+          { q: "รูปอย่างง่ายของ (x² − 9)/(x² + 3x) คือข้อใด?", a: ["(x − 3)/x", "(x + 3)/x", "(x − 3)/(x + 3)", "(x + 3)/(x − 3)"], correct: 0 },
+          { q: "รูปอย่างง่ายของ (x² − 4x)/(x² − 16) คือข้อใด?", a: ["x/(x − 4)", "x/(x + 4)", "(x − 4)/(x + 4)", "(x + 4)/x"], correct: 1 },
+          { q: "(x² − 9)/(x² − x − 6) × (x − 2)/(x + 3) มีค่าเท่ากับข้อใด?", a: ["(x − 2)/(x + 2)", "(x + 2)/(x − 2)", "(x − 3)/(x + 3)", "(x + 3)/(x − 3)"], correct: 0 },
+          { q: "(x² − 4)/(x² + x − 6) ÷ (x − 2)/(x + 3) มีค่าเท่ากับข้อใด?", a: ["(x + 2)/(x − 2)", "(x − 2)/(x + 2)", "(x + 3)/(x − 3)", "(x − 3)/(x + 3)"], correct: 0 },
+          { q: "1/x + 2/(x + 1) มีค่าเท่ากับข้อใด?", a: ["(3x + 1)/(x(x + 1))", "(3x + 2)/(x(x + 1))", "(x + 3)/(x + 1)", "(2x + 1)/x"], correct: 0 },
+          { q: "x/(x − 1) − 2/(x + 1) มีค่าเท่ากับข้อใด?", a: ["(x² − x + 2)/(x² − 1)", "(x² + x − 2)/(x² − 1)", "(x² − 1)/(x² − x + 2)", "(x − 2)/(x + 1)"], correct: 0 },
+          { q: "3/x + 2/x² มีค่าเท่ากับข้อใด?", a: ["(3x + 2)/x²", "5/x²", "(3x + 2)/x", "5x/x²"], correct: 0 },
+          { q: "รูปอย่างง่ายของ (x² − 1)/(x² − 2x + 1) คือข้อใด?", a: ["(x − 1)/(x + 1)", "(x + 1)/(x − 1)", "x + 1", "x − 1"], correct: 1 },
+          { q: "รูปอย่างง่ายของ (x + 2)/(x² + 5x + 6) คือข้อใด?", a: ["1/(x + 2)", "1/(x + 3)", "(x + 2)/(x + 3)", "(x + 3)/(x + 2)"], correct: 1 },
+          { q: "รูปอย่างง่ายของ (x² + 2x)/(x² − 4) คือข้อใด?", a: ["x/(x − 2)", "x/(x + 2)", "(x + 2)/(x − 2)", "(x − 2)/(x + 2)"], correct: 0 },
+          { q: "รูปอย่างง่ายของ (x² − 4)/(x² − x − 2) คือข้อใด?", a: ["(x + 2)/(x + 1)", "(x − 2)/(x + 1)", "(x + 1)/(x + 2)", "(x + 1)/(x − 2)"], correct: 0 },
+          { q: "1/(x − 1) − 1/(x + 1) มีค่าเท่ากับข้อใด?", a: ["2/(x² − 1)", "−2/(x² − 1)", "2/(x − 1)", "2/(x + 1)"], correct: 0 },
+          { q: "x/(x + 2) ÷ x²/(x² − 4) มีค่าเท่ากับข้อใด?", a: ["(x − 2)/x", "x/(x − 2)", "(x + 2)/x", "x/(x + 2)"], correct: 0 },
+          { q: "เซตคำตอบของ 1/x + 1/(x + 2) = 3/4 คือข้อใด?", a: ["x = 2, −4/3", "x = 2, 4/3", "x = −2, 4/3", "x = −2, −4/3"], correct: 0 }
+        ]
       }
     ];
 
@@ -682,6 +745,7 @@
           'set': 'บทที่ 1: เซต',
           'logic': 'บทที่ 2: ตรรกศาสตร์',
           'real': 'บทที่ 3: ระบบจำนวนจริง',
+          'pre-midterm': 'เก็บคะแนนก่อนกลางภาค: จำนวนจริง พหุนาม และเศษส่วนพหุนาม',
           'function': 'บทที่ 4: ความสัมพันธ์และฟังก์ชัน'
         }
       }
@@ -967,7 +1031,58 @@
       renderExamQuestions();
     }
 
-    // Render 10 questions in page
+    function formatMath(text) {
+      const source = String(text);
+      const isToken = (char) => /[0-9A-Za-z√²³⁴⁵−-]/u.test(char);
+      const skipSpace = (index, direction) => {
+        while (/\s/.test(source[index] || "")) index += direction;
+        return index;
+      };
+      const readLeft = (slash) => {
+        let end = skipSpace(slash - 1, -1) + 1;
+        let start = end - 1;
+        if (source[start] === ")") {
+          let depth = 0;
+          for (; start >= 0; start--) {
+            if (source[start] === ")") depth++;
+            if (source[start] === "(" && --depth === 0) break;
+          }
+        } else {
+          while (start >= 0 && isToken(source[start])) start--;
+          start++;
+        }
+        return start < end ? { start, end } : null;
+      };
+      const readRight = (slash) => {
+        let start = skipSpace(slash + 1, 1);
+        let end = start;
+        if (source[start] === "(") {
+          let depth = 0;
+          for (; end < source.length; end++) {
+            if (source[end] === "(") depth++;
+            if (source[end] === ")" && --depth === 0) { end++; break; }
+          }
+        } else {
+          while (end < source.length && isToken(source[end])) end++;
+        }
+        return start < end ? { start, end } : null;
+      };
+
+      const fractions = [];
+      for (let slash = 0; slash < source.length; slash++) {
+        if (source[slash] !== "/") continue;
+        const left = readLeft(slash);
+        const right = readRight(slash);
+        if (left && right) fractions.push({ start: left.start, end: right.end, numerator: source.slice(left.start, left.end), denominator: source.slice(right.start, right.end) });
+      }
+
+      return fractions.sort((a, b) => b.start - a.start).reduce((html, fraction) =>
+        html.slice(0, fraction.start) +
+        `<span class="math-frac"><span>${fraction.numerator}</span><span>${fraction.denominator}</span></span>` +
+        html.slice(fraction.end), source);
+    }
+
+    // Render questions in page
     function renderExamQuestions() {
       const container = document.getElementById('exam-questions-container');
       container.innerHTML = '';
@@ -978,7 +1093,7 @@
         
         card.innerHTML = `
           <h4 class="text-xs sm:text-sm font-semibold text-white leading-relaxed">
-            <span class="text-accentred font-outfit font-bold mr-1">ข้อที่ ${qIdx + 1}</span> — ${quiz.q}
+            <span class="text-accentred font-outfit font-bold mr-1">ข้อที่ ${qIdx + 1}</span>: ${formatMath(quiz.q)}
           </h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="exam-options-q-${qIdx}">
             <!-- Options injected -->
@@ -996,7 +1111,7 @@
             <span class="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-[10px] font-bold shrink-0 font-outfit">
               ${oIdx + 1}
             </span>
-            <span>${optText}</span>
+            <span>${formatMath(optText)}</span>
           `;
           optionsContainer.appendChild(btn);
         });
