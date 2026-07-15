@@ -646,6 +646,28 @@
     </div>
   </div>
 
+  <!-- TEACHER REPORT LOGIN -->
+  <div id="teacher-login-modal" class="fixed inset-0 w-full h-full z-50 bg-black/90 backdrop-blur-lg hidden flex-col items-center justify-center p-6">
+    <div class="w-full max-w-sm glass-card p-6 rounded-3xl border border-white/10 space-y-5 font-kanit">
+      <div class="text-center space-y-2">
+        <div class="text-4xl">🔐</div>
+        <h2 class="text-lg font-bold text-white">เข้าสู่รายงานคะแนนสอบ</h2>
+        <p class="text-xs text-textlight/50">สำหรับคุณครูเท่านั้น</p>
+      </div>
+      <div>
+        <label for="teacher-dashboard-code" class="block text-[10px] text-textlight/50 mb-1.5">รหัสผ่านคุณครู</label>
+        <input id="teacher-dashboard-code" type="password" autocomplete="off" placeholder="กรอกรหัสผ่าน"
+          onkeydown="if (event.key === 'Enter') confirmTeacherDashboardAccess()"
+          class="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-accentred">
+        <div id="teacher-dashboard-login-error" class="hidden mt-2 text-[11px] text-accentred" role="alert"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="closeTeacherLogin()" class="py-2.5 rounded-xl border border-white/10 text-textlight text-xs font-semibold hover:bg-white/5">ยกเลิก</button>
+        <button onclick="confirmTeacherDashboardAccess()" class="py-2.5 rounded-xl bg-accentred text-white text-xs font-bold hover:bg-accentred/90">เข้าสู่รายงาน</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TEACHER DASHBOARD MODAL -->
   <div id="teacher-dashboard-modal" class="fixed inset-0 w-full h-full z-50 bg-black/95 backdrop-blur-lg hidden flex-col items-center justify-start p-4 sm:p-6 overflow-y-auto">
     <div class="max-w-4xl w-full glass-card p-6 rounded-3xl border border-white/10 space-y-6 my-auto">
@@ -662,7 +684,7 @@
       </div>
 
       <!-- Controls -->
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 font-kanit">
+      <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 font-kanit">
         <div class="sm:col-span-2">
           <label class="block text-[10px] text-textlight/40 font-semibold mb-1">ค้นหา ชื่อ หรือ เลขที่</label>
           <input type="text" id="teacher-search-input" oninput="filterTeacherScores()" placeholder="พิมพ์ชื่อ หรือ เลขที่เพื่อค้นหา..." class="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-textlight outline-none focus:border-accentblue transition-colors">
@@ -680,7 +702,14 @@
             <span>🔄 ดึงข้อมูลล่าสุด</span>
           </button>
         </div>
+        <div>
+          <label class="block text-[10px] text-textlight/40 font-semibold mb-1">นำออกข้อมูล</label>
+          <button id="teacher-export-btn" onclick="exportTeacherScoresToExcel()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/15">
+            <span>📥 ส่งออก Excel</span>
+          </button>
+        </div>
       </div>
+      <div id="teacher-export-status" class="hidden -mt-3 text-[11px] font-kanit" role="status" aria-live="polite"></div>
 
       <!-- Scores Table Container -->
       <div class="overflow-x-auto border border-white/5 rounded-2xl bg-black/20 font-kanit">
@@ -711,6 +740,9 @@
 
     </div>
   </div>
+
+  <!-- Excel workbook generator -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
   <!-- JavaScript logics -->
   <script>
@@ -1858,29 +1890,51 @@
     let allTeacherScores = [];
 
     function openTeacherDashboard() {
-      const code = prompt("🔒 กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบรายงานคะแนนสอบ:");
-      if (code === "newtron05") {
-        document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
-        document.getElementById('teacher-dashboard-modal').classList.add('flex');
-        
-        // Populates filter rooms if empty
-        const filterRoom = document.getElementById('teacher-filter-room');
-        if (filterRoom.options.length <= 1) {
-          filterRoom.innerHTML = '<option value="">ทั้งหมด</option>';
-          for (let g = 1; g <= 6; g++) {
-            for (let r = 1; r <= 6; r++) {
-              const opt = document.createElement('option');
-              opt.value = `ม.${g}/${r}`;
-              opt.innerText = `ม.${g}/${r}`;
-              filterRoom.appendChild(opt);
-            }
+      const modal = document.getElementById('teacher-login-modal');
+      const input = document.getElementById('teacher-dashboard-code');
+      const error = document.getElementById('teacher-dashboard-login-error');
+      input.value = '';
+      error.classList.add('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function closeTeacherLogin() {
+      const modal = document.getElementById('teacher-login-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmTeacherDashboardAccess() {
+      const input = document.getElementById('teacher-dashboard-code');
+      const error = document.getElementById('teacher-dashboard-login-error');
+      if (input.value.trim() !== "newtron05") {
+        error.innerText = input.value ? "รหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง" : "กรุณากรอกรหัสผ่านคุณครู";
+        error.classList.remove('hidden');
+        input.select();
+        return;
+      }
+
+      closeTeacherLogin();
+      document.getElementById('teacher-dashboard-modal').classList.remove('hidden');
+      document.getElementById('teacher-dashboard-modal').classList.add('flex');
+
+      // Populate filter rooms if empty.
+      const filterRoom = document.getElementById('teacher-filter-room');
+      if (filterRoom.options.length <= 1) {
+        filterRoom.innerHTML = '<option value="">ทั้งหมด</option>';
+        for (let g = 1; g <= 6; g++) {
+          for (let r = 1; r <= 6; r++) {
+            const opt = document.createElement('option');
+            opt.value = `ม.${g}/${r}`;
+            opt.innerText = `ม.${g}/${r}`;
+            filterRoom.appendChild(opt);
           }
         }
-        
-        fetchTeacherScores();
-      } else if (code !== null) {
-        alert("❌ รหัสผ่านไม่ถูกต้อง");
       }
+
+      fetchTeacherScores();
     }
 
     function closeTeacherDashboard() {
@@ -1913,23 +1967,8 @@
     }
 
     function filterTeacherScores() {
-      const query = document.getElementById('teacher-search-input').value.trim().toLowerCase();
-      const selectedRoom = document.getElementById('teacher-filter-room').value;
       const tbody = document.getElementById('teacher-scores-tbody');
-      
-      let filtered = allTeacherScores;
-      
-      if (selectedRoom) {
-        filtered = filtered.filter(row => row.room === selectedRoom);
-      }
-      
-      if (query) {
-        filtered = filtered.filter(row => {
-          return (row.name || '').toLowerCase().includes(query) ||
-                 (row.no || '').toLowerCase().includes(query) ||
-                 (row.subject || '').toLowerCase().includes(query);
-        });
-      }
+      const filtered = getFilteredTeacherScores();
       
       tbody.innerHTML = '';
       document.getElementById('teacher-records-count').innerText = filtered.length;
@@ -1959,6 +1998,179 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function getFilteredTeacherScores() {
+      const query = document.getElementById('teacher-search-input').value.trim().toLowerCase();
+      const selectedRoom = document.getElementById('teacher-filter-room').value;
+      let filtered = allTeacherScores.slice();
+
+      if (selectedRoom) filtered = filtered.filter(row => row.room === selectedRoom);
+      if (query) {
+        filtered = filtered.filter(row =>
+          String(row.name || '').toLowerCase().includes(query) ||
+          String(row.no || '').toLowerCase().includes(query) ||
+          String(row.subject || '').toLowerCase().includes(query)
+        );
+      }
+      return filtered;
+    }
+
+    function setTeacherExportStatus(message, type = 'info') {
+      const status = document.getElementById('teacher-export-status');
+      status.innerText = message;
+      status.className = `-mt-3 text-[11px] font-kanit ${type === 'error' ? 'text-accentred' : type === 'ok' ? 'text-emerald-400' : 'text-accentamber'}`;
+    }
+
+    function scorePercent(row) {
+      const score = Number(row.score) || 0;
+      const total = Number(row.total) || 0;
+      return total > 0 ? score / total : 0;
+    }
+
+    function scoreStatus(row) {
+      if (String(row.name || '').includes('ตรวจพบทุจริต')) return 'ตรวจพบทุจริต';
+      return scorePercent(row) >= 0.5 ? 'ผ่าน' : 'ไม่ผ่าน';
+    }
+
+    function buildScoreSummary(rows, keySelector) {
+      const groups = new Map();
+      rows.forEach(row => {
+        const key = keySelector(row) || 'ไม่ระบุ';
+        if (!groups.has(key)) groups.set(key, { key, count: 0, sum: 0, max: 0, min: 1, pass: 0, fail: 0 });
+        const group = groups.get(key);
+        const percent = scorePercent(row);
+        group.count++;
+        group.sum += percent;
+        group.max = Math.max(group.max, percent);
+        group.min = Math.min(group.min, percent);
+        if (percent >= 0.5) group.pass++; else group.fail++;
+      });
+      return Array.from(groups.values()).sort((a, b) => String(a.key).localeCompare(String(b.key), 'th'));
+    }
+
+    function styleWorkbookSheet(sheet, percentColumns = []) {
+      sheet.views = [{ state: 'frozen', ySplit: 1 }];
+      sheet.autoFilter = { from: 'A1', to: sheet.getRow(1).getCell(sheet.columnCount).address };
+      sheet.getRow(1).height = 26;
+      sheet.getRow(1).eachCell(cell => {
+        cell.font = { name: 'Aptos', bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF101827' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { bottom: { style: 'medium', color: { argb: 'FFE11D3F' } } };
+      });
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
+        row.height = 22;
+        row.eachCell(cell => {
+          cell.font = { name: 'Aptos', size: 10 };
+          cell.alignment = { vertical: 'middle' };
+          cell.border = { bottom: { style: 'hair', color: { argb: 'FFE5E7EB' } } };
+        });
+      });
+      percentColumns.forEach(columnKey => { sheet.getColumn(columnKey).numFmt = '0.0%'; });
+      sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
+      sheet.properties.defaultRowHeight = 21;
+    }
+
+    async function exportTeacherScoresToExcel() {
+      const rows = getFilteredTeacherScores();
+      const button = document.getElementById('teacher-export-btn');
+      if (!rows.length) {
+        setTeacherExportStatus('ไม่มีข้อมูลตามตัวกรองสำหรับส่งออก', 'error');
+        return;
+      }
+      if (typeof ExcelJS === 'undefined') {
+        setTeacherExportStatus('โหลดระบบสร้าง Excel ไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่', 'error');
+        return;
+      }
+
+      button.disabled = true;
+      button.classList.add('opacity-60');
+      setTeacherExportStatus(`กำลังสร้างไฟล์จาก ${rows.length} รายการ...`);
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'ครูนิวตรอน.com';
+        workbook.created = new Date();
+        workbook.subject = 'รายงานคะแนนสอบออนไลน์';
+
+        const details = workbook.addWorksheet('คะแนนสอบทั้งหมด', { properties: { tabColor: { argb: 'FFE11D3F' } } });
+        details.columns = [
+          { header: 'วันเวลาส่ง', key: 'timestamp', width: 24 },
+          { header: 'ห้อง', key: 'room', width: 11 },
+          { header: 'เลขที่', key: 'no', width: 9 },
+          { header: 'ชื่อ-นามสกุล', key: 'name', width: 27 },
+          { header: 'บทเรียน/หัวข้อสอบ', key: 'subject', width: 48 },
+          { header: 'คะแนน', key: 'score', width: 11 },
+          { header: 'คะแนนเต็ม', key: 'total', width: 12 },
+          { header: 'ร้อยละ', key: 'percent', width: 12 },
+          { header: 'ผลการสอบ', key: 'status', width: 16 }
+        ];
+        rows.forEach(row => details.addRow({
+          timestamp: row.timestamp || '', room: row.room || '', no: Number(row.no) || row.no || '',
+          name: row.name || '', subject: row.subject || '', score: Number(row.score) || 0,
+          total: Number(row.total) || 0, percent: scorePercent(row), status: scoreStatus(row)
+        }));
+        styleWorkbookSheet(details, ['percent']);
+        details.getColumn('no').alignment = { horizontal: 'center' };
+        details.getColumn('score').numFmt = '0';
+        details.getColumn('total').numFmt = '0';
+        details.eachRow((row, index) => {
+          if (index === 1) return;
+          const statusCell = row.getCell('status');
+          const passed = statusCell.value === 'ผ่าน';
+          statusCell.font = { name: 'Aptos', size: 10, bold: true, color: { argb: passed ? 'FF15803D' : 'FFBE123C' } };
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: passed ? 'FFDCFCE7' : 'FFFFE4E6' } };
+          statusCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        });
+
+        const addSummarySheet = (name, keyHeader, groups, color) => {
+          const sheet = workbook.addWorksheet(name, { properties: { tabColor: { argb: color } } });
+          sheet.columns = [
+            { header: keyHeader, key: 'key', width: name === 'สรุปรายหัวข้อ' ? 48 : 15 },
+            { header: 'จำนวนรายการ', key: 'count', width: 14 },
+            { header: 'คะแนนเฉลี่ย', key: 'average', width: 15 },
+            { header: 'คะแนนสูงสุด', key: 'max', width: 15 },
+            { header: 'คะแนนต่ำสุด', key: 'min', width: 15 },
+            { header: 'ผ่าน', key: 'pass', width: 10 },
+            { header: 'ไม่ผ่าน', key: 'fail', width: 12 },
+            { header: 'อัตราผ่าน', key: 'passRate', width: 14 }
+          ];
+          groups.forEach(group => sheet.addRow({
+            key: group.key, count: group.count, average: group.sum / group.count,
+            max: group.max, min: group.min, pass: group.pass, fail: group.fail,
+            passRate: group.count ? group.pass / group.count : 0
+          }));
+          styleWorkbookSheet(sheet, ['average', 'max', 'min', 'passRate']);
+          return sheet;
+        };
+
+        addSummarySheet('สรุปรายห้อง', 'ห้อง', buildScoreSummary(rows, row => row.room), 'FF159455');
+        addSummarySheet('สรุปรายหัวข้อ', 'บทเรียน/หัวข้อสอบ', buildScoreSummary(rows, row => row.subject), 'FFF59E0B');
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const selectedRoom = document.getElementById('teacher-filter-room').value || 'ทุกห้อง';
+        const safeRoom = selectedRoom.replace(/[^0-9A-Za-zก-๙.-]/g, '-');
+        const date = new Date().toISOString().slice(0, 10);
+        const filename = `คะแนนสอบ_${safeRoom}_${date}.xlsx`;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setTeacherExportStatus(`ส่งออก ${rows.length} รายการเป็น ${filename} แล้ว`, 'ok');
+      } catch (error) {
+        console.error(error);
+        setTeacherExportStatus('สร้างไฟล์ Excel ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        button.disabled = false;
+        button.classList.remove('opacity-60');
+      }
     }
 
   </script>
