@@ -143,6 +143,31 @@
       border-radius: 18px;
       box-shadow: 0 8px 28px rgba(16, 24, 39, 0.06);
     }
+    .focus-change-exam-row {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 13px;
+      border-bottom: 1px solid #edf0f4;
+    }
+    .focus-change-exam-btn {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border: 1px solid #e11d3f;
+      border-radius: 10px;
+      color: #b81331;
+      background: #fff5f6;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .focus-change-exam-btn:hover { background: #ffe6ea; }
+    .focus-change-exam-note { color: #7a8496; font-size: 0.7rem; }
     .focus-student {
       display: flex;
       align-items: center;
@@ -296,29 +321,6 @@
       font-weight: 700;
       margin-bottom: 18px;
     }
-    .focus-question-tools {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-    .focus-question-back {
-      min-height: 34px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 7px 12px;
-      border: 1px solid #e11d3f;
-      border-radius: 9px;
-      color: #b81331;
-      background: #fff5f6;
-      font-size: 0.72rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .focus-question-back:hover:not(:disabled) { background: #ffe6ea; }
-    .focus-question-back:disabled { opacity: 0.35; cursor: not-allowed; }
     .focus-question-text {
       color: #172033;
       font-size: clamp(1.05rem, 2vw, 1.3rem);
@@ -393,7 +395,7 @@
     }
     .focus-btn:hover:not(:disabled) { transform: translateY(-1px); }
     .focus-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .focus-btn-secondary { color: #b81331; background: #fff5f6; border: 1px solid #e11d3f; }
+    .focus-btn-secondary { color: #283347; background: #fff; border: 1px solid #ccd3dd; }
     .focus-btn-primary { color: #fff; background: #e11d3f; border: 1px solid #e11d3f; }
     .focus-btn-submit { color: #fff; background: #101827; border: 1px solid #101827; }
     .focus-feedback {
@@ -427,6 +429,9 @@
       body.exam-focus header { padding: 12px 16px; }
       body.exam-focus main { padding: 12px 10px 96px; }
       .focus-topbar { grid-template-columns: minmax(0, 1fr) auto; padding: 13px; gap: 10px; border-radius: 14px; }
+      .focus-change-exam-row { padding-bottom: 10px; }
+      .focus-change-exam-btn { width: 100%; min-height: 40px; }
+      .focus-change-exam-note { display: none; }
       .focus-avatar { display: none; }
       .focus-student-name { font-size: 0.82rem; }
       .focus-subject { font-size: 0.66rem; }
@@ -443,9 +448,6 @@
       .question-nav-btn { width: 34px; min-width: 34px; height: 34px; aspect-ratio: auto; }
       .focus-question-card { border-radius: 14px; }
       .focus-question-body { padding: 22px 18px; }
-      .focus-question-number { align-items: flex-start; }
-      .focus-question-hint { display: none; }
-      .focus-question-back { min-height: 36px; padding: 8px 11px; }
       .focus-question-text { font-size: 1rem; line-height: 1.7; margin-bottom: 20px; }
       .focus-option { min-height: 54px; padding: 11px 12px; font-size: 0.86rem; }
       .focus-actions {
@@ -559,6 +561,10 @@
       <!-- SCREEN 2: ACTIVE EXAM SHEET -->
       <section id="exam-screen" class="hidden focus-shell">
         <div class="focus-topbar">
+          <div class="focus-change-exam-row">
+            <button type="button" class="focus-change-exam-btn" onclick="returnToExamSetup()">← กลับไปกรอกข้อมูลและเลือกข้อสอบใหม่</button>
+            <span class="focus-change-exam-note">ยกเลิกข้อสอบชุดนี้โดยไม่ส่งคะแนน</span>
+          </div>
           <div class="focus-student">
             <div class="focus-avatar" aria-hidden="true">KNT</div>
             <div class="focus-student-copy">
@@ -1374,6 +1380,45 @@
       requestWakeLock();
     }
 
+    async function returnToExamSetup() {
+      if (!isExamActive) return;
+
+      const shouldReturn = confirm(
+        "กลับไปกรอกข้อมูลและเลือกข้อสอบใหม่หรือไม่?\n\nคำตอบและเวลาของข้อสอบชุดนี้จะถูกยกเลิก และระบบจะไม่ส่งคะแนน"
+      );
+      if (!shouldReturn) return;
+
+      isExamActive = false;
+      isSubmitting = false;
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+      await releaseWakeLock();
+
+      const sessionKeys = [
+        'exam_start_time_', 'exam_questions_', 'exam_answers_',
+        'exam_room_', 'exam_no_', 'exam_name_', 'exam_time_left_',
+        'exam_current_question_', 'paused_', 'cheated_'
+      ];
+      sessionKeys.forEach(prefix => localStorage.removeItem(prefix + selectedChapterKey));
+
+      activeExamList = [];
+      selectedExamAnswers = {};
+      currentQuestionIndex = 0;
+      timeLeft = 40 * 60;
+
+      document.getElementById('exam-questions-container').innerHTML = '';
+      document.getElementById('question-nav').innerHTML = '';
+      document.getElementById('exam-feedback').innerText = '';
+      document.getElementById('exam-screen').classList.add('hidden');
+      document.getElementById('setup-screen').classList.remove('hidden');
+      document.getElementById('back-btn').classList.remove('hidden');
+      document.body.classList.remove('exam-focus');
+      document.documentElement.classList.remove('exam-focus');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     // Setup up to 20 shuffled questions from the selected chapter pool
     function setupQuestionsForExam() {
       // Find all lessons for the selected chapter
@@ -1528,10 +1573,7 @@
         <div class="focus-question-body">
           <div class="focus-question-number">
             <span>ข้อที่ ${currentQuestionIndex + 1} จาก ${activeExamList.length}</span>
-            <div class="focus-question-tools">
-              <span class="focus-question-hint" style="color:#7a8496;font-weight:500">เลือกคำตอบที่ถูกต้องที่สุด</span>
-              <button type="button" class="focus-question-back" onclick="changeQuestion(-1)" ${currentQuestionIndex === 0 ? 'disabled' : ''} aria-label="ย้อนกลับไปแก้ข้อก่อนหน้า">← ย้อนกลับ</button>
-            </div>
+            <span style="color:#7a8496;font-weight:500">เลือกคำตอบที่ถูกต้องที่สุด</span>
           </div>
           <h4 class="focus-question-text">${formatMath(quiz.q)}</h4>
           <div class="focus-options" id="exam-options-current"></div>
