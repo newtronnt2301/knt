@@ -630,9 +630,17 @@
           <p class="text-[10px] text-textlight/40 italic">
             * ระบบจะไม่แสดงผลเฉลยของตัวเลือกที่ถูกต้อง เพื่อรักษาความปลอดภัยและความเป็นธรรมในการประเมินผล
           </p>
-          <a href="../index.html" class="inline-block px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-textlight font-semibold text-xs transition-all">
-            ⬅️ กลับสู่หน้าหลัก
-          </a>
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button type="button" onclick="startNewExamAttempt()" class="px-6 py-2.5 rounded-xl bg-accentred hover:bg-accentred/90 text-white font-bold text-xs transition-all">
+              🔄 ทำข้อสอบใหม่อีกครั้ง
+            </button>
+            <a href="../index.html" class="inline-block px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-textlight font-semibold text-xs transition-all">
+              ⬅️ กลับสู่หน้าหลัก
+            </a>
+          </div>
+          <p class="text-[10px] text-accentemerald/80">
+            สามารถเริ่มทำรอบใหม่ได้ทันที โดยไม่ต้องใช้รหัสปลดล็อกของคุณครู
+          </p>
         </div>
       </section>
 
@@ -1287,16 +1295,10 @@
         return;
       }
 
-      // 1. ตรวจสอบล็อกประวัติส่งข้อสอบซ้ำ
-      const isSubmitted = localStorage.getItem('submitted_' + selectedChapterKey);
-      if (isSubmitted === 'true') {
-        errMsg.innerHTML = `⚠️ คุณได้ทำการส่งข้อสอบบทเรียนนี้ไปเรียบร้อยแล้ว ไม่ได้รับสิทธิ์ให้ทำข้อสอบซ้ำอีกครั้ง (หากเกิดปัญหาข้อขัดข้องกรุณาแจ้งครูผู้สอน)
-          <button onclick="teacherUnlockExam()" class="text-accentblue hover:underline text-[11px] block mt-1.5 mx-auto font-kanit">🔑 ปลดล็อคการสอบสำหรับคุณครู</button>`;
-        errMsg.classList.remove('hidden');
-        return;
-      }
+      // ยกเลิกล็อกการส่งซ้ำจากระบบรุ่นเดิม นักเรียนเริ่มรอบใหม่ได้โดยไม่ต้องใช้รหัสครู
+      localStorage.removeItem('submitted_' + selectedChapterKey);
 
-      // 2. หากข้อสอบถูกพัก ต้องให้คุณครูปลดล็อกก่อนทำต่อ
+      // 1. หากข้อสอบถูกพัก ต้องให้คุณครูปลดล็อกก่อนทำต่อ
       const isPaused = localStorage.getItem('paused_' + selectedChapterKey) === 'true';
       if (isPaused) {
         examRoom = localStorage.getItem('exam_room_' + selectedChapterKey) || examRoom;
@@ -1309,7 +1311,7 @@
 
       errMsg.classList.add('hidden');
 
-      // 3. ตรวจสอบประวัติข้อสอบสอบค้างอยู่ (Resume Exam)
+      // 2. ตรวจสอบประวัติข้อสอบสอบค้างอยู่ (Resume Exam)
       const savedStartTime = localStorage.getItem('exam_start_time_' + selectedChapterKey);
       const savedQuestions = localStorage.getItem('exam_questions_' + selectedChapterKey);
       
@@ -1420,6 +1422,44 @@
       document.getElementById('exam-questions-container').innerHTML = '';
       document.getElementById('question-nav').innerHTML = '';
       document.getElementById('exam-feedback').innerText = '';
+      document.getElementById('exam-screen').classList.add('hidden');
+      document.getElementById('setup-screen').classList.remove('hidden');
+      document.getElementById('back-btn').classList.remove('hidden');
+      document.body.classList.remove('exam-focus');
+      document.documentElement.classList.remove('exam-focus');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startNewExamAttempt() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+
+      const sessionKeys = [
+        'submitted_', 'exam_start_time_', 'exam_questions_', 'exam_answers_',
+        'exam_room_', 'exam_no_', 'exam_name_', 'exam_time_left_',
+        'exam_current_question_', 'paused_', 'cheated_'
+      ];
+      sessionKeys.forEach(prefix => localStorage.removeItem(prefix + selectedChapterKey));
+
+      isExamActive = false;
+      isSubmitting = false;
+      activeExamList = [];
+      selectedExamAnswers = {};
+      currentQuestionIndex = 0;
+      timeLeft = 40 * 60;
+
+      document.querySelectorAll('#exam-screen button').forEach(button => {
+        button.disabled = false;
+      });
+      document.getElementById('exam-questions-container').innerHTML = '';
+      document.getElementById('question-nav').innerHTML = '';
+      const feedback = document.getElementById('exam-feedback');
+      feedback.className = 'focus-feedback';
+      feedback.innerText = '';
+
+      document.getElementById('result-screen').classList.add('hidden');
       document.getElementById('exam-screen').classList.add('hidden');
       document.getElementById('setup-screen').classList.remove('hidden');
       document.getElementById('back-btn').classList.remove('hidden');
@@ -1939,8 +1979,8 @@
           localStorage.removeItem('exam_current_question_' + selectedChapterKey);
           localStorage.removeItem('cheated_' + selectedChapterKey);
           
-          // บันทึกสถานะส่งแล้วของบทเรียนนี้เพื่อล็อกการสอบถาวร
-          localStorage.setItem('submitted_' + selectedChapterKey, 'true');
+          // ไม่ล็อกการสอบซ้ำ นักเรียนสามารถเริ่มรอบใหม่ได้หลังส่งสำเร็จ
+          localStorage.removeItem('submitted_' + selectedChapterKey);
 
           // Show Screen 3
           document.getElementById('exam-screen').classList.add('hidden');
