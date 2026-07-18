@@ -54,11 +54,10 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
 .mobile-brand, .brand { display: flex; align-items: center; gap: 10px; }
 .mobile-brand b { font-size: 17px; letter-spacing: -.2px; }
 .brand-mark {
-  display: grid; place-items: center; flex: 0 0 auto;
+  display: block; flex: 0 0 auto;
   width: 42px; height: 42px; border-radius: 15px;
-  color: #fff; font-weight: 800; font-size: 20px;
-  background: linear-gradient(145deg, #4b8cf4, #8269e4);
-  box-shadow: 0 8px 20px rgba(83, 102, 221, .3);
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(9, 43, 89, .25);
 }
 .top-actions { display: flex; align-items: center; gap: 8px; }
 .icon-button, .mini-avatar {
