@@ -347,7 +347,7 @@ const API = {
   fund: 'https://script.google.com/macros/s/AKfycbz-F0PVMgQel2G7PIutsmvIW_D7UeSwXau39cGn4G8gnKHK2O_AXJnofNu5X5AMmdDafQ/exec'
 };
 
-const nativeState = { roster: null, attendance: {}, attendanceHistory: [], subjectRecords: [], teachers: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', workDirty: false, workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
+const nativeState = { roster: null, attendance: {}, attendanceHistory: [], subjectRecords: [], subjectHistoryRecords: [], teachers: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', workDirty: false, workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
 
 const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
 const todayISO = () => new Date().toLocaleDateString('en-CA');
@@ -396,17 +396,33 @@ async function loadSubjectRecords() {
   if (connection) connection.textContent = 'กำลังโหลดประวัติวิชา…';
   try {
     const response = await getJSON(API.attendance, {action:'getAll', id:subjectId});
-    nativeState.subjectRecords = (response.records || []).map(record => ({
-      key:`subject-${subjectId}-${record.room}-${record.date}`, room:appRoomFromApi(record.room), date:record.date,
-      subjectId, teacher:document.getElementById('nativeTeacher')?.selectedOptions?.[0]?.textContent || '', source:'Google Sheets',
-      data:Object.fromEntries(Object.entries(record.data || {}).map(([no,status]) => [no,appAttendanceStatus(status)]))
-    }));
+    const subject = nativeState.subjects.find(item => String(item.id) === String(subjectId));
+    nativeState.subjectRecords = makeSubjectHistoryRecords(response.records || [], subject);
     if (connection) { connection.textContent = 'เชื่อม Google Sheets แล้ว'; connection.classList.add('online'); }
     loadSelectedAttendanceRecord();
   } catch (error) {
     nativeState.subjectRecords = [];
     if (connection) connection.textContent = 'โหลดประวัติวิชาไม่ได้';
   }
+}
+
+function makeSubjectHistoryRecords(records, subject) {
+  const teacher = nativeState.teachers.find(item => String(item.id) === String(subject?.teacherId));
+  return records.map(record => ({
+    key:`subject-${subject?.id || ''}-${record.room}-${record.date}`, room:appRoomFromApi(record.room), date:record.date,
+    subjectId:subject?.id || '', subjectName:subject?.name || 'รายวิชา', teacher:teacher?.name || '', source:'Google Sheets',
+    data:Object.fromEntries(Object.entries(record.data || {}).map(([no,status]) => [no,appAttendanceStatus(status)]))
+  }));
+}
+
+async function loadAllSubjectHistory() {
+  const target = document.getElementById('attendanceHistory');
+  if (target) target.innerHTML = '<div class="native-loader">กำลังโหลดประวัติรายวิชาทั้งหมดจาก Google Sheets…</div>';
+  const results = await Promise.all(nativeState.subjects.map(async subject => {
+    try { const response = await getJSON(API.attendance, {action:'getAll', id:subject.id}); return makeSubjectHistoryRecords(response.records || [], subject); }
+    catch { return []; }
+  }));
+  nativeState.subjectHistoryRecords = results.flat();
 }
 
 function loadSelectedAttendanceRecord() {
@@ -805,9 +821,11 @@ async function renderAttendanceHistory() {
     sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
   }
   if (currentTool.id === 'subject-attendance') {
+    if (!document.getElementById('nativeSubject')?.value && !nativeState.subjectHistoryRecords.length) await loadAllSubjectHistory();
+    const sourceRecords = document.getElementById('nativeSubject')?.value ? nativeState.subjectRecords : nativeState.subjectHistoryRecords;
     const merged = new Map();
-    nativeState.subjectRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
-    localRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
+    sourceRecords.forEach(record => merged.set(`${record.subjectId}-${record.date}-${record.room}`, record));
+    localRecords.forEach(record => merged.set(`${record.subjectId}-${record.date}-${record.room}`, record));
     records = [...merged.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
   }
@@ -819,7 +837,7 @@ async function renderAttendanceHistory() {
   const dates = [...new Set(records.map(record => record.date))];
   target.innerHTML = `<div class="native-panel-heading"><div><p class="eyebrow">${sourceNote}</p><h2>ประวัติการเช็กชื่อ</h2></div><div class="native-heading-actions"><button class="outline-button" data-native-action="show-attendance-stats">สถิติรวม</button><button class="outline-button" data-native-action="export-attendance-excel">Excel</button><button class="outline-button" data-native-action="hide-attendance-history">ปิด</button></div></div><div class="attendance-history-filter"><label>วันที่<select id="attendanceHistoryDate"><option value="">ทุกวัน (${dates.length})</option>${dates.map(date => `<option value="${date}">${date}</option>`).join('')}</select></label></div><div class="attendance-history-list" id="attendanceHistoryList">${records.map(record => {
     const stats = attendanceRecordStats(record.data);
-    const detail = currentTool.id === 'subject-attendance' ? `${escapeText(record.teacher || 'ไม่ระบุครู')} · ${escapeText(record.subjectId || 'ไม่ระบุวิชา')}` : 'เตรียมวิศวกรรมศาสตร์';
+    const detail = currentTool.id === 'subject-attendance' ? `${escapeText(record.teacher || 'ไม่ระบุครู')} · ${escapeText(record.subjectName || record.subjectId || 'ไม่ระบุวิชา')}` : 'เตรียมวิศวกรรมศาสตร์';
     return `<article data-attendance-record="${escapeText(record.key)}"><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}${record.source ? ` · ${record.source}` : ''}</span></div><p>${stats.map(item => `${item.status} ${item.count}`).join(' · ')}</p></article>`;
   }).join('')}</div>`;
 }
