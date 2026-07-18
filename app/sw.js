@@ -1,5 +1,5 @@
-const CACHE_NAME = 'knt-classroom-v10';
-const APP_SHELL = ['./', './index.html', './styles.css?v=8', './roster-data.js?v=7', './app.js?v=8', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE_NAME = 'knt-classroom-v11';
+const APP_SHELL = ['./', './index.html', './styles.css?v=8', './roster-data.js?v=7', './app.js?v=9', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

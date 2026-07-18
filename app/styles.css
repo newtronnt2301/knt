@@ -448,6 +448,12 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .scan-history time { color: var(--muted); font-size: 9px; }
 .scan-history span { display: flex; flex-direction: column; font-size: 10px; }
 .scan-history small { color: var(--muted); font-size: 8px; }
+.attendance-history { margin-top: 14px; padding: 14px; }
+.attendance-history-list { display: grid; gap: 8px; }
+.attendance-history-list article { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px; border: 1px solid #e8ecf5; border-radius: 12px; background: #fff; }
+.attendance-history-list article > div { display: grid; gap: 2px; }
+.attendance-history-list span, .attendance-history-list p { color: var(--muted); font-size: 10px; }
+.attendance-history-list p { margin: 0; white-space: nowrap; }
 
 .bottom-nav {
   position: fixed; left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 30;

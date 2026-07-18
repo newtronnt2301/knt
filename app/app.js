@@ -272,7 +272,7 @@ function teacherProfileView() {
 function nativeToolBody(tool) {
   if (['subject-attendance', 'engineering-attendance'].includes(tool.id)) return `
     <section class="native-panel card">
-      <div class="native-panel-heading"><div><p class="eyebrow">เช็กชื่อประจำวัน</p><h2>เลือกห้องและสถานะนักเรียน</h2></div><span class="connection-pill" id="nativeConnection">กำลังเชื่อมข้อมูล…</span></div>
+      <div class="native-panel-heading"><div><p class="eyebrow">เช็กชื่อประจำวัน</p><h2>เลือกห้องและสถานะนักเรียน</h2></div><div class="native-heading-actions"><button class="outline-button" type="button" data-native-action="show-attendance-history">ประวัติ</button><span class="connection-pill" id="nativeConnection">กำลังเชื่อมข้อมูล…</span></div></div>
       <div class="native-form-grid attendance-controls">
         ${tool.id === 'subject-attendance' ? `<label><span>ครูผู้สอน</span><select id="nativeTeacher"><option value="">เลือกครูผู้สอน</option>${attendanceTeachers.map(teacher => `<option value="${teacher}">${teacher}</option>`).join('')}</select></label>` : ''}
         <label><span>รายวิชา</span><select id="nativeSubject"><option value="">กำลังโหลดวิชา…</option></select></label>
@@ -283,6 +283,7 @@ function nativeToolBody(tool) {
       <div class="attendance-summary" id="attendanceSummary"></div>
       <div class="student-attendance-list" id="nativeRoster"><div class="native-empty">เลือกห้องเพื่อแสดงรายชื่อนักเรียน</div></div>
       <div class="native-sticky-actions"><button class="outline-button" type="button" data-native-action="mark-all-present"><svg><use href="#icon-check"></use></svg>มาครบทุกคน</button><button class="soft-button" type="button" data-native-action="save-attendance"><svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ</button></div>
+      <section class="attendance-history card" id="attendanceHistory" hidden></section>
     </section>`;
 
   if (tool.id === 'submission-tracker') return `
@@ -677,6 +678,28 @@ async function saveNativeAttendance() {
   finally { button.disabled = false; button.innerHTML = '<svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ'; }
 }
 
+function attendanceRecordStats(data = {}) {
+  return ['มา', 'สาย', 'ลา', 'ขาด'].map(status => ({ status, count: Object.values(data).filter(value => value === status).length }));
+}
+
+function renderAttendanceHistory() {
+  const target = document.getElementById('attendanceHistory');
+  if (!target || !currentTool) return;
+  const prefix = `knt-attendance-${currentTool.id}-`;
+  const records = Object.keys(localStorage).filter(key => key.startsWith(prefix)).map(key => {
+    try { return { key, ...JSON.parse(localStorage.getItem(key)) }; } catch { return null; }
+  }).filter(Boolean).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (!records.length) {
+    target.innerHTML = '<div class="native-empty"><span>📅</span><h2>ยังไม่มีประวัติในอุปกรณ์นี้</h2><p>เมื่อบันทึกเช็กชื่อแล้ว รายการจะปรากฏที่นี่</p></div>';
+    return;
+  }
+  target.innerHTML = `<div class="native-panel-heading"><div><p class="eyebrow">บันทึกในอุปกรณ์นี้</p><h2>ประวัติการเช็กชื่อ</h2></div><button class="outline-button" data-native-action="hide-attendance-history">ปิด</button></div><div class="attendance-history-list">${records.map(record => {
+    const stats = attendanceRecordStats(record.data);
+    const detail = currentTool.id === 'subject-attendance' ? `${escapeText(record.teacher || 'ไม่ระบุครู')} · ${escapeText(record.subjectId || 'ไม่ระบุวิชา')}` : 'เตรียมวิศวกรรมศาสตร์';
+    return `<article><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}</span></div><p>${stats.map(item => `${item.status} ${item.count}`).join(' · ')}</p></article>`;
+  }).join('')}</div>`;
+}
+
 async function startNativeCamera() {
   const video = document.getElementById('nativeCamera');
   if (!video || !navigator.mediaDevices?.getUserMedia) { showToast('อุปกรณ์นี้ไม่รองรับกล้อง หรือจำเป็นต้องเปิดผ่าน HTTPS'); return; }
@@ -1036,6 +1059,11 @@ async function handleNativeAction(button) {
     renderAttendanceRoster(); showToast('ทำเครื่องหมายมาครบแล้ว');
   }
   if (action === 'save-attendance') await saveNativeAttendance();
+  if (action === 'show-attendance-history') {
+    const history = document.getElementById('attendanceHistory');
+    if (history) { history.hidden = false; renderAttendanceHistory(); history.scrollIntoView({ behavior:'smooth', block:'start' }); }
+  }
+  if (action === 'hide-attendance-history') { const history = document.getElementById('attendanceHistory'); if (history) history.hidden = true; }
   if (action === 'refresh-work') {
     if (!nativeState.workDirty || confirm('โหลดข้อมูลจากคลาวด์และทิ้งร่างที่ยังไม่ได้บันทึก?')) await loadWorkData();
   }
