@@ -1,4 +1,4 @@
-const CACHE_NAME = 'knt-classroom-v7';
+const CACHE_NAME = 'knt-classroom-v8';
 const APP_SHELL = ['./', './index.html', './styles.css?v=7', './roster-data.js?v=7', './app.js?v=7', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', event => {

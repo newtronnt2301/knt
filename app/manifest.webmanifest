@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f4f8ff",
-  "theme_color": "#eef4ff",
+  "background_color": "#0e3f74",
+  "theme_color": "#0e3f74",
   "shortcuts": [
     { "name": "โหมดนักเรียน", "short_name": "นักเรียน", "url": "./#home", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "โหมดครู", "short_name": "ครู", "url": "./#teacher-home", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
