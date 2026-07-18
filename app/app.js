@@ -744,7 +744,7 @@ async function saveNativeAttendance() {
 }
 
 function attendanceRecordStats(data = {}) {
-  return ['มา', 'สาย', 'ลา', 'ขาด'].map(status => ({ status, count: Object.values(data).filter(value => value === status).length }));
+  return [['มา','ม'],['สาย','ส'],['ลา','ล'],['ขาด','ข']].map(([status, abbr]) => ({ status, abbr, count: Object.values(data).filter(value => value === status).length }));
 }
 
 async function shareAttendanceReport() {
@@ -771,7 +771,7 @@ async function shareAttendanceReport() {
     const x = 65 + index * 278;
     context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(x, 260, 240, 170, 24); context.fill();
     context.fillStyle = colors[index]; context.font = '700 66px Anuphan, sans-serif'; context.fillText(String(item.count), x + 28, 338);
-    context.fillStyle = '#53627f'; context.font = '500 28px Anuphan, sans-serif'; context.fillText(item.status, x + 28, 390);
+    context.fillStyle = '#53627f'; context.font = '500 28px Anuphan, sans-serif'; context.fillText(item.abbr, x + 28, 390);
   });
   const present = stats.find(item => item.status === 'มา')?.count || 0;
   const rate = students.length ? Math.round(present / students.length * 100) : 0;
@@ -838,7 +838,7 @@ async function renderAttendanceHistory() {
   target.innerHTML = `<div class="native-panel-heading"><div><p class="eyebrow">${sourceNote}</p><h2>ประวัติการเช็กชื่อ</h2></div><div class="native-heading-actions"><button class="outline-button" data-native-action="show-attendance-stats">สถิติรวม</button><button class="outline-button" data-native-action="export-attendance-excel">Excel</button><button class="outline-button" data-native-action="hide-attendance-history">ปิด</button></div></div><div class="attendance-history-filter"><label>วันที่<select id="attendanceHistoryDate"><option value="">ทุกวัน (${dates.length})</option>${dates.map(date => `<option value="${date}">${date}</option>`).join('')}</select></label></div><div class="attendance-history-list" id="attendanceHistoryList">${records.map(record => {
     const stats = attendanceRecordStats(record.data);
     const detail = currentTool.id === 'subject-attendance' ? `${escapeText(record.teacher || 'ไม่ระบุครู')} · ${escapeText(record.subjectName || record.subjectId || 'ไม่ระบุวิชา')}` : 'เตรียมวิศวกรรมศาสตร์';
-    return `<article data-attendance-record="${escapeText(record.key)}"><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}${record.source ? ` · ${record.source}` : ''}</span></div><p>${stats.map(item => `${item.status} ${item.count}`).join(' · ')}</p></article>`;
+    return `<article data-attendance-record="${escapeText(record.key)}"><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}${record.source ? ` · ${record.source}` : ''}</span></div><p>${stats.map(item => `${item.abbr} ${item.count}`).join(' · ')}</p></article>`;
   }).join('')}</div>`;
 }
 
@@ -847,7 +847,7 @@ function renderAttendanceRecordDetail(key) {
   const target = document.getElementById('attendanceHistory');
   if (!record || !target) return;
   const students = nativeState.roster?.[record.room] || [];
-  const statusFor = (student, index) => record.data?.[student.no] || record.data?.[index] || '—';
+  const statusFor = (student, index) => ({'มา':'ม','สาย':'ส','ลา':'ล','ขาด':'ข'})[record.data?.[student.no] || record.data?.[index]] || '—';
   target.insertAdjacentHTML('beforeend', `<section class="attendance-detail"><div class="native-panel-heading"><div><p class="eyebrow">${escapeText(record.room)} · ${escapeText(record.date)}</p><h2>รายละเอียดรายวัน</h2></div></div><div class="native-table-wrap"><table class="native-table"><thead><tr><th>เลขที่</th><th>นักเรียน</th><th>สถานะ</th></tr></thead><tbody>${students.map((student, index) => `<tr><td>${student.no}</td><td><b>${escapeText(student.name)}</b></td><td>${escapeText(statusFor(student,index))}</td></tr>`).join('')}</tbody></table></div></section>`);
   target.querySelector('.attendance-detail')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
@@ -872,16 +872,15 @@ function renderAttendanceStats() {
   if (!target) return;
   const { people, dayCount } = attendanceAggregate();
   const roomSummary = new Map();
-  people.forEach(person => { const r = roomSummary.get(person.room) || { room:person.room, present:0, marked:0 }; r.present += person.มา + person.สาย; r.marked += person.total; roomSummary.set(person.room, r); });
   people.sort((a,b) => ((b.มา + b.สาย) / (b.total || 1)) - ((a.มา + a.สาย) / (a.total || 1)) || a.name.localeCompare(b.name,'th'));
-  target.insertAdjacentHTML('beforeend', `<section class="attendance-detail"><div class="native-panel-heading"><div><p class="eyebrow">${dayCount} รายการบันทึก</p><h2>สถิติรวมการเข้าเรียน</h2></div><button class="outline-button" data-native-action="export-attendance-stats-image">ส่งรูปสถิติ</button></div><div class="attendance-room-summary">${[...roomSummary.values()].map(item => `<div><b>${escapeText(item.room)}</b><strong>${item.marked ? Math.round(item.present / item.marked * 100) : 0}%</strong><span>มา/สาย ${item.present}/${item.marked}</span></div>`).join('')}</div><div class="native-table-wrap"><table class="native-table"><thead><tr><th>ห้อง</th><th>เลขที่</th><th>นักเรียน</th><th>มา</th><th>สาย</th><th>ลา</th><th>ขาด</th><th>เข้าเรียน</th></tr></thead><tbody>${people.map(person => { const pct = person.total ? Math.round((person.มา + person.สาย) / person.total * 100) : 0; return `<tr><td>${escapeText(person.room)}</td><td>${person.no}</td><td><b>${escapeText(person.name)}</b></td><td>${person.มา}</td><td>${person.สาย}</td><td>${person.ลา}</td><td>${person.ขาด}</td><td><strong>${pct}%</strong></td></tr>`; }).join('')}</tbody></table></div></section>`);
+  target.insertAdjacentHTML('beforeend', `<section class="attendance-detail"><div class="native-panel-heading"><div><p class="eyebrow">${dayCount} รายการบันทึก</p><h2>สถิติรวมการเข้าเรียน</h2></div><button class="outline-button" data-native-action="export-attendance-stats-image">ส่งรูปสถิติ</button></div><div class="attendance-room-summary">${[...roomSummary.values()].map(item => `<div><b>${escapeText(item.room)}</b><strong>${item.marked ? Math.round(item.present / item.marked * 100) : 0}%</strong><span>ม/ส ${item.present}/${item.marked}</span></div>`).join('')}</div><div class="native-table-wrap"><table class="native-table"><thead><tr><th>ห้อง</th><th>เลขที่</th><th>นักเรียน</th><th>ม</th><th>ส</th><th>ล</th><th>ข</th><th>เข้าเรียน</th></tr></thead><tbody>${people.map(person => { const pct = person.total ? Math.round((person.มา + person.สาย) / person.total * 100) : 0; return `<tr><td>${escapeText(person.room)}</td><td>${person.no}</td><td><b>${escapeText(person.name)}</b></td><td>${person.มา}</td><td>${person.สาย}</td><td>${person.ลา}</td><td>${person.ขาด}</td><td><strong>${pct}%</strong></td></tr>`; }).join('')}</tbody></table></div></section>`);
   target.querySelectorAll('.attendance-detail').item(-1)?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function exportAttendanceExcel() {
   const { people } = attendanceAggregate();
   if (!people.length) { showToast('ยังไม่มีข้อมูลสถิติให้ส่งออก'); return; }
-  const rows = [['ห้อง','เลขที่','ชื่อ-สกุล','มา','สาย','ลา','ขาด','จำนวนวันที่มีข้อมูล','ร้อยละเข้าเรียน'], ...people.map(person => [person.room, person.no, person.name, person.มา, person.สาย, person.ลา, person.ขาด, person.total, person.total ? Math.round((person.มา + person.สาย) / person.total * 100) : 0])];
+  const rows = [['ห้อง','เลขที่','ชื่อ-สกุล','ม','ส','ล','ข','จำนวนวันที่มีข้อมูล','ร้อยละเข้าเรียน'], ...people.map(person => [person.room, person.no, person.name, person.มา, person.สาย, person.ลา, person.ขาด, person.total, person.total ? Math.round((person.มา + person.สาย) / person.total * 100) : 0])];
   const html = `<table>${rows.map(row => `<tr>${row.map(value => `<td>${escapeText(value)}</td>`).join('')}</tr>`).join('')}</table>`;
   const blob = new Blob(['\ufeff', html], { type:'application/vnd.ms-excel;charset=utf-8' });
   const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = `knt-attendance-stats-${todayISO()}.xls`; link.click(); URL.revokeObjectURL(url); showToast('ส่งออก Excel แล้ว');
@@ -896,7 +895,7 @@ async function shareAttendanceStatsImage() {
   const gradient = c.createLinearGradient(0,0,canvas.width,0); gradient.addColorStop(0,'#0e3f74'); gradient.addColorStop(1,'#8068dc'); c.fillStyle = gradient; c.fillRect(0,0,canvas.width,185);
   c.fillStyle = '#fff'; c.font = '700 45px Anuphan, sans-serif'; c.fillText('KNT Classroom · สถิติการเข้าเรียน', 58,75);
   c.font = '400 26px Anuphan, sans-serif'; c.fillText(`${currentTool.id === 'engineering-attendance' ? 'เตรียมวิศวกรรมศาสตร์' : 'เช็กชื่อรวม'} · ${dayCount} รายการบันทึก`,58,125);
-  c.fillStyle='#53627f'; c.font='700 22px Anuphan, sans-serif'; c.fillText('ห้อง',58,230); c.fillText('นักเรียน',190,230); c.fillText('มา',720,230); c.fillText('สาย',800,230); c.fillText('ขาด',880,230); c.fillText('เข้าเรียน',1000,230);
+  c.fillStyle='#53627f'; c.font='700 22px Anuphan, sans-serif'; c.fillText('ห้อง',58,230); c.fillText('นักเรียน',190,230); c.fillText('ม',720,230); c.fillText('ส',800,230); c.fillText('ข',880,230); c.fillText('เข้าเรียน',1000,230);
   rows.forEach((person,index) => { const y=278+index*58; c.fillStyle=index%2?'#ffffff':'#ebeff8'; c.fillRect(42,y-34,1116,47); c.fillStyle='#263558'; c.font='500 20px Anuphan, sans-serif'; c.fillText(person.room,58,y); c.fillText(`${person.no}. ${person.name}`.slice(0,36),190,y); c.fillText(String(person.มา),720,y); c.fillText(String(person.สาย),800,y); c.fillText(String(person.ขาด),880,y); c.fillText(`${person.total ? Math.round((person.มา+person.สาย)/person.total*100) : 0}%`,1000,y); });
   const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) return;
   const file = new File([blob],`knt-attendance-stats-${todayISO()}.png`,{type:'image/png'});
