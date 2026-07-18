@@ -59,7 +59,6 @@ const teacherTools = [
 
 // รายชื่อครูสำหรับระบบเช็กชื่อรวม — เก็บแยกจากระบบเตรียมวิศวะ
 // ซึ่งใช้รายวิชาและกลุ่มห้องเฉพาะของตนเอง
-const attendanceTeachers = ['ครูนิวตรอน', 'ครูปรียา', 'ครูวรรณา', 'Teacher Ann', 'ครูอนุชา', 'ครูณัฐ'];
 const engineeringRooms = ['ม.4/1', 'ม.5/1', 'ม.6/1'];
 
 const navMarkup = items => items.map(item => `
@@ -274,7 +273,7 @@ function nativeToolBody(tool) {
     <section class="native-panel card">
       <div class="native-panel-heading"><div><p class="eyebrow">เช็กชื่อประจำวัน</p><h2>เลือกห้องและสถานะนักเรียน</h2></div><div class="native-heading-actions"><button class="outline-button" type="button" data-native-action="show-attendance-history">ประวัติ</button><span class="connection-pill" id="nativeConnection">กำลังเชื่อมข้อมูล…</span></div></div>
       <div class="native-form-grid attendance-controls">
-        ${tool.id === 'subject-attendance' ? `<label><span>ครูผู้สอน</span><select id="nativeTeacher"><option value="">เลือกครูผู้สอน</option>${attendanceTeachers.map(teacher => `<option value="${teacher}">${teacher}</option>`).join('')}</select></label>` : ''}
+        ${tool.id === 'subject-attendance' ? `<label><span>ครูผู้สอน</span><select id="nativeTeacher"><option value="">กำลังโหลดช่องครู…</option></select></label>` : ''}
         <label><span>รายวิชา</span><select id="nativeSubject"><option value="">กำลังโหลดวิชา…</option></select></label>
         <label><span>ห้องเรียน</span><select id="nativeRoom"><option value="">กำลังโหลดรายชื่อ…</option></select></label>
         <label><span>วันที่</span><input id="nativeDate" type="date"></label>
@@ -348,7 +347,7 @@ const API = {
   fund: 'https://script.google.com/macros/s/AKfycbz-F0PVMgQel2G7PIutsmvIW_D7UeSwXau39cGn4G8gnKHK2O_AXJnofNu5X5AMmdDafQ/exec'
 };
 
-const nativeState = { roster: null, attendance: {}, attendanceHistory: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', workDirty: false, workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
+const nativeState = { roster: null, attendance: {}, attendanceHistory: [], subjectRecords: [], teachers: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', workDirty: false, workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
 
 const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
 const todayISO = () => new Date().toLocaleDateString('en-CA');
@@ -371,6 +370,52 @@ function populateRoomSelect(roster, allowedRooms = null) {
   if (!select) return;
   const rooms = (allowedRooms || Object.keys(roster)).filter(room => roster[room]);
   select.innerHTML = '<option value="">เลือกห้องเรียน</option>' + rooms.map(room => `<option value="${escapeText(room)}">${escapeText(room)} · ${roster[room].length} คน</option>`).join('');
+}
+
+function appRoomFromApi(room) {
+  const value = String(room || '');
+  return value.startsWith('ม.') ? value : value.replace('_','/').replace(/^(\d)/,'ม.$1');
+}
+
+function appAttendanceStatus(status) {
+  return ({present:'มา', late:'สาย', leave:'ลา', absent:'ขาด'})[status] || status || '';
+}
+
+function renderSubjectOptions() {
+  const teacherId = document.getElementById('nativeTeacher')?.value;
+  const select = document.getElementById('nativeSubject');
+  if (!select) return;
+  const subjects = nativeState.subjects.filter(subject => !teacherId || String(subject.teacherId) === String(teacherId));
+  select.innerHTML = '<option value="">เลือกช่องรายวิชา</option>' + subjects.map(subject => `<option value="${escapeText(subject.id)}">${escapeText(subject.name)} · ${(subject.rooms || []).join(', ')}</option>`).join('');
+}
+
+async function loadSubjectRecords() {
+  const subjectId = document.getElementById('nativeSubject')?.value;
+  if (!subjectId) { nativeState.subjectRecords = []; return; }
+  const connection = document.getElementById('nativeConnection');
+  if (connection) connection.textContent = 'กำลังโหลดประวัติวิชา…';
+  try {
+    const response = await getJSON(API.attendance, {action:'getAll', id:subjectId});
+    nativeState.subjectRecords = (response.records || []).map(record => ({
+      key:`subject-${subjectId}-${record.room}-${record.date}`, room:appRoomFromApi(record.room), date:record.date,
+      subjectId, teacher:document.getElementById('nativeTeacher')?.selectedOptions?.[0]?.textContent || '', source:'Google Sheets',
+      data:Object.fromEntries(Object.entries(record.data || {}).map(([no,status]) => [no,appAttendanceStatus(status)]))
+    }));
+    if (connection) { connection.textContent = 'เชื่อม Google Sheets แล้ว'; connection.classList.add('online'); }
+    loadSelectedAttendanceRecord();
+  } catch (error) {
+    nativeState.subjectRecords = [];
+    if (connection) connection.textContent = 'โหลดประวัติวิชาไม่ได้';
+  }
+}
+
+function loadSelectedAttendanceRecord() {
+  if (currentTool?.id !== 'subject-attendance') return;
+  const room = document.getElementById('nativeRoom')?.value, date = document.getElementById('nativeDate')?.value;
+  if (!room || !date) return;
+  const record = nativeState.subjectRecords.find(item => item.room === room && item.date === date);
+  nativeState.attendance[room] = record ? {...record.data} : {};
+  renderAttendanceRoster();
 }
 
 function renderAttendanceRoster() {
@@ -410,8 +455,11 @@ async function initializeAttendance() {
     if (currentTool.id === 'engineering-attendance') {
       subjectSelect.innerHTML = '<option value="engineering">เตรียมวิศวกรรมศาสตร์</option>';
     } else if (setup?.ok) {
+      nativeState.teachers = setup.teachers || [];
       nativeState.subjects = setup.subjects || [];
-      subjectSelect.innerHTML = '<option value="">เลือกช่องรายวิชา</option>' + nativeState.subjects.map(subject => `<option value="${escapeText(subject.id)}">${escapeText(subject.name)} · ${(subject.rooms || []).join(', ')}</option>`).join('');
+      const teacherSelect = document.getElementById('nativeTeacher');
+      if (teacherSelect) teacherSelect.innerHTML = '<option value="">เลือกครูผู้สอน</option>' + nativeState.teachers.map(teacher => `<option value="${escapeText(teacher.id)}">${escapeText(teacher.name)}</option>`).join('');
+      renderSubjectOptions();
     } else subjectSelect.innerHTML = '<option value="">ยังโหลดช่องรายวิชาไม่ได้</option>';
     document.getElementById('nativeDate').value = todayISO();
     connection.textContent = setup?.ok ? 'เชื่อม Google Sheets แล้ว' : 'ใช้รายชื่อในแอป';
@@ -650,7 +698,8 @@ async function saveNativeAttendance() {
   const date = document.getElementById('nativeDate')?.value;
   const password = document.getElementById('nativePassword')?.value;
   const subjectId = document.getElementById('nativeSubject')?.value;
-  const teacher = document.getElementById('nativeTeacher')?.value || '';
+  const teacherSelect = document.getElementById('nativeTeacher');
+  const teacher = teacherSelect?.selectedOptions?.[0]?.textContent || '';
   if (!room || !date) { showToast('กรุณาเลือกห้องและวันที่'); return; }
   if (currentTool.id === 'subject-attendance' && !teacher) { showToast('กรุณาเลือกครูผู้สอน'); return; }
   const data = nativeState.attendance[room] || {};
@@ -685,7 +734,7 @@ function attendanceRecordStats(data = {}) {
 async function shareAttendanceReport() {
   const room = document.getElementById('nativeRoom')?.value;
   const date = document.getElementById('nativeDate')?.value;
-  const teacher = document.getElementById('nativeTeacher')?.value || '';
+  const teacher = document.getElementById('nativeTeacher')?.selectedOptions?.[0]?.textContent || '';
   const subject = document.getElementById('nativeSubject')?.selectedOptions?.[0]?.textContent || 'เตรียมวิศวกรรมศาสตร์';
   const students = nativeState.roster?.[room] || [];
   if (!room || !date || !students.length) { showToast('กรุณาเลือกห้องและวันที่ก่อนส่งรูปสรุป'); return; }
@@ -751,6 +800,13 @@ async function renderAttendanceHistory() {
     }));
     const merged = new Map();
     cloudResults.flat().forEach(record => merged.set(`${record.date}-${record.room}`, record));
+    localRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
+    records = [...merged.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
+  }
+  if (currentTool.id === 'subject-attendance') {
+    const merged = new Map();
+    nativeState.subjectRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
     localRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
     records = [...merged.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
@@ -1347,7 +1403,17 @@ document.addEventListener('change', event => {
 });
 
 document.addEventListener('change', event => {
-  if (event.target.id === 'nativeRoom') renderAttendanceRoster();
+  if (event.target.id === 'nativeRoom') {
+    if (currentTool?.id === 'subject-attendance') loadSelectedAttendanceRecord();
+    else renderAttendanceRoster();
+  }
+  if (event.target.id === 'nativeDate' && currentTool?.id === 'subject-attendance') loadSelectedAttendanceRecord();
+  if (event.target.id === 'nativeTeacher') {
+    renderSubjectOptions();
+    nativeState.subjectRecords = [];
+    const roomSelect = document.getElementById('nativeRoom');
+    if (roomSelect) [...roomSelect.options].forEach(option => { option.hidden = false; });
+  }
   if (event.target.id === 'nativeSubject') {
     const subject = nativeState.subjects.find(item => item.id === event.target.value);
     const roomSelect = document.getElementById('nativeRoom');
@@ -1355,6 +1421,7 @@ document.addEventListener('change', event => {
       const allowed = new Set((subject.rooms || []).map(room => String(room).replace('_','/').replace(/^(\d)/,'ม.$1')));
       [...roomSelect.options].forEach(option => { if (option.value) option.hidden = allowed.size > 0 && !allowed.has(option.value); });
     }
+    loadSubjectRecords();
   }
   if (event.target.id === 'attendanceHistoryDate') {
     const value = event.target.value;
