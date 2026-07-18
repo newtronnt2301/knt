@@ -57,6 +57,11 @@ const teacherTools = [
   { id: 'qr-generator', category: 'utility', icon: 'qr', tone: 'purple', title: 'สร้าง QR Code อิสระ', description: 'เครื่องมือสร้างคิวอาร์โค้ดอเนกประสงค์', path: '../ส่งงาน/qr-generator.html', badge: 'QR TOOL' }
 ];
 
+// รายชื่อครูสำหรับระบบเช็กชื่อรวม — เก็บแยกจากระบบเตรียมวิศวะ
+// ซึ่งใช้รายวิชาและกลุ่มห้องเฉพาะของตนเอง
+const attendanceTeachers = ['ครูนิวตรอน', 'ครูปรียา', 'ครูวรรณา', 'Teacher Ann', 'ครูอนุชา', 'ครูณัฐ'];
+const engineeringRooms = ['ม.4/1', 'ม.5/1', 'ม.6/1'];
+
 const navMarkup = items => items.map(item => `
   <button class="nav-item" type="button" data-route="${item.id}" aria-label="${item.label}">
     <svg aria-hidden="true"><use href="#icon-${item.icon}"></use></svg>
@@ -269,6 +274,7 @@ function nativeToolBody(tool) {
     <section class="native-panel card">
       <div class="native-panel-heading"><div><p class="eyebrow">เช็กชื่อประจำวัน</p><h2>เลือกห้องและสถานะนักเรียน</h2></div><span class="connection-pill" id="nativeConnection">กำลังเชื่อมข้อมูล…</span></div>
       <div class="native-form-grid attendance-controls">
+        ${tool.id === 'subject-attendance' ? `<label><span>ครูผู้สอน</span><select id="nativeTeacher"><option value="">เลือกครูผู้สอน</option>${attendanceTeachers.map(teacher => `<option value="${teacher}">${teacher}</option>`).join('')}</select></label>` : ''}
         <label><span>รายวิชา</span><select id="nativeSubject"><option value="">กำลังโหลดวิชา…</option></select></label>
         <label><span>ห้องเรียน</span><select id="nativeRoom"><option value="">กำลังโหลดรายชื่อ…</option></select></label>
         <label><span>วันที่</span><input id="nativeDate" type="date"></label>
@@ -359,10 +365,10 @@ async function ensureRoster() {
   return nativeState.roster;
 }
 
-function populateRoomSelect(roster) {
+function populateRoomSelect(roster, allowedRooms = null) {
   const select = document.getElementById('nativeRoom');
   if (!select) return;
-  const rooms = Object.keys(roster);
+  const rooms = (allowedRooms || Object.keys(roster)).filter(room => roster[room]);
   select.innerHTML = '<option value="">เลือกห้องเรียน</option>' + rooms.map(room => `<option value="${escapeText(room)}">${escapeText(room)} · ${roster[room].length} คน</option>`).join('');
 }
 
@@ -398,7 +404,7 @@ async function initializeAttendance() {
   const connection = document.getElementById('nativeConnection');
   try {
     const [roster, setup] = await Promise.all([ensureRoster(), getJSON(API.attendance, {action:'listAll'}).catch(() => null)]);
-    populateRoomSelect(roster);
+    populateRoomSelect(roster, currentTool.id === 'engineering-attendance' ? engineeringRooms : null);
     const subjectSelect = document.getElementById('nativeSubject');
     if (currentTool.id === 'engineering-attendance') {
       subjectSelect.innerHTML = '<option value="engineering">เตรียมวิศวกรรมศาสตร์</option>';
@@ -643,9 +649,11 @@ async function saveNativeAttendance() {
   const date = document.getElementById('nativeDate')?.value;
   const password = document.getElementById('nativePassword')?.value;
   const subjectId = document.getElementById('nativeSubject')?.value;
+  const teacher = document.getElementById('nativeTeacher')?.value || '';
   if (!room || !date) { showToast('กรุณาเลือกห้องและวันที่'); return; }
+  if (currentTool.id === 'subject-attendance' && !teacher) { showToast('กรุณาเลือกครูผู้สอน'); return; }
   const data = nativeState.attendance[room] || {};
-  localStorage.setItem(`knt-attendance-${date}-${room}`, JSON.stringify(data));
+  localStorage.setItem(`knt-attendance-${currentTool.id}-${date}-${room}-${subjectId || 'general'}`, JSON.stringify({teacher, subjectId, room, date, data}));
   if (!password && currentTool.id === 'subject-attendance') { showToast('บันทึกร่างในเครื่องแล้ว · ใส่รหัสครูเพื่อส่งขึ้น Google Sheets'); return; }
   const button = document.querySelector('[data-native-action="save-attendance"]');
   button.disabled = true; button.textContent = 'กำลังบันทึก…';
@@ -653,10 +661,15 @@ async function saveNativeAttendance() {
     if (currentTool.id === 'subject-attendance') {
       if (!subjectId) throw new Error('กรุณาเลือกรายวิชา');
       const roomKey = room.replace('ม.','').replace('/','_');
-      const response = await getJSON(API.attendance, {action:'save', id:subjectId, password, date, room:roomKey, data:JSON.stringify(data)});
+      const response = await getJSON(API.attendance, {action:'save', id:subjectId, password, teacher, date, room:roomKey, data:JSON.stringify(data)});
       if (!response.ok) throw new Error(response.error || 'บันทึกไม่สำเร็จ');
     } else {
-      const response = await getJSON(API.engineering, {action:'save', date, data:encodeURIComponent(JSON.stringify({room, attendance:data}))});
+      if (!engineeringRooms.includes(room)) throw new Error('เช็กชื่อเตรียมวิศวะได้เฉพาะ ม.4/1, ม.5/1 และ ม.6/1');
+      const roster = nativeState.roster?.[room] || [];
+      const legacyStatus = { 'มา':'present', 'สาย':'late', 'ลา':'leave', 'ขาด':'absent' };
+      const engineeringData = Object.fromEntries(roster.map((student, index) => [index, legacyStatus[data[student.no]] || 'present']));
+      const roomKey = room.replace('ม.','').replace('/','_');
+      const response = await getJSON(API.engineering, {action:'save', room:roomKey, date, data:encodeURIComponent(JSON.stringify(engineeringData))});
       if (!response.success) throw new Error(response.error || 'บันทึกไม่สำเร็จ');
     }
     showToast('บันทึกการเช็กชื่อขึ้น Google Sheets แล้ว');
