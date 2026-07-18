@@ -378,7 +378,7 @@ function appRoomFromApi(room) {
 }
 
 function appAttendanceStatus(status) {
-  return ({present:'มา', late:'สาย', leave:'ลา', absent:'ขาด'})[status] || status || '';
+  return ({ p:'มา', present:'มา', l:'สาย', late:'สาย', s:'ลา', leave:'ลา', a:'ขาด', absent:'ขาด' })[status] || status || '';
 }
 
 function renderSubjectOptions() {
