@@ -682,21 +682,42 @@ function attendanceRecordStats(data = {}) {
   return ['มา', 'สาย', 'ลา', 'ขาด'].map(status => ({ status, count: Object.values(data).filter(value => value === status).length }));
 }
 
-function renderAttendanceHistory() {
+async function renderAttendanceHistory() {
   const target = document.getElementById('attendanceHistory');
   if (!target || !currentTool) return;
   const prefix = `knt-attendance-${currentTool.id}-`;
-  const records = Object.keys(localStorage).filter(key => key.startsWith(prefix)).map(key => {
+  const localRecords = Object.keys(localStorage).filter(key => key.startsWith(prefix)).map(key => {
     try { return { key, ...JSON.parse(localStorage.getItem(key)) }; } catch { return null; }
   }).filter(Boolean).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  let records = localRecords;
+  let sourceNote = 'บันทึกในอุปกรณ์นี้';
+  if (currentTool.id === 'engineering-attendance') {
+    target.innerHTML = '<div class="native-loader">กำลังโหลดประวัติเตรียมวิศวะจาก Google Sheets…</div>';
+    const thaiStatus = { present:'มา', late:'สาย', leave:'ลา', absent:'ขาด', 'มา':'มา', 'สาย':'สาย', 'ลา':'ลา', 'ขาด':'ขาด' };
+    const cloudResults = await Promise.all(engineeringRooms.map(async room => {
+      try {
+        const roomKey = room.replace('ม.','').replace('/','_');
+        const response = await getJSON(API.engineering, { action:'getAll', room:roomKey });
+        return Object.entries(response?.data || {}).map(([date, data]) => ({
+          key: `cloud-${room}-${date}`, room, date, subjectId:'engineering', source:'Google Sheets',
+          data: Object.fromEntries(Object.entries(data || {}).map(([no, status]) => [no, thaiStatus[status] || status]))
+        }));
+      } catch { return []; }
+    }));
+    const merged = new Map();
+    cloudResults.flat().forEach(record => merged.set(`${record.date}-${record.room}`, record));
+    localRecords.forEach(record => merged.set(`${record.date}-${record.room}`, record));
+    records = [...merged.values()].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
+  }
   if (!records.length) {
     target.innerHTML = '<div class="native-empty"><span>📅</span><h2>ยังไม่มีประวัติในอุปกรณ์นี้</h2><p>เมื่อบันทึกเช็กชื่อแล้ว รายการจะปรากฏที่นี่</p></div>';
     return;
   }
-  target.innerHTML = `<div class="native-panel-heading"><div><p class="eyebrow">บันทึกในอุปกรณ์นี้</p><h2>ประวัติการเช็กชื่อ</h2></div><button class="outline-button" data-native-action="hide-attendance-history">ปิด</button></div><div class="attendance-history-list">${records.map(record => {
+  target.innerHTML = `<div class="native-panel-heading"><div><p class="eyebrow">${sourceNote}</p><h2>ประวัติการเช็กชื่อ</h2></div><button class="outline-button" data-native-action="hide-attendance-history">ปิด</button></div><div class="attendance-history-list">${records.map(record => {
     const stats = attendanceRecordStats(record.data);
     const detail = currentTool.id === 'subject-attendance' ? `${escapeText(record.teacher || 'ไม่ระบุครู')} · ${escapeText(record.subjectId || 'ไม่ระบุวิชา')}` : 'เตรียมวิศวกรรมศาสตร์';
-    return `<article><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}</span></div><p>${stats.map(item => `${item.status} ${item.count}`).join(' · ')}</p></article>`;
+    return `<article><div><b>${escapeText(record.date)}</b><span>${escapeText(record.room)} · ${detail}${record.source ? ` · ${record.source}` : ''}</span></div><p>${stats.map(item => `${item.status} ${item.count}`).join(' · ')}</p></article>`;
   }).join('')}</div>`;
 }
 
@@ -1061,7 +1082,7 @@ async function handleNativeAction(button) {
   if (action === 'save-attendance') await saveNativeAttendance();
   if (action === 'show-attendance-history') {
     const history = document.getElementById('attendanceHistory');
-    if (history) { history.hidden = false; renderAttendanceHistory(); history.scrollIntoView({ behavior:'smooth', block:'start' }); }
+    if (history) { history.hidden = false; await renderAttendanceHistory(); history.scrollIntoView({ behavior:'smooth', block:'start' }); }
   }
   if (action === 'hide-attendance-history') { const history = document.getElementById('attendanceHistory'); if (history) history.hidden = true; }
   if (action === 'refresh-work') {
