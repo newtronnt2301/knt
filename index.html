@@ -406,6 +406,21 @@
       letter-spacing: 0.1em;
     }
     .hero-tag.gold { border-color: rgba(255,184,0,0.3); color: var(--gold); background: rgba(255,184,0,0.06); }
+    .hero-app-cta {
+      position: relative; z-index: 3;
+      display: inline-flex; align-items: center; gap: 12px;
+      margin-top: 20px; padding: 12px 18px;
+      border: 1px solid rgba(255,184,0,0.5); border-radius: 10px;
+      color: #fff; background: linear-gradient(135deg, rgba(255,32,64,.18), rgba(255,184,0,.12));
+      box-shadow: 0 0 28px rgba(255,32,64,.12);
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .hero-app-cta:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 8px 32px rgba(255,32,64,.22); }
+    .hero-app-cta-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; color: var(--gold); background: rgba(255,184,0,.1); font-family: var(--font-hud); font-weight: 800; }
+    .hero-app-cta-text { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+    .hero-app-cta-text b { font-size: .86rem; }
+    .hero-app-cta-text small { color: var(--text-dim); font-family: var(--font-mono); font-size: .58rem; letter-spacing: .05em; }
+    .hero-app-cta svg { width: 18px; stroke: var(--gold); stroke-width: 2; fill: none; }
 
     /* ========== HUD STATS BAR ========== */
     .hud-stats {
@@ -551,6 +566,13 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 32, 64, 0.1);
       transform: translateY(-3px);
     }
+    .jarvis-card.app-feature { border-color: rgba(255,184,0,.35); background: linear-gradient(135deg, rgba(255,32,64,.12), rgba(255,184,0,.07)); }
+    .jarvis-card.app-feature .card-icon { color: var(--gold); border-color: rgba(255,184,0,.28); background: rgba(255,184,0,.08); font-family: var(--font-hud); font-weight: 800; }
+    .jarvis-card.app-feature .card-badge { color: var(--gold); border-color: rgba(255,184,0,.35); background: rgba(255,184,0,.08); }
+    .jarvis-card.app-feature .card-action, .jarvis-card.app-feature .card-action svg { color: var(--gold); stroke: var(--gold); }
+    .sidebar-link.featured { border: 1px solid rgba(255,184,0,.28); background: linear-gradient(135deg, rgba(255,32,64,.1), rgba(255,184,0,.06)); }
+    .sidebar-link.featured .sidebar-link-icon { color: var(--gold); border-color: rgba(255,184,0,.25); font-family: var(--font-hud); font-size: .65rem; font-weight: 800; }
+    .sidebar-link.featured .title { color: var(--gold); }
 
     .card-top {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -814,6 +836,13 @@
       </button>
     </div>
     <div class="sidebar-body">
+      <div class="sidebar-section-label">NEW CLASSROOM APP</div>
+      <a href="app/" class="sidebar-link featured">
+        <div class="sidebar-link-icon">APP</div>
+        <div class="sidebar-link-text"><div class="title">KNT Classroom</div><div class="sub">นักเรียนและครูในแอปเดียว</div></div>
+        <div class="sidebar-link-num">NEW</div>
+      </a>
+
       <div class="sidebar-section-label">CORE SYSTEMS</div>
 
       <a href="เช็คชื่อรายวิชา/index.html" class="sidebar-link">
@@ -968,15 +997,20 @@
       </p>
       <div class="hero-tags">
         <span class="hero-tag">NEURAL INTERFACE v2.0</span>
-        <span class="hero-tag gold">13 MODULES ACTIVE</span>
+        <span class="hero-tag gold">14 MODULES ACTIVE</span>
       </div>
+      <a class="hero-app-cta" href="app/">
+        <span class="hero-app-cta-icon">K</span>
+        <span class="hero-app-cta-text"><b>เปิด KNT Classroom</b><small>STUDENT + TEACHER APP · PWA READY</small></span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg>
+      </a>
     </div>
 
     <!-- HUD STATS BAR -->
     <div class="hud-stats">
       <div class="hud-stat">
         <div class="hud-stat-label">MODULES</div>
-        <div class="hud-stat-value">13</div>
+        <div class="hud-stat-value">14</div>
       </div>
       <div class="hud-stat">
         <div class="hud-stat-label">STATUS</div>
@@ -1007,6 +1041,22 @@
       </div>
 
       <div class="cards-grid" id="cardsGrid">
+
+        <!-- Featured: KNT Classroom -->
+        <a href="app/" class="jarvis-card app-feature" style="animation-delay:0ms">
+          <div class="scan-line"></div>
+          <div class="card-num">APP</div>
+          <div class="card-top">
+            <div class="card-icon">K</div>
+            <span class="card-badge">✨ NEW PWA</span>
+          </div>
+          <div class="card-title">KNT Classroom</div>
+          <div class="card-desc">แอปสำหรับนักเรียนและครู รวมรายวิชา ข้อสอบ งาน เช็กชื่อ คะแนน และสแกน QR ในแอปเดียว</div>
+          <div class="card-footer">
+            <div class="card-action">OPEN APP <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg></div>
+            <div class="card-status">ONLINE</div>
+          </div>
+        </a>
 
         <!-- Card 01: เช็คชื่อรายวิชา -->
         <a href="เช็คชื่อรายวิชา/index.html" class="jarvis-card" style="animation-delay:0ms">
