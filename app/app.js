@@ -282,7 +282,7 @@ function nativeToolBody(tool) {
       </div>
       <div class="attendance-summary" id="attendanceSummary"></div>
       <div class="student-attendance-list" id="nativeRoster"><div class="native-empty">เลือกห้องเพื่อแสดงรายชื่อนักเรียน</div></div>
-      <div class="native-sticky-actions"><button class="outline-button" type="button" data-native-action="mark-all-present"><svg><use href="#icon-check"></use></svg>มาครบทุกคน</button><button class="soft-button" type="button" data-native-action="save-attendance"><svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ</button></div>
+      <div class="native-sticky-actions"><button class="outline-button" type="button" data-native-action="mark-all-present"><svg><use href="#icon-check"></use></svg>มาครบทุกคน</button><button class="outline-button" type="button" data-native-action="share-attendance-report">ส่งรูปสรุป</button><button class="soft-button" type="button" data-native-action="save-attendance"><svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ</button></div>
       <section class="attendance-history card" id="attendanceHistory" hidden></section>
     </section>`;
 
@@ -680,6 +680,51 @@ async function saveNativeAttendance() {
 
 function attendanceRecordStats(data = {}) {
   return ['มา', 'สาย', 'ลา', 'ขาด'].map(status => ({ status, count: Object.values(data).filter(value => value === status).length }));
+}
+
+async function shareAttendanceReport() {
+  const room = document.getElementById('nativeRoom')?.value;
+  const date = document.getElementById('nativeDate')?.value;
+  const teacher = document.getElementById('nativeTeacher')?.value || '';
+  const subject = document.getElementById('nativeSubject')?.selectedOptions?.[0]?.textContent || 'เตรียมวิศวกรรมศาสตร์';
+  const students = nativeState.roster?.[room] || [];
+  if (!room || !date || !students.length) { showToast('กรุณาเลือกห้องและวันที่ก่อนส่งรูปสรุป'); return; }
+  const data = nativeState.attendance[room] || {};
+  const stats = attendanceRecordStats(data);
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200; canvas.height = 760;
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#f5f7ff'; context.fillRect(0, 0, canvas.width, canvas.height);
+  const gradient = context.createLinearGradient(0, 0, canvas.width, 0);
+  gradient.addColorStop(0, '#0e3f74'); gradient.addColorStop(1, '#8068dc');
+  context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, 212);
+  context.fillStyle = '#ffffff'; context.font = '700 48px Anuphan, sans-serif'; context.fillText('KNT Classroom · สรุปการเช็กชื่อ', 65, 85);
+  context.font = '400 30px Anuphan, sans-serif'; context.fillText(`${room} · ${date}`, 65, 138);
+  context.font = '400 24px Anuphan, sans-serif'; context.fillText(currentTool.id === 'subject-attendance' ? `${teacher} · ${subject}` : 'เตรียมวิศวกรรมศาสตร์', 65, 180);
+  const colors = ['#2c9b78', '#d69220', '#5d79cc', '#d75b69'];
+  stats.forEach((item, index) => {
+    const x = 65 + index * 278;
+    context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(x, 260, 240, 170, 24); context.fill();
+    context.fillStyle = colors[index]; context.font = '700 66px Anuphan, sans-serif'; context.fillText(String(item.count), x + 28, 338);
+    context.fillStyle = '#53627f'; context.font = '500 28px Anuphan, sans-serif'; context.fillText(item.status, x + 28, 390);
+  });
+  const present = stats.find(item => item.status === 'มา')?.count || 0;
+  const rate = students.length ? Math.round(present / students.length * 100) : 0;
+  context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(65, 480, 1070, 175, 24); context.fill();
+  context.fillStyle = '#24345c'; context.font = '700 34px Anuphan, sans-serif'; context.fillText(`นักเรียนทั้งหมด ${students.length} คน · มาเรียน ${rate}%`, 102, 548);
+  context.fillStyle = '#e7ecf7'; context.beginPath(); context.roundRect(102, 582, 950, 24, 12); context.fill();
+  context.fillStyle = '#2c9b78'; context.beginPath(); context.roundRect(102, 582, 950 * rate / 100, 24, 12); context.fill();
+  context.fillStyle = '#7c88a6'; context.font = '400 21px Anuphan, sans-serif'; context.fillText('สร้างโดย KNT Classroom', 65, 714);
+  const filename = `knt-attendance-${room.replace(/[./]/g, '-')}-${date}.png`;
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) { showToast('สร้างรูปสรุปไม่สำเร็จ'); return; }
+  const file = new File([blob], filename, { type:'image/png' });
+  if (navigator.canShare?.({ files:[file] })) {
+    try { await navigator.share({ files:[file], title:'สรุปการเช็กชื่อ KNT Classroom' }); return; } catch (error) { if (error.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(blob); const link = document.createElement('a');
+  link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url);
+  showToast('บันทึกรูปสรุปแล้ว');
 }
 
 async function renderAttendanceHistory() {
@@ -1080,6 +1125,7 @@ async function handleNativeAction(button) {
     renderAttendanceRoster(); showToast('ทำเครื่องหมายมาครบแล้ว');
   }
   if (action === 'save-attendance') await saveNativeAttendance();
+  if (action === 'share-attendance-report') await shareAttendanceReport();
   if (action === 'show-attendance-history') {
     const history = document.getElementById('attendanceHistory');
     if (history) { history.hidden = false; await renderAttendanceHistory(); history.scrollIntoView({ behavior:'smooth', block:'start' }); }
