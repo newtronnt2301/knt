@@ -6,8 +6,8 @@
 <title>📦 ติดตามงาน / ข้อสอบ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Itim&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Itim&family=Sarabun:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Itim&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
   :root{
     --green:#1f6f3e;--green-d:#0f3d20;--green-l:#e8f3ec;
@@ -1495,9 +1495,7 @@ function showWsLogin(name) {
   document.getElementById('wsLoginMsg').textContent = '';
   document.getElementById('wsLandingPageSelect').classList.add('hide');
   document.getElementById('wsLandingPageLogin').classList.remove('hide');
-  setTimeout(function() {
-    document.getElementById('wsLoginPw').focus();
-  }, 60);
+  document.getElementById('wsLoginPw').focus();
 }
 
 function hideWsLandingOverlay() {
@@ -1676,6 +1674,28 @@ document.getElementById('btnDeleteWs').onclick = function() {
 var html5QrCode = null;
 var scanSessionHistory = [];
 var scanCooldown = false;
+var qrScannerLibPromise = null;
+
+/* โหลดตัวอ่าน QR เฉพาะตอนกดเปิดสแกนเนอร์ ไม่ให้ขวางหน้าใส่รหัสครู */
+function loadQrScannerLib() {
+  if (window.Html5Qrcode) return Promise.resolve();
+  if (qrScannerLibPromise) return qrScannerLibPromise;
+  qrScannerLibPromise = new Promise(function(resolve, reject) {
+    var script = document.createElement('script');
+    script.src = 'https://unpkg.com/html5-qrcode';
+    script.async = true;
+    script.onload = function() {
+      if (window.Html5Qrcode) resolve();
+      else reject(new Error('QR scanner library unavailable'));
+    };
+    script.onerror = function() { reject(new Error('QR scanner library failed to load')); };
+    document.head.appendChild(script);
+  }).catch(function(error) {
+    qrScannerLibPromise = null;
+    throw error;
+  });
+  return qrScannerLibPromise;
+}
 
 function playScanBeep(success) {
   try {
@@ -1743,11 +1763,13 @@ function openScannerModal() {
   var logBox = document.getElementById('scanner-status-log');
   logBox.style.background = 'var(--green-l)';
   logBox.style.color = 'var(--green-d)';
-  logBox.textContent = 'พร้อมสแกน... นำการ์ดรหัสส่องกล้อง';
+  logBox.textContent = 'กำลังเตรียมตัวสแกน QR…';
 
   document.getElementById('scanDlg').showModal();
 
-  Html5Qrcode.getCameras().then(function(devices) {
+  loadQrScannerLib().then(function() {
+    return Html5Qrcode.getCameras();
+  }).then(function(devices) {
     var select = document.getElementById('scanner-camera-select');
     select.innerHTML = '';
     
@@ -1948,9 +1970,10 @@ function closeScannerModal() {
 /* ===== เริ่ม ===== */
 unlocked = (sessionStorage.getItem('hwUnlocked_' + activeWorkspace) === '1');
 showWsLandingOverlay();
-load(); toggleMax(); updateLockUI(); afterDataReady();   // แสดง cache ในเครื่องทันที
-if(cloudUrl()){ refreshFromCloud(); }                    // แล้วดึงของล่าสุดจากคลาวด์มาทับ
-else { setStatus('⚠️ ยังไม่ตั้งค่าคลาวด์ — กด ⚙️ ตั้งค่าคลาวด์'); }
+load(); toggleMax(); updateLockUI();
+setStatus('เลือกห้องทำงานครูเพื่อเริ่ม');
+// ยังไม่สร้างตารางหรือดึงคลาวด์ขณะหน้ารหัสเปิดอยู่ เพื่อให้ช่องรหัสตอบสนองทันที
+// ข้อมูลจะเริ่มโหลดใน switchWorkspace() หลังผู้ใช้เข้าห้องทำงานแล้ว
 </script>
 </body>
 </html>
