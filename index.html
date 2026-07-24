@@ -279,6 +279,7 @@
       border-radius: 7px;
       display: grid; place-items: center;
       flex-shrink: 0;
+      overflow: hidden;
       transition: all 0.25s;
     }
     .sidebar-link:hover .sidebar-link-icon {
@@ -286,11 +287,12 @@
       background: var(--red-soft);
     }
     .sidebar-link-icon img {
-      width: 18px; height: 18px; object-fit: contain;
-      filter: brightness(0) invert(0.7);
-      transition: filter 0.25s;
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 6px;
+      filter: none;
+      transition: transform 0.25s, filter 0.25s;
     }
-    .sidebar-link:hover .sidebar-link-icon img { filter: brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(335deg); }
+    .sidebar-link:hover .sidebar-link-icon img { filter: brightness(1.12); transform: scale(1.06); }
     .sidebar-link-icon svg { width: 16px; height: 16px; stroke: var(--text-dim); stroke-width: 1.6; fill: none; transition: stroke 0.25s; }
     .sidebar-link:hover .sidebar-link-icon svg { stroke: var(--red-bright); }
     .sidebar-link-text { flex: 1; min-width: 0; }
@@ -417,6 +419,8 @@
     }
     .hero-app-cta:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 8px 32px rgba(255,32,64,.22); }
     .hero-app-cta-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; color: var(--gold); background: rgba(255,184,0,.1); font-family: var(--font-hud); font-weight: 800; }
+    .hero-app-cta-icon { overflow: hidden; flex-shrink: 0; }
+    .hero-app-cta-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
     .hero-app-cta-text { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
     .hero-app-cta-text b { font-size: .86rem; }
     .hero-app-cta-text small { color: var(--text-dim); font-family: var(--font-mono); font-size: .58rem; letter-spacing: .05em; }
@@ -567,7 +571,7 @@
       transform: translateY(-3px);
     }
     .jarvis-card.app-feature { border-color: rgba(255,184,0,.35); background: linear-gradient(135deg, rgba(255,32,64,.12), rgba(255,184,0,.07)); }
-    .jarvis-card.app-feature .card-icon { color: var(--gold); border-color: rgba(255,184,0,.28); background: rgba(255,184,0,.08); font-family: var(--font-hud); font-weight: 800; }
+    .jarvis-card.app-feature .card-icon { color: var(--gold); border-color: rgba(255,184,0,.28); background: rgba(255,184,0,.08); }
     .jarvis-card.app-feature .card-badge { color: var(--gold); border-color: rgba(255,184,0,.35); background: rgba(255,184,0,.08); }
     .jarvis-card.app-feature .card-action, .jarvis-card.app-feature .card-action svg { color: var(--gold); stroke: var(--gold); }
     .sidebar-link.featured { border: 1px solid rgba(255,184,0,.28); background: linear-gradient(135deg, rgba(255,32,64,.1), rgba(255,184,0,.06)); }
@@ -579,13 +583,14 @@
       margin-bottom: 16px;
     }
     .card-icon {
-      width: 44px; height: 44px;
+      width: 54px; height: 54px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 13px;
       display: grid; place-items: center;
       background: rgba(255, 32, 64, 0.04);
       transition: all 0.3s;
       position: relative;
+      overflow: hidden;
     }
     .card-icon::after {
       content: ''; position: absolute; inset: -1px;
@@ -596,11 +601,12 @@
     .jarvis-card:hover .card-icon { background: var(--red-soft); }
     .jarvis-card:hover .card-icon::after { opacity: 1; box-shadow: 0 0 12px var(--red-glow); }
     .card-icon img {
-      width: 24px; height: 24px; object-fit: contain;
-      filter: brightness(0) invert(0.6);
-      transition: filter 0.3s;
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 12px;
+      filter: none;
+      transition: transform 0.3s, filter 0.3s;
     }
-    .jarvis-card:hover .card-icon img { filter: brightness(0) invert(1) sepia(1) saturate(8) hue-rotate(335deg) brightness(1.2); }
+    .jarvis-card:hover .card-icon img { filter: brightness(1.12); transform: scale(1.06); }
     .card-icon svg { width: 22px; height: 22px; stroke: var(--text-dim); stroke-width: 1.6; fill: none; transition: stroke 0.3s; }
     .jarvis-card:hover .card-icon svg { stroke: var(--red-bright); }
 
@@ -838,7 +844,7 @@
     <div class="sidebar-body">
       <div class="sidebar-section-label">NEW CLASSROOM APP</div>
       <a href="app/" class="sidebar-link featured">
-        <div class="sidebar-link-icon">APP</div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/knt-classroom.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">KNT Classroom</div><div class="sub">นักเรียนและครูในแอปเดียว</div></div>
         <div class="sidebar-link-num">NEW</div>
       </a>
@@ -846,83 +852,69 @@
       <div class="sidebar-section-label">CORE SYSTEMS</div>
 
       <a href="เช็คชื่อรายวิชา/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/grad-cap.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/attendance.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">เช็คชื่อเข้าเรียนรายวิชา</div><div class="sub">บันทึกเวลาเรียนรายคาบ</div></div>
         <div class="sidebar-link-num">01</div>
       </a>
       <a href="เช็คชื่อ-เตรียมวิศวะ.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/gear.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/engineering.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div><div class="sub">ห้องเรียนพิเศษ 3 ห้อง</div></div>
         <div class="sidebar-link-num">02</div>
       </a>
       <a href="ส่งงาน/index-ส่งงาน.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/beaker.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/assignments.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">ระบบติดตามส่งงาน/ข้อสอบ</div><div class="sub">ติดตามการบ้าน/คะแนนเก็บ</div></div>
         <div class="sidebar-link-num">03</div>
       </a>
       <a href="สุ่มเลขที่/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/dice.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/duck-race.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div><div class="sub">กิจกรรมสุ่มเลขที่สนุก</div></div>
         <div class="sidebar-link-num">04</div>
       </a>
       <a href="boardgame/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/dice.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/boardgames.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">บอร์ดเกมคลับพัฒนาทักษะ</div><div class="sub">ฝึกตรรกะและความคิด</div></div>
         <div class="sidebar-link-num">05</div>
       </a>
       <a href="learning/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon"><img src="images/atom.png" alt=""></div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/mathematics.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">คลังคณิตศาสตร์เพิ่มเติม</div><div class="sub">บทเรียนและโจทย์ออนไลน์</div></div>
         <div class="sidebar-link-num">06</div>
       </a>
       <a href="exam/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/exam.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">ระบบสอบเก็บคะแนนท้ายบท</div><div class="sub">สุ่มสลับข้อสอบอัตโนมัติ</div></div>
         <div class="sidebar-link-num">07</div>
       </a>
       <a href="plickers/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/plickers.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">ระบบสแกนการ์ด Plickers</div><div class="sub">สแกนการ์ด ArUco ผ่านกล้อง</div></div>
         <div class="sidebar-link-num">08</div>
       </a>
       <a href="คะแนนเกรด/index-เกรด.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/grades.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">ระบบจัดการคะแนน/ตัดเกรด</div><div class="sub">คำนวณเกรด 8 ระดับ</div></div>
         <div class="sidebar-link-num">09</div>
       </a>
       <a href="ประกาศผลสอบ/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/results.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">ประกาศผลสอบ/ตามงานค้าง</div><div class="sub">คะแนนรายคนและเกรด 0</div></div>
         <div class="sidebar-link-num">10</div>
       </a>
       <a href="เก็บเงินเพื่อน/index.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/class-fund.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">บัญชีเงินห้องเรียน ม.6/1</div><div class="sub">รายรับ-รายจ่าย โปร่งใส</div></div>
         <div class="sidebar-link-num">11</div>
       </a>
 
       <div class="sidebar-section-label">QR UTILITIES</div>
       <a href="ส่งงาน/qr-card.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3M14 21h7"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/qr-tools.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">พิมพ์การ์ดสแกนเช็คชื่อ</div><div class="sub">การ์ด QR Code รายบุคคล</div></div>
         <div class="sidebar-link-num">12</div>
       </a>
       <a href="ส่งงาน/qr-generator.html" class="sidebar-link">
-        <div class="sidebar-link-icon">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v3M14 21h7"/></svg>
-        </div>
+        <div class="sidebar-link-icon"><img src="images/module-icons/qr-tools.png" alt=""></div>
         <div class="sidebar-link-text"><div class="title">สร้าง QR Code อิสระ</div><div class="sub">เจนคิวอาร์โค้ดอเนกประสงค์</div></div>
         <div class="sidebar-link-num">13</div>
       </a>
@@ -1000,7 +992,7 @@
         <span class="hero-tag gold">14 MODULES ACTIVE</span>
       </div>
       <a class="hero-app-cta" href="app/">
-        <span class="hero-app-cta-icon">K</span>
+        <span class="hero-app-cta-icon"><img src="images/module-icons/knt-classroom.png" alt=""></span>
         <span class="hero-app-cta-text"><b>เปิด KNT Classroom</b><small>STUDENT + TEACHER APP · PWA READY</small></span>
         <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round"/></svg>
       </a>
@@ -1047,7 +1039,7 @@
           <div class="scan-line"></div>
           <div class="card-num">APP</div>
           <div class="card-top">
-            <div class="card-icon">K</div>
+            <div class="card-icon"><img src="images/module-icons/knt-classroom.png" alt="ไอคอน KNT Classroom"></div>
             <span class="card-badge">✨ NEW PWA</span>
           </div>
           <div class="card-title">KNT Classroom</div>
@@ -1063,7 +1055,7 @@
           <div class="scan-line"></div>
           <div class="card-num">001</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/grad-cap.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/attendance.png" alt="ไอคอนระบบเช็คชื่อเข้าเรียน"></div>
             <span class="card-badge">📷 LIVE SCAN</span>
           </div>
           <div class="card-title">ระบบเช็คชื่อเข้าเรียนรายวิชา</div>
@@ -1079,7 +1071,7 @@
           <div class="scan-line"></div>
           <div class="card-num">002</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/gear.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/engineering.png" alt="ไอคอนเช็คชื่อเตรียมวิศวะ"></div>
             <span class="card-badge">🚀 ม.4-ม.6</span>
           </div>
           <div class="card-title">เช็คชื่อ ม.4-ม.6 เตรียมวิศวะ</div>
@@ -1095,7 +1087,7 @@
           <div class="scan-line"></div>
           <div class="card-num">003</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/beaker.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/assignments.png" alt="ไอคอนระบบติดตามส่งงาน"></div>
             <span class="card-badge">📝 TRACK</span>
           </div>
           <div class="card-title">ระบบติดตามส่งงาน/ข้อสอบ</div>
@@ -1111,7 +1103,7 @@
           <div class="scan-line"></div>
           <div class="card-num">004</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/dice.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/duck-race.png" alt="ไอคอนสุ่มเลขที่เป็ดแข่งวิ่ง"></div>
             <span class="card-badge">🦆 3D RACE</span>
           </div>
           <div class="card-title">สุ่มเลขที่เป็ดแข่งวิ่ง 3D</div>
@@ -1127,7 +1119,7 @@
           <div class="scan-line"></div>
           <div class="card-num">005</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/dice.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/boardgames.png" alt="ไอคอนบอร์ดเกม"></div>
             <span class="card-badge">🧩 GAME</span>
           </div>
           <div class="card-title">บอร์ดเกมคลับพัฒนาทักษะ</div>
@@ -1143,7 +1135,7 @@
           <div class="scan-line"></div>
           <div class="card-num">006</div>
           <div class="card-top">
-            <div class="card-icon"><img src="images/atom.png" alt=""></div>
+            <div class="card-icon"><img src="images/module-icons/mathematics.png" alt="ไอคอนคลังคณิตศาสตร์"></div>
             <span class="card-badge">📚 LEARN</span>
           </div>
           <div class="card-title">คลังคณิตศาสตร์เพิ่มเติม ม.4</div>
@@ -1159,9 +1151,7 @@
           <div class="scan-line"></div>
           <div class="card-num">007</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4" stroke-linecap="round"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/exam.png" alt="ไอคอนระบบสอบ"></div>
             <span class="card-badge">📝 EXAM</span>
           </div>
           <div class="card-title">ระบบสอบเก็บคะแนนท้ายบท</div>
@@ -1177,9 +1167,7 @@
           <div class="scan-line"></div>
           <div class="card-num">008</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/plickers.png" alt="ไอคอนระบบสแกน Plickers"></div>
             <span class="card-badge">📸 SCAN</span>
           </div>
           <div class="card-title">ระบบสแกนการ์ด Plickers</div>
@@ -1195,9 +1183,7 @@
           <div class="scan-line"></div>
           <div class="card-num">009</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/grades.png" alt="ไอคอนระบบจัดการคะแนน"></div>
             <span class="card-badge">📊 GRADES</span>
           </div>
           <div class="card-title">ระบบจัดการคะแนน/ตัดเกรด</div>
@@ -1213,9 +1199,7 @@
           <div class="scan-line"></div>
           <div class="card-num">010</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/results.png" alt="ไอคอนประกาศผลสอบ"></div>
             <span class="card-badge">📢 PUBLISH</span>
           </div>
           <div class="card-title">ประกาศผลสอบ & ติดตามเกรด 0</div>
@@ -1231,9 +1215,7 @@
           <div class="scan-line"></div>
           <div class="card-num">011</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/class-fund.png" alt="ไอคอนบัญชีเงินห้อง"></div>
             <span class="card-badge">💰 FUND</span>
           </div>
           <div class="card-title">ระบบบัญชีเงินห้องเรียน ม.6/1</div>
@@ -1249,9 +1231,7 @@
           <div class="scan-line"></div>
           <div class="card-num">012</div>
           <div class="card-top">
-            <div class="card-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 4H4v8h8V4zM20 4h-8v8h8V4zM12 12H4v8h8v-8zM20 16h-4v4h4v-4z"/></svg>
-            </div>
+            <div class="card-icon"><img src="images/module-icons/qr-tools.png" alt="ไอคอนชุดจัดการ QR Code"></div>
             <span class="card-badge">🖨️ QR UTILS</span>
           </div>
           <div class="card-title">ชุดจัดการ QR Code</div>
