@@ -16,6 +16,8 @@ const teacherNavItems = [
 
 let currentRole = localStorage.getItem('knt-classroom-role') === 'teacher' ? 'teacher' : 'student';
 let currentTool = null;
+const thaiToday = () => new Intl.DateTimeFormat('th-TH', {dateStyle:'full'}).format(new Date());
+const studentDemoNotice = '<div class="demo-notice"><b>หน้าตัวอย่างนักเรียน</b><span>ยังไม่เชื่อมบัญชีรายบุคคล งานและตารางด้านล่างเป็นข้อมูลสาธิต</span></div>';
 
 const courses = [
   { icon: '∑', tone: 'blue', title: 'คณิตศาสตร์', teacher: 'ครูนิวตรอน', progress: 72, lessons: '12 บทเรียน' },
@@ -91,9 +93,10 @@ const courseCard = course => `
 
 function homeView() {
   return `
+    ${studentDemoNotice}
     <div class="home-layout">
       <section class="hero">
-        <span class="date">วันเสาร์ที่ 18 กรกฎาคม 2569</span>
+        <span class="date">${thaiToday()}</span>
         <h1>สวัสดี ธนกฤต 👋</h1>
         <p>พร้อมเรียนรู้สิ่งใหม่แล้วหรือยัง? วันนี้มี 3 คาบเรียน และงานที่ใกล้ถึงกำหนด 1 ชิ้น</p>
         <button class="primary-button" type="button" data-route="courses">เริ่มเรียนวันนี้ <svg><use href="#icon-arrow"></use></svg></button>
@@ -119,7 +122,7 @@ function homeView() {
 }
 
 function coursesView() {
-  return `<header class="page-heading"><p class="eyebrow">ห้องเรียนของฉัน</p><h1>รายวิชาทั้งหมด</h1><p class="subtitle">เลือกวิชาเพื่อเริ่มเรียนหรือทบทวนบทเรียน</p></header>
+  return `${studentDemoNotice}<header class="page-heading"><p class="eyebrow">ห้องเรียนของฉัน</p><h1>รายวิชาทั้งหมด</h1><p class="subtitle">เลือกวิชาเพื่อเริ่มเรียนหรือทบทวนบทเรียน</p></header>
     <div class="filter-pills"><button class="filter-pill active">ทั้งหมด 6</button><button class="filter-pill">กำลังเรียน</button><button class="filter-pill">เรียนล่าสุด</button></div>
     <section class="course-grid">${courses.map(courseCard).join('')}</section>`;
 }
@@ -132,7 +135,7 @@ const examCard = exam => `
   </article>`;
 
 function examsView() {
-  return `<header class="page-heading"><p class="eyebrow">ทดสอบความรู้</p><h1>ข้อสอบของฉัน</h1><p class="subtitle">ตรวจสอบกำหนดการและผลสอบได้ในที่เดียว</p></header>
+  return `${studentDemoNotice}<header class="page-heading"><p class="eyebrow">ทดสอบความรู้</p><h1>ข้อสอบของฉัน</h1><p class="subtitle">ตรวจสอบกำหนดการและผลสอบได้ในที่เดียว</p></header>
     <div class="filter-pills" data-filter-group="exam"><button class="filter-pill active" data-filter="all">ทั้งหมด</button><button class="filter-pill" data-filter="upcoming">กำลังจะมาถึง</button><button class="filter-pill" data-filter="done">ทำแล้ว</button></div>
     <section class="exam-grid stack-list">${exams.map(examCard).join('')}</section>`;
 }
@@ -144,13 +147,13 @@ const taskCard = task => `
   </article>`;
 
 function tasksView() {
-  return `<header class="page-heading"><p class="eyebrow">อย่าลืมส่งนะ</p><h1>งานของฉัน</h1><p class="subtitle">ติดตามงานที่ต้องส่งและงานที่เสร็จแล้ว</p></header>
+  return `${studentDemoNotice}<header class="page-heading"><p class="eyebrow">อย่าลืมส่งนะ</p><h1>งานของฉัน</h1><p class="subtitle">ติดตามงานที่ต้องส่งและงานที่เสร็จแล้ว</p></header>
     <div class="filter-pills" data-filter-group="task"><button class="filter-pill active" data-filter="all">ทั้งหมด</button><button class="filter-pill" data-filter="pending">ต้องส่ง</button><button class="filter-pill" data-filter="done">ส่งแล้ว</button></div>
     <section class="task-grid stack-list">${tasks.map(taskCard).join('')}</section>`;
 }
 
 function profileView() {
-  return `<header class="page-heading"><p class="eyebrow">บัญชีของฉัน</p><h1>โปรไฟล์และการตั้งค่า</h1></header>
+  return `${studentDemoNotice}<header class="page-heading"><p class="eyebrow">บัญชีของฉัน</p><h1>โปรไฟล์และการตั้งค่า</h1></header>
     <div class="profile-layout">
       <section class="profile-banner card"><div class="profile-avatar">ธ</div><h2>ธนกฤต ใจดี</h2><p>นักเรียนชั้นมัธยมศึกษาปีที่ 3/2 · เลขที่ 12</p></section>
       <div>
@@ -165,11 +168,19 @@ function profileView() {
     </div>`;
 }
 
-const toolCard = tool => `
+const toolMode = tool => {
+  if (['subject-attendance','engineering-attendance','submission-tracker','qr-generator','random-student'].includes(tool.id)) return {label:'ใช้งานจริง', className:'live'};
+  if (['grades','exam','results','class-fund'].includes(tool.id)) return {label:'อ่านข้อมูลจริง', className:'readonly'};
+  return {label:'กำลังพัฒนา', className:'developing'};
+};
+
+const toolCard = tool => {
+  const mode = toolMode(tool);
+  return `
   <article class="tool-card card">
     <div class="tool-card-top">
       <span class="tool-icon ${tool.tone}"><svg><use href="#icon-${tool.icon}"></use></svg></span>
-      <span class="tool-badge">${tool.badge}</span>
+      <span class="tool-badge ${mode.className}">${mode.label}</span>
     </div>
     <h3>${tool.title}</h3>
     <p>${tool.description}</p>
@@ -177,23 +188,54 @@ const toolCard = tool => `
       <button class="soft-button" type="button" data-tool="${tool.id}">เปิดใช้งาน <svg><use href="#icon-arrow"></use></svg></button>
     </div>
   </article>`;
+};
 
 const toolSection = (title, subtitle, category) => {
   const selected = teacherTools.filter(tool => tool.category === category);
   return `<section><div class="section-heading"><div><p class="eyebrow">${subtitle}</p><h2>${title}</h2></div></div><div class="tool-grid">${selected.map(toolCard).join('')}</div></section>`;
 };
 
+function teacherDashboardMetrics() {
+  const cached = readWorkDraft();
+  const db = cached?.data || {sets:{}};
+  const sets = Object.values(db.sets || {}).filter(set => set?.room);
+  const uniqueStudents = new Set();
+  let pending = 0;
+  sets.forEach(set => {
+    (set.students || []).filter(student => student.active !== false).forEach(student => {
+      uniqueStudents.add(String(student.schoolId || `${set.room}|${student.no}|${student.name}`));
+      (set.works || []).forEach(work => {
+        if (work.type === 'สอบ' || !workIsDue(work)) return;
+        const saved = set.submissions?.[student.id]?.[work.id];
+        const status = saved?.status || (set.data?.[student.id]?.[work.id] === true ? 'submitted' : 'unsubmitted');
+        if (!WORK_COMPLETE.has(status)) pending++;
+      });
+    });
+  });
+  let audit = [];
+  try { audit = JSON.parse(localStorage.getItem(ATTENDANCE_AUDIT_KEY) || '[]'); } catch {}
+  const todayRecords = audit.filter(item => item.type === 'cloud-save' && item.date === todayISO());
+  const totals = todayRecords.reduce((result,item) => {
+    Object.entries(item.counts || {}).forEach(([status,count]) => { result[status] = (result[status] || 0) + Number(count || 0); });
+    return result;
+  }, {});
+  const marked = ATTENDANCE_STATUSES.reduce((sum,status) => sum + (totals[status] || 0), 0);
+  const attendanceRate = marked ? Math.round(((totals.มา || 0) + (totals.สาย || 0)) / marked * 100) : null;
+  return {sets:sets.length, students:uniqueStudents.size, pending, attendanceRecords:todayRecords.length, attendanceRate};
+}
+
 function teacherHomeView() {
   const quickTools = ['subject-attendance', 'submission-tracker', 'grades', 'exam'].map(id => teacherTools.find(tool => tool.id === id));
+  const metrics = teacherDashboardMetrics();
   return `
     <div class="teacher-hero hero">
-      <div><span class="date">ศูนย์ควบคุมสำหรับคุณครู</span><h1>สวัสดีครับ ครูนิวตรอน 👋</h1><p>วันนี้มี 4 คาบเรียน งานรอตรวจ 18 ชิ้น และนักเรียนที่ต้องติดตามการเข้าเรียน 3 คน</p></div>
-      <div class="teacher-hero-orb"><strong>4</strong><span>คาบวันนี้</span></div>
+      <div><span class="date">ศูนย์ควบคุมสำหรับคุณครู · ข้อมูลจากร่างล่าสุดในอุปกรณ์</span><h1>สวัสดีครับ ครูนิวตรอน 👋</h1><p>${metrics.sets} ห้อง/วิชา · ${metrics.pending} งานค้างที่ถึงกำหนด · เช็กชื่อวันนี้ ${metrics.attendanceRecords} รายการ</p></div>
+      <div class="teacher-hero-orb"><strong>${metrics.sets}</strong><span>ห้อง/วิชา</span></div>
     </div>
     <section class="teacher-stats stats-grid" aria-label="สรุปห้องเรียน">
-      <div class="stat-card card"><span class="stat-icon blue"><svg><use href="#icon-users"></use></svg></span><div><strong>126</strong><span>นักเรียนทั้งหมด</span></div></div>
-      <div class="stat-card card"><span class="stat-icon purple"><svg><use href="#icon-task"></use></svg></span><div><strong>18</strong><span>งานรอตรวจ</span></div></div>
-      <div class="stat-card card"><span class="stat-icon mint"><svg><use href="#icon-chart"></use></svg></span><div><strong>82%</strong><span>การเข้าเรียนวันนี้</span></div></div>
+      <div class="stat-card card"><span class="stat-icon blue"><svg><use href="#icon-users"></use></svg></span><div><strong>${metrics.students || '—'}</strong><span>นักเรียนในระบบงาน</span></div></div>
+      <div class="stat-card card"><span class="stat-icon purple"><svg><use href="#icon-task"></use></svg></span><div><strong>${metrics.pending}</strong><span>งานค้างถึงกำหนด</span></div></div>
+      <div class="stat-card card"><span class="stat-icon mint"><svg><use href="#icon-chart"></use></svg></span><div><strong>${metrics.attendanceRate === null ? '—' : `${metrics.attendanceRate}%`}</strong><span>การเข้าเรียนวันนี้</span></div></div>
     </section>
     <section>
       <div class="section-heading"><div><p class="eyebrow">เริ่มทำงานทันที</p><h2>ทางลัดสำหรับครู</h2></div><button type="button" data-route="tools">ดูทั้งหมด</button></div>
@@ -216,9 +258,9 @@ function teacherHomeView() {
       <section>
         <div class="section-heading"><div><p class="eyebrow">ต้องดำเนินการ</p><h2>รายการที่ควรตรวจสอบ</h2></div></div>
         <div class="attention-card card">
-          <button data-route="teacher-work"><span class="attention-dot coral"></span><span><b>งานรอตรวจ 18 ชิ้น</b><small>แบบฝึกหัดสมการเชิงเส้น</small></span><svg><use href="#icon-arrow"></use></svg></button>
-          <button data-route="attendance"><span class="attention-dot purple"></span><span><b>นักเรียนขาดเรียนต่อเนื่อง 3 คน</b><small>ตรวจสอบและติดต่อผู้ปกครอง</small></span><svg><use href="#icon-arrow"></use></svg></button>
-          <button data-route="scores"><span class="attention-dot mint"></span><span><b>คะแนนสอบชุดใหม่พร้อมแล้ว</b><small>แบบทดสอบก่อนกลางภาค 42 คน</small></span><svg><use href="#icon-arrow"></use></svg></button>
+          <button data-route="teacher-work"><span class="attention-dot coral"></span><span><b>งานค้างที่ถึงกำหนด ${metrics.pending} รายการ</b><small>เปิดรายงานเพื่อติดตามรายคน</small></span><svg><use href="#icon-arrow"></use></svg></button>
+          <button data-route="attendance"><span class="attention-dot purple"></span><span><b>เช็กชื่อวันนี้ ${metrics.attendanceRecords} รายการ</b><small>${metrics.attendanceRate === null ? 'ยังไม่มีบันทึกจริงวันนี้' : `เข้าเรียน ${metrics.attendanceRate}%`}</small></span><svg><use href="#icon-arrow"></use></svg></button>
+          <button data-route="scores"><span class="attention-dot mint"></span><span><b>คะแนนเชื่อมแบบอ่านข้อมูล</b><small>เปิดดูชุดคะแนนและผลสอบจริง</small></span><svg><use href="#icon-arrow"></use></svg></button>
         </div>
       </section>
     </div>
@@ -226,28 +268,45 @@ function teacherHomeView() {
 }
 
 function attendanceView() {
+  const metrics = teacherDashboardMetrics();
   return `<header class="page-heading"><p class="eyebrow">จัดการเวลาเรียน</p><h1>เช็กชื่อและการเข้าเรียน</h1><p class="subtitle">เช็กชื่อ บันทึกสถานะ และใช้กล้องได้โดยไม่ออกจาก KNT Classroom</p></header>
-    <section class="summary-strip card"><div><strong>4</strong><span>ห้องเรียนวันนี้</span></div><div><strong>103</strong><span>มาเรียน</span></div><div><strong>7</strong><span>ขาด/ลา/สาย</span></div></section>
+    <section class="summary-strip card"><div><strong>${metrics.attendanceRecords}</strong><span>รายการบันทึกวันนี้</span></div><div><strong>${metrics.attendanceRate === null ? '—' : `${metrics.attendanceRate}%`}</strong><span>เข้าเรียนวันนี้</span></div><div><strong>จริง</strong><span>รูปหลังบันทึกเท่านั้น</span></div></section>
     ${toolSection('ระบบเช็กชื่อ', 'พร้อมใช้งานจากเว็บเดิม', 'attendance')}
     <section><div class="section-heading"><div><p class="eyebrow">เตรียมการ์ดนักเรียน</p><h2>เครื่องมือ QR</h2></div></div><div class="tool-grid">${teacherTools.filter(tool => tool.id === 'qr-cards').map(toolCard).join('')}</div></section>`;
 }
 
 function teacherWorkView() {
+  const cached = readWorkDraft();
+  const sets = Object.values(cached?.data?.sets || {}).filter(set => set?.room);
+  let sent = 0, pending = 0, review = 0;
+  sets.forEach(set => (set.students || []).filter(student => student.active !== false).forEach(student => (set.works || []).filter(work => work.type !== 'สอบ').forEach(work => {
+    const status = set.submissions?.[student.id]?.[work.id]?.status || (set.data?.[student.id]?.[work.id] === true ? 'submitted' : 'unsubmitted');
+    if (WORK_COMPLETE.has(status)) sent++; else if (workIsDue(work)) pending++;
+    if (['review','submitted','late'].includes(status)) review++;
+  })));
   return `<header class="page-heading"><p class="eyebrow">ตรวจและติดตาม</p><h1>งานและการสแกน</h1><p class="subtitle">ติดตามงาน สแกน QR นักเรียน และสแกนคำตอบกิจกรรมในห้อง</p></header>
-    <section class="summary-strip card"><div><strong>18</strong><span>รอตรวจ</span></div><div><strong>96</strong><span>ส่งแล้ว</span></div><div><strong>12</strong><span>ยังไม่ส่ง</span></div></section>
+    <section class="summary-strip card"><div><strong>${review}</strong><span>รอตรวจ</span></div><div><strong>${sent}</strong><span>ส่ง/ยกเว้นแล้ว</span></div><div><strong>${pending}</strong><span>ค้างถึงกำหนด</span></div></section>
     ${toolSection('ระบบงานและการสแกน', 'เปิดใช้งานได้ทันที', 'work')}
-    <section><div class="section-heading"><div><p class="eyebrow">งานล่าสุด</p><h2>ภาพรวมการส่งงาน</h2></div></div>
+    <section><div class="section-heading"><div><p class="eyebrow">ข้อมูลจากร่างล่าสุดในอุปกรณ์</p><h2>ภาพรวมการส่งงาน</h2></div></div>
       <div class="teacher-list card">
-        <div><span class="list-avatar blue">4/1</span><span><b>แบบฝึกหัดสมการเชิงเส้น</b><small>ส่งแล้ว 32/38 คน · รอตรวจ 8 ชิ้น</small></span><strong>84%</strong></div>
-        <div><span class="list-avatar purple">4/2</span><span><b>ใบงานจำนวนจริง</b><small>ส่งแล้ว 35/40 คน · รอตรวจ 10 ชิ้น</small></span><strong>88%</strong></div>
-        <div><span class="list-avatar mint">5</span><span><b>โครงงานสะพานจำลอง</b><small>ส่งแล้ว 24/28 กลุ่ม</small></span><strong>86%</strong></div>
+        ${sets.slice(0,5).map(set => {
+          const students = (set.students || []).filter(student => student.active !== false);
+          const works = (set.works || []).filter(work => work.type !== 'สอบ');
+          let complete = 0; const total = students.length * works.length;
+          students.forEach(student => works.forEach(work => {
+            const status = set.submissions?.[student.id]?.[work.id]?.status || (set.data?.[student.id]?.[work.id] === true ? 'submitted' : 'unsubmitted');
+            if (WORK_COMPLETE.has(status)) complete++;
+          }));
+          const pct = total ? Math.round(complete / total * 100) : 0;
+          return `<div><span class="list-avatar blue">${escapeText(set.room.replace('ม.',''))}</span><span><b>${escapeText(set.subject)}</b><small>${students.length} คน · ${works.length} งาน</small></span><strong>${pct}%</strong></div>`;
+        }).join('') || '<div><span><b>ยังไม่มีข้อมูลร่าง</b><small>เปิดระบบติดตามส่งงานเพื่อโหลดจาก Google Sheets</small></span><strong>—</strong></div>'}
       </div>
     </section>`;
 }
 
 function scoresView() {
   return `<header class="page-heading"><p class="eyebrow">ผลการเรียน</p><h1>คะแนน ข้อสอบ และรายงาน</h1><p class="subtitle">บันทึกคะแนน ดูผลสอบ ตัดเกรด และประกาศผลจากจุดเดียว</p></header>
-    <section class="summary-strip card"><div><strong>4</strong><span>ชุดข้อสอบ</span></div><div><strong>42</strong><span>ผลสอบใหม่</span></div><div><strong>76.5</strong><span>คะแนนเฉลี่ย</span></div></section>
+    <section class="summary-strip card"><div><strong>—</strong><span>โหลดเมื่อเปิดชุดคะแนน</span></div><div><strong>อ่าน</strong><span>ข้อมูลจริงจาก Sheets</span></div><div><strong>ไม่เดา</strong><span>ไม่แสดงตัวเลขตัวอย่าง</span></div></section>
     ${toolSection('ระบบคะแนนทั้งหมด', 'เชื่อมหน้าจริงจากเว็บเดิม', 'scores')}
     <section><div class="section-heading"><div><p class="eyebrow">การเรียนรู้</p><h2>คลังบทเรียน</h2></div></div><div class="tool-grid">${teacherTools.filter(tool => tool.category === 'learning').map(toolCard).join('')}</div></section>`;
 }
@@ -277,11 +336,13 @@ function nativeToolBody(tool) {
         <label><span>รายวิชา</span><select id="nativeSubject"><option value="">กำลังโหลดวิชา…</option></select></label>
         <label><span>ห้องเรียน</span><select id="nativeRoom"><option value="">กำลังโหลดรายชื่อ…</option></select></label>
         <label><span>วันที่</span><input id="nativeDate" type="date"></label>
+        <label><span>คาบเรียน</span><input id="nativePeriod" type="text" maxlength="30" placeholder="เช่น คาบ 3 หรือ 09:20–10:10"></label>
         <label class="native-password"><span>รหัสบันทึกของครู</span><input id="nativePassword" type="password" inputmode="numeric" placeholder="ใส่เมื่อต้องการบันทึกจริง"></label>
       </div>
       <div class="attendance-summary" id="attendanceSummary"></div>
+      <section class="attendance-review" id="attendanceReview" aria-live="polite"></section>
       <div class="student-attendance-list" id="nativeRoster"><div class="native-empty">เลือกห้องเพื่อแสดงรายชื่อนักเรียน</div></div>
-      <div class="native-sticky-actions"><button class="outline-button" type="button" data-native-action="mark-all-present"><svg><use href="#icon-check"></use></svg>มาครบทุกคน</button><button class="outline-button" type="button" data-native-action="share-attendance-report">ส่งรูปสรุป</button><button class="soft-button" type="button" data-native-action="save-attendance"><svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ</button></div>
+      <div class="native-sticky-actions"><button class="outline-button" type="button" data-native-action="mark-all-present"><svg><use href="#icon-check"></use></svg>ทำเครื่องหมายมาครบ</button><button class="outline-button" type="button" data-native-action="undo-attendance" hidden>ย้อนกลับ</button><button class="outline-button" type="button" data-native-action="share-attendance-report" disabled>ส่งรูปหลังบันทึก</button><button class="soft-button" type="button" data-native-action="save-attendance"><svg><use href="#icon-download"></use></svg>ตรวจและบันทึก</button></div>
       <section class="attendance-history card" id="attendanceHistory" hidden></section>
     </section>`;
 
@@ -347,10 +408,75 @@ const API = {
   fund: 'https://script.google.com/macros/s/AKfycbz-F0PVMgQel2G7PIutsmvIW_D7UeSwXau39cGn4G8gnKHK2O_AXJnofNu5X5AMmdDafQ/exec'
 };
 
-const nativeState = { roster: null, attendance: {}, attendanceHistory: [], subjectRecords: [], subjectHistoryRecords: [], teachers: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', workDirty: false, workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
+const nativeState = { roster: null, attendance: {}, attendanceUndo: null, attendanceReceipt: null, attendanceHistory: [], subjectRecords: [], subjectHistoryRecords: [], teachers: [], subjects: [], examRows: [], gradeSets: {}, gradeIndex: [], workDB: {sets:{}}, workSets: {}, activeWorkKey: '', activeWorkFocus: '', workDirty: false, workBaselineFingerprint: '', workScanHistory: [], qrScanner: null, cameraStream: null, qrLibrary: null };
 
 const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
 const todayISO = () => new Date().toLocaleDateString('en-CA');
+const ATTENDANCE_STATUSES = ['มา','สาย','ลา','ขาด'];
+const ATTENDANCE_AUDIT_KEY = 'knt-classroom-attendance-audit-v2';
+
+function stableFingerprint(value) {
+  const stable = input => {
+    if (Array.isArray(input)) return input.map(stable);
+    if (input && typeof input === 'object') return Object.fromEntries(Object.keys(input).sort().map(key => [key, stable(input[key])]));
+    return input;
+  };
+  const text = JSON.stringify(stable(value));
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619);
+  return (hash >>> 0).toString(36);
+}
+
+function attendanceContext() {
+  const room = document.getElementById('nativeRoom')?.value || '';
+  const date = document.getElementById('nativeDate')?.value || '';
+  const period = document.getElementById('nativePeriod')?.value.trim() || '';
+  const subjectId = document.getElementById('nativeSubject')?.value || 'general';
+  const teacher = document.getElementById('nativeTeacher')?.selectedOptions?.[0]?.textContent || '';
+  const data = nativeState.attendance[room] || {};
+  return { tool:currentTool?.id || '', teacher, subjectId, room, date, period, data };
+}
+
+function attendanceDraftKey(context = attendanceContext()) {
+  return `knt-attendance-${context.tool}-${context.date}-${context.room}-${context.subjectId}-${context.period || 'no-period'}`;
+}
+
+function attendanceFingerprint(context = attendanceContext()) {
+  return stableFingerprint({...context, data:Object.fromEntries(Object.entries(context.data).sort(([a],[b]) => String(a).localeCompare(String(b), 'th', {numeric:true})))});
+}
+
+function saveAttendanceDraft() {
+  const context = attendanceContext();
+  if (!context.room || !context.date) return;
+  try { localStorage.setItem(attendanceDraftKey(context), JSON.stringify({...context, savedAt:new Date().toISOString()})); } catch {}
+}
+
+function appendAttendanceAudit(entry) {
+  try {
+    const audit = JSON.parse(localStorage.getItem(ATTENDANCE_AUDIT_KEY) || '[]');
+    audit.unshift({...entry, at:new Date().toISOString()});
+    localStorage.setItem(ATTENDANCE_AUDIT_KEY, JSON.stringify(audit.slice(0,100)));
+  } catch {}
+}
+
+function invalidateAttendanceReceipt() {
+  nativeState.attendanceReceipt = null;
+  const button = document.querySelector('[data-native-action="share-attendance-report"]');
+  if (button) { button.disabled = true; button.textContent = 'ส่งรูปหลังบันทึก'; }
+}
+
+function restoreAttendanceDraft() {
+  const context = attendanceContext();
+  if (!context.room || !context.date) return false;
+  try {
+    const draft = JSON.parse(localStorage.getItem(attendanceDraftKey(context)) || 'null');
+    if (!draft?.data) return false;
+    nativeState.attendance[context.room] = {...draft.data};
+    nativeState.attendanceReceipt = null;
+    renderAttendanceRoster();
+    return true;
+  } catch { return false; }
+}
 
 async function getJSON(url, params = {}) {
   const query = new URLSearchParams(params);
@@ -429,8 +555,11 @@ function loadSelectedAttendanceRecord() {
   if (currentTool?.id !== 'subject-attendance') return;
   const room = document.getElementById('nativeRoom')?.value, date = document.getElementById('nativeDate')?.value;
   if (!room || !date) return;
-  const record = nativeState.subjectRecords.find(item => item.room === room && item.date === date);
+  const period = document.getElementById('nativePeriod')?.value.trim();
+  const record = period ? null : nativeState.subjectRecords.find(item => item.room === room && item.date === date);
   nativeState.attendance[room] = record ? {...record.data} : {};
+  nativeState.attendanceReceipt = record ? {fingerprint:attendanceFingerprint(), id:record.key, savedAt:new Date().toISOString(), source:'Google Sheets'} : null;
+  if (!record && restoreAttendanceDraft()) return;
   renderAttendanceRoster();
 }
 
@@ -446,10 +575,9 @@ function renderAttendanceRoster() {
     return;
   }
   const roomState = nativeState.attendance[room] ||= {};
-  students.forEach(student => { if (!roomState[student.no]) roomState[student.no] = 'มา'; });
   container.innerHTML = students.map(student => {
-    const status = roomState[student.no];
-    return `<div class="native-student-row"><span class="student-no">${student.no}</span><span><b>${escapeText(student.name)}</b><small>${escapeText(student.id || 'ไม่มีรหัสนักเรียน')}</small></span><div class="status-pills">${['มา','สาย','ลา','ขาด'].map(item => `<button type="button" class="${status === item ? `active ${item}` : ''}" data-attendance-no="${student.no}" data-status="${item}">${item}</button>`).join('')}</div></div>`;
+    const status = roomState[student.no] || '';
+    return `<div class="native-student-row ${status ? '' : 'is-unreviewed'}"><span class="student-no">${student.no}</span><span><b>${escapeText(student.name)}</b><small>${status ? escapeText(student.id || 'ไม่มีรหัสนักเรียน') : 'ยังไม่ตรวจ'}</small></span><div class="status-pills">${ATTENDANCE_STATUSES.map(item => `<button type="button" class="${status === item ? `active ${item}` : ''}" data-attendance-no="${student.no}" data-status="${item}">${item}</button>`).join('')}</div></div>`;
   }).join('');
   renderAttendanceSummary();
 }
@@ -458,8 +586,28 @@ function renderAttendanceSummary() {
   const room = document.getElementById('nativeRoom')?.value;
   const target = document.getElementById('attendanceSummary');
   if (!room || !target) return;
-  const values = Object.values(nativeState.attendance[room] || {});
-  target.innerHTML = ['มา','สาย','ลา','ขาด'].map(status => `<div><strong>${values.filter(value => value === status).length}</strong><span>${status}</span></div>`).join('');
+  const students = nativeState.roster?.[room] || [];
+  const data = nativeState.attendance[room] || {};
+  const values = students.map(student => data[student.no]).filter(Boolean);
+  const unreviewed = students.length - values.length;
+  target.innerHTML = [...ATTENDANCE_STATUSES,'ยังไม่ตรวจ'].map(status => {
+    const count = status === 'ยังไม่ตรวจ' ? unreviewed : values.filter(value => value === status).length;
+    return `<div class="${status === 'ยังไม่ตรวจ' && count ? 'needs-review' : ''}"><strong>${count}</strong><span>${status}</span></div>`;
+  }).join('');
+  const review = document.getElementById('attendanceReview');
+  if (review) {
+    const missing = students.filter(student => !data[student.no]);
+    review.className = `attendance-review ${missing.length ? 'needs-review' : 'complete'}`;
+    review.innerHTML = missing.length
+      ? `<b>ยังตรวจไม่ครบ ${missing.length} คน</b><span>${missing.slice(0,8).map(student => `${student.no}. ${escapeText(student.name)}`).join(' · ')}${missing.length > 8 ? ` · และอีก ${missing.length - 8} คน` : ''}</span>`
+      : `<b>ตรวจครบ ${students.length} คนแล้ว</b><span>ทบทวนยอด มา/สาย/ลา/ขาด แล้วจึงกดบันทึก</span>`;
+  }
+  const share = document.querySelector('[data-native-action="share-attendance-report"]');
+  const receiptMatches = nativeState.attendanceReceipt?.fingerprint === attendanceFingerprint();
+  if (share) {
+    share.disabled = !receiptMatches;
+    share.textContent = receiptMatches ? 'ส่งรูปรายชื่อ' : 'ส่งรูปหลังบันทึก';
+  }
 }
 
 async function initializeAttendance() {
@@ -498,18 +646,26 @@ async function loadWorkData() {
   try {
     const response = await getJSON(API.work);
     if (!response?.ok || !response.data) throw new Error(response?.error || 'รูปแบบข้อมูลไม่ถูกต้อง');
-    nativeState.workDB = normalizeWorkDB(response.data);
+    const cloudDB = normalizeWorkDB(response.data);
+    const cloudFingerprint = stableFingerprint(cloudDB);
+    const cached = readWorkDraft();
+    const recoverDraft = !!(cached?.dirty && cached?.data);
+    const draftMatchesBaseline = recoverDraft && cached.baselineFingerprint === cloudFingerprint;
+    nativeState.workDB = recoverDraft ? normalizeWorkDB(cached.data) : cloudDB;
     nativeState.workSets = nativeState.workDB.sets;
     nativeState.activeWorkKey = '';
-    nativeState.workDirty = false;
+    nativeState.workDirty = !!recoverDraft;
+    nativeState.workBaselineFingerprint = recoverDraft ? (cached.baselineFingerprint || '') : cloudFingerprint;
     cacheWorkDraft();
-    setWorkCloudStatus('โหลดจาก Google Sheets แล้ว', true);
+    setWorkCloudStatus(recoverDraft ? (draftMatchesBaseline ? 'กู้ร่างที่ยังไม่ขึ้นคลาวด์แล้ว' : 'เก็บร่างไว้ · พบว่าคลาวด์เปลี่ยน กรุณาตรวจและรวมข้อมูล') : 'โหลดจาก Google Sheets แล้ว', !recoverDraft);
     renderWorkSetList();
   } catch (error) {
     const cached = readWorkDraft();
     if (cached) {
-      nativeState.workDB = normalizeWorkDB(cached);
+      nativeState.workDB = normalizeWorkDB(cached.data || cached);
       nativeState.workSets = nativeState.workDB.sets;
+      nativeState.workDirty = !!cached.dirty;
+      nativeState.workBaselineFingerprint = cached.baselineFingerprint || '';
       setWorkCloudStatus('ออฟไลน · ใช้ร่างในเครื่อง');
       renderWorkSetList();
     } else target.innerHTML = `<div class="native-error">โหลดข้อมูลไม่ได้<br><small>${escapeText(error.message)}</small></div>`;
@@ -517,6 +673,7 @@ async function loadWorkData() {
 }
 
 const WORK_DRAFT_KEY = 'knt-classroom-work-draft';
+const WORK_BACKUP_KEY = 'knt-classroom-work-backups-v2';
 const uid = prefix => `${prefix}${Math.random().toString(36).slice(2,9)}`;
 
 function normalizeWorkDB(value) {
@@ -527,16 +684,37 @@ function normalizeWorkDB(value) {
     set.students = Array.isArray(set.students) ? set.students : [];
     set.works = Array.isArray(set.works) ? set.works : [];
     set.data = set.data && typeof set.data === 'object' ? set.data : {};
+    set.submissions = set.submissions && typeof set.submissions === 'object' ? set.submissions : {};
+    set.audit = Array.isArray(set.audit) ? set.audit.slice(-200) : [];
+    set.students = set.students.map((student, index) => ({...student, id:student.id || `legacy-s-${stableFingerprint({key,no:student.no || index + 1,name:student.name || ''})}`, no:student.no || index + 1, active:student.active !== false}));
+    set.works = set.works.map((work,index) => ({...work, id:work.id || `legacy-w-${stableFingerprint({key,index,name:work.name || ''})}`, status:work.status || 'open', openAt:work.openAt || '', dueAt:work.dueAt || '', closeAt:work.closeAt || '', instructions:work.instructions || ''}));
   });
   return db;
 }
 
 function cacheWorkDraft() {
-  try { localStorage.setItem(WORK_DRAFT_KEY, JSON.stringify(nativeState.workDB)); } catch {}
+  try { localStorage.setItem(WORK_DRAFT_KEY, JSON.stringify({version:2, data:nativeState.workDB, dirty:nativeState.workDirty, baselineFingerprint:nativeState.workBaselineFingerprint, savedAt:new Date().toISOString()})); } catch {}
 }
 
 function readWorkDraft() {
-  try { return JSON.parse(localStorage.getItem(WORK_DRAFT_KEY)); } catch { return null; }
+  try {
+    const value = JSON.parse(localStorage.getItem(WORK_DRAFT_KEY));
+    return value?.version === 2 ? value : value ? {version:1, data:value, dirty:true, baselineFingerprint:''} : null;
+  } catch { return null; }
+}
+
+function backupWorkDB(reason) {
+  try {
+    const backups = JSON.parse(localStorage.getItem(WORK_BACKUP_KEY) || '[]');
+    backups.unshift({id:`B-${Date.now()}`, reason, at:new Date().toISOString(), data:structuredClone(nativeState.workDB)});
+    localStorage.setItem(WORK_BACKUP_KEY, JSON.stringify(backups.slice(0,10)));
+  } catch {}
+}
+
+function workAudit(set, action, detail = {}) {
+  set.audit ||= [];
+  set.audit.push({at:new Date().toISOString(), action, ...detail});
+  if (set.audit.length > 200) set.audit.splice(0, set.audit.length - 200);
 }
 
 function setWorkCloudStatus(message, online = false) {
@@ -565,17 +743,53 @@ function setWorkValue(set, studentId, workId, value) {
   set.data[studentId][workId] = value;
 }
 
+const WORK_STATUS = {
+  unsubmitted:'ยังไม่ส่ง', submitted:'ส่งแล้ว', late:'ส่งช้า', review:'รอตรวจ',
+  'needs-revision':'ให้แก้ไข', graded:'ตรวจแล้ว', excused:'ยกเว้น'
+};
+const WORK_COMPLETE = new Set(['submitted','late','review','graded','excused']);
+
+function workSubmission(set, studentId, workId) {
+  const saved = set.submissions?.[studentId]?.[workId];
+  if (saved) return saved;
+  const legacy = workValue(set, studentId, workId);
+  return {status:legacy === true ? 'submitted' : 'unsubmitted', submittedAt:'', updatedAt:''};
+}
+
+function setWorkSubmission(set, studentId, workId, status, extra = {}) {
+  set.submissions ||= {}; set.submissions[studentId] ||= {};
+  const previous = workSubmission(set, studentId, workId);
+  const now = new Date().toISOString();
+  const history = Array.isArray(previous.history) ? previous.history.slice(-19) : [];
+  history.push({at:now, from:previous.status || 'unsubmitted', to:status});
+  const submittedAt = WORK_COMPLETE.has(status) && status !== 'excused' ? (previous.submittedAt || now) : '';
+  set.submissions[studentId][workId] = {...previous, ...extra, status, submittedAt, updatedAt:now, history};
+  setWorkValue(set, studentId, workId, WORK_COMPLETE.has(status));
+}
+
+function workIsDue(work, now = Date.now()) {
+  if (work.status === 'draft' || work.status === 'archived') return false;
+  if (!work.dueAt) return true;
+  const due = new Date(work.dueAt).getTime();
+  return Number.isNaN(due) || due <= now;
+}
+
+function workIsPending(set, studentId, work) {
+  return work.type !== 'สอบ' && workIsDue(work) && !WORK_COMPLETE.has(workSubmission(set, studentId, work.id).status);
+}
+
 function renderWorkSetList() {
   const target = document.getElementById('nativeWorkData');
   if (!target) return;
   const entries = Object.entries(nativeState.workSets).filter(([,set]) => set?.room);
   target.innerHTML = entries.length ? `<div class="native-record-grid">${entries.map(([key,set]) => {
     const sendWorks = set.works.filter(work => work.type !== 'สอบ');
-    const total = set.students.length * sendWorks.length;
+    const activeStudents = set.students.filter(student => student.active !== false);
+    const total = activeStudents.length * sendWorks.length;
     let sent = 0;
-    set.students.forEach(student => sendWorks.forEach(work => { if (workValue(set, student.id, work.id) === true) sent++; }));
+    activeStudents.forEach(student => sendWorks.forEach(work => { if (WORK_COMPLETE.has(workSubmission(set, student.id, work.id).status)) sent++; }));
     const percent = total ? Math.round(sent / total * 100) : 0;
-    return `<article class="work-set-card"><span class="tag mint">${escapeText(set.room)}</span><h3>${escapeText(set.subject)}</h3><p>${set.students.length} นักเรียน · ${set.works.length} งาน</p><div class="work-progress"><i style="width:${percent}%"></i></div><small>ส่งงานแล้ว ${percent}%</small><button class="outline-button" data-native-action="select-work-set" data-set-key="${escapeText(key)}">เปิดตาราง</button></article>`;
+    return `<article class="work-set-card"><span class="tag mint">${escapeText(set.room)}</span><h3>${escapeText(set.subject)}</h3><p>${activeStudents.length} นักเรียน · ${set.works.length} งาน</p><div class="work-progress"><i style="width:${percent}%"></i></div><small>ส่งงานแล้ว ${percent}%</small><button class="outline-button" data-native-action="select-work-set" data-set-key="${escapeText(key)}">เปิดตาราง</button></article>`;
   }).join('')}</div>` : '<div class="native-empty"><span>✦</span><h2>ยังไม่มีห้อง/วิชา</h2><p>กด “สร้างห้อง/วิชา” เพื่อเริ่มต้น</p></div>';
 }
 
@@ -583,24 +797,35 @@ function renderWorkEditor() {
   const set = activeWorkSet();
   const target = document.getElementById('nativeWorkData');
   if (!set || !target) return;
-  const headers = set.works.map(work => `<th><span>${escapeText(work.name)}</span><small>${work.type === 'สอบ' ? `สอบ / ${Number(work.max || 0)}` : 'งานส่ง'}</small></th>`).join('');
-  const rows = set.students.map((student, studentIndex) => {
+  const activeStudents = set.students.filter(student => student.active !== false);
+  const focusWorks = set.works.filter(work => work.type !== 'สอบ');
+  const focusId = nativeState.activeWorkFocus && focusWorks.some(work => work.id === nativeState.activeWorkFocus) ? nativeState.activeWorkFocus : (focusWorks[0]?.id || '');
+  nativeState.activeWorkFocus = focusId;
+  const headers = set.works.map(work => `<th><span>${escapeText(work.name)}</span><small>${work.type === 'สอบ' ? `สอบ / ${Number(work.max || 0)}` : work.dueAt ? `กำหนด ${new Date(work.dueAt).toLocaleDateString('th-TH')}` : 'งานส่ง'}</small></th>`).join('');
+  const rows = activeStudents.map(student => {
+    const studentIndex = set.students.indexOf(student);
     let pending = 0;
     const cells = set.works.map(work => {
       const value = workValue(set, student.id, work.id);
       if (work.type === 'สอบ') return `<td><input class="work-score-input" type="number" min="0" max="${Number(work.max || 999)}" value="${value ?? ''}" data-work-score data-student-id="${escapeText(student.id)}" data-work-id="${escapeText(work.id)}" aria-label="คะแนน ${escapeText(student.name)}"></td>`;
-      if (value !== true) pending++;
-      return `<td><button class="work-status-cell ${value === true ? 'sent' : 'missing'}" data-native-action="toggle-work-status" data-student-id="${escapeText(student.id)}" data-work-id="${escapeText(work.id)}">${value === true ? '✓ ส่ง' : '—'}</button></td>`;
+      const submission = workSubmission(set, student.id, work.id);
+      if (workIsPending(set, student.id, work)) pending++;
+      return `<td><button class="work-status-cell ${WORK_COMPLETE.has(submission.status) ? 'sent' : 'missing'} status-${escapeText(submission.status)}" data-native-action="edit-submission-status" data-student-id="${escapeText(student.id)}" data-work-id="${escapeText(work.id)}">${escapeText(WORK_STATUS[submission.status] || submission.status)}</button></td>`;
     }).join('');
     return `<tr><td class="work-student-name"><b>${escapeText(student.name || 'ยังไม่มีชื่อ')}</b><small>เลขที่ ${escapeText(student.no || '-')}</small><span class="row-edit-actions"><button data-native-action="edit-work-student" data-student-index="${studentIndex}" aria-label="แก้ไขนักเรียน">✎</button><button data-native-action="delete-work-student" data-student-index="${studentIndex}" aria-label="ลบนักเรียน">×</button></span></td>${cells}<td class="pending-count ${pending ? 'has-pending' : ''}">${pending}</td></tr>`;
   }).join('');
   target.innerHTML = `
-    <div class="native-detail-bar work-detail-bar"><button class="outline-button" data-native-action="back-work-sets">← ห้องทั้งหมด</button><div><b>${escapeText(set.room)} · ${escapeText(set.subject)}</b><span>${set.students.length} นักเรียน · ${set.works.length} งาน</span></div><div class="native-heading-actions"><button class="outline-button" data-native-action="edit-work-set">แก้ชื่อ</button><button class="outline-button" data-native-action="show-work-report">รายงานงานค้าง</button><button class="outline-button" data-native-action="open-work-scanner"><svg><use href="#icon-qr"></use></svg>สแกน QR</button><button class="outline-button" data-native-action="export-work-excel">ส่งออก Excel</button><button class="danger-button" data-native-action="delete-work-set">ลบห้อง/วิชา</button></div></div>
+    <div class="native-detail-bar work-detail-bar"><button class="outline-button" data-native-action="back-work-sets">← ห้องทั้งหมด</button><div><b>${escapeText(set.room)} · ${escapeText(set.subject)}</b><span>${activeStudents.length} นักเรียน · ${set.works.length} งาน</span></div><div class="native-heading-actions"><button class="outline-button" data-native-action="edit-work-set">แก้ชื่อ</button><button class="outline-button" data-native-action="show-work-report">รายงานงานค้าง</button><button class="outline-button" data-native-action="share-work-report">ส่งรูป LINE</button><button class="outline-button" data-native-action="restore-work-backup">คืนข้อมูลสำรอง</button><button class="outline-button" data-native-action="open-work-scanner"><svg><use href="#icon-qr"></use></svg>สแกน QR</button><button class="outline-button" data-native-action="export-work-excel">ส่งออก Excel</button><button class="danger-button" data-native-action="delete-work-set">ลบห้อง/วิชา</button></div></div>
     <div class="work-manager-grid">
-      <section class="work-manager-box"><h3>จัดการงาน/ข้อสอบ</h3><div class="work-inline-form"><input id="newWorkName" placeholder="ชื่องานหรือข้อสอบ"><select id="newWorkType"><option value="ส่ง">งานส่ง</option><option value="สอบ">ข้อสอบ</option></select><input id="newWorkMax" type="number" min="0" value="10" title="คะแนนเต็ม"><button class="soft-button" data-native-action="add-work-item">+เพิ่ม</button></div><div class="work-chip-list">${set.works.map((work,index) => `<span>${escapeText(work.name)} <small>${work.type === 'สอบ' ? `/${work.max || 0}` : 'ส่ง'}</small><button data-native-action="edit-work-item" data-work-index="${index}" aria-label="แก้ไขงาน">✎</button><button data-native-action="delete-work-item" data-work-index="${index}" aria-label="ลบงาน">×</button></span>`).join('') || '<em>ยังไม่มีงาน</em>'}</div></section>
+      <section class="work-manager-box"><h3>จัดการงาน/ข้อสอบ</h3><div class="work-inline-form"><input id="newWorkName" placeholder="ชื่องานหรือข้อสอบ"><select id="newWorkType"><option value="ส่ง">งานส่ง</option><option value="สอบ">ข้อสอบ</option></select><input id="newWorkMax" type="number" min="0" value="10" title="คะแนนเต็ม"><input id="newWorkDue" type="datetime-local" title="กำหนดส่ง"><button class="soft-button" data-native-action="add-work-item">+เพิ่ม</button></div><div class="work-chip-list">${set.works.map((work,index) => `<span>${escapeText(work.name)} <small>${work.type === 'สอบ' ? `/${work.max || 0}` : work.dueAt ? `ส่ง ${new Date(work.dueAt).toLocaleDateString('th-TH')}` : 'ไม่กำหนดวัน'}</small><button data-native-action="edit-work-item" data-work-index="${index}" aria-label="แก้ไขงาน">✎</button><button data-native-action="delete-work-item" data-work-index="${index}" aria-label="ลบงาน">×</button></span>`).join('') || '<em>ยังไม่มีงาน</em>'}</div></section>
       <section class="work-manager-box"><h3>จัดการนักเรียน</h3><div class="work-inline-form"><input id="newStudentNo" inputmode="numeric" placeholder="เลขที่"><input id="newStudentName" placeholder="ชื่อ-สกุล"><button class="soft-button" data-native-action="add-work-student">+เพิ่ม</button></div><div class="native-heading-actions"><button class="outline-button" data-native-action="use-room-roster">ใช้ทะเบียน ${escapeText(set.room)}</button><button class="outline-button" data-native-action="import-work-students">นำเข้า Excel/CSV</button></div></section>
     </div>
     <section id="workPendingReport" class="work-pending-report" hidden></section>
+    ${focusWorks.length ? `<section class="work-focus-panel"><label><span>มุมมองมือถือ: เลือกงานส่ง</span><select id="workFocusSelect">${focusWorks.map(work => `<option value="${escapeText(work.id)}" ${work.id === focusId ? 'selected' : ''}>${escapeText(work.name)}</option>`).join('')}</select></label><div class="work-focus-list">${activeStudents.map(student => {
+      const work = set.works.find(item => item.id === focusId);
+      const submission = work ? workSubmission(set, student.id, work.id) : {status:'unsubmitted'};
+      return `<button data-native-action="edit-submission-status" data-student-id="${escapeText(student.id)}" data-work-id="${escapeText(focusId)}"><span class="student-no">${escapeText(student.no)}</span><span><b>${escapeText(student.name)}</b><small>${escapeText(WORK_STATUS[submission.status] || submission.status)}</small></span></button>`;
+    }).join('')}</div></section>` : ''}
     <div class="native-table-wrap work-table-wrap"><table class="native-table work-table"><thead><tr><th>นักเรียน</th>${headers}<th>ค้าง</th></tr></thead><tbody>${rows || `<tr><td colspan="${set.works.length + 2}"><div class="native-empty">ยังไม่มีนักเรียน</div></td></tr>`}</tbody></table></div>
     <section id="workScannerPanel" class="work-scanner-panel" hidden></section>`;
 }
@@ -710,17 +935,22 @@ function setRole(role) {
 }
 
 async function saveNativeAttendance() {
-  const room = document.getElementById('nativeRoom')?.value;
-  const date = document.getElementById('nativeDate')?.value;
+  const context = attendanceContext();
+  const {room, date, period, subjectId, teacher, data} = context;
   const password = document.getElementById('nativePassword')?.value;
-  const subjectId = document.getElementById('nativeSubject')?.value;
-  const teacherSelect = document.getElementById('nativeTeacher');
-  const teacher = teacherSelect?.selectedOptions?.[0]?.textContent || '';
   if (!room || !date) { showToast('กรุณาเลือกห้องและวันที่'); return; }
   if (currentTool.id === 'subject-attendance' && !teacher) { showToast('กรุณาเลือกครูผู้สอน'); return; }
-  const data = nativeState.attendance[room] || {};
-  localStorage.setItem(`knt-attendance-${currentTool.id}-${date}-${room}-${subjectId || 'general'}`, JSON.stringify({teacher, subjectId, room, date, data}));
+  const students = nativeState.roster?.[room] || [];
+  const unreviewed = students.filter(student => !ATTENDANCE_STATUSES.includes(data[student.no]));
+  saveAttendanceDraft();
+  if (unreviewed.length) {
+    document.querySelector('.native-student-row.is-unreviewed')?.scrollIntoView({behavior:'smooth', block:'center'});
+    showToast(`ยังบันทึกไม่ได้ · เหลือ ${unreviewed.length} คนที่ยังไม่ตรวจ`);
+    return;
+  }
   if (!password && currentTool.id === 'subject-attendance') { showToast('บันทึกร่างในเครื่องแล้ว · ใส่รหัสครูเพื่อส่งขึ้น Google Sheets'); return; }
+  if (period && currentTool.id === 'subject-attendance' && !confirm('ข้อจำกัดของ Google Sheets รุ่นเดิม: เก็บได้หนึ่งรายการต่อวิชา/ห้อง/วัน\nคาบเรียนจะแสดงในร่างและรูปของแอป แต่การบันทึกคาบอื่นในวันเดียวกันอาจแทนรายการเดิม\n\nต้องการบันทึกต่อหรือไม่?')) return;
+  if (!confirm(`ยืนยันบันทึก ${room} วันที่ ${date}${period ? ` · ${period}` : ''}\nมา ${attendanceRecordStats(data)[0].count} · สาย ${attendanceRecordStats(data)[1].count} · ลา ${attendanceRecordStats(data)[2].count} · ขาด ${attendanceRecordStats(data)[3].count}`)) return;
   const button = document.querySelector('[data-native-action="save-attendance"]');
   button.disabled = true; button.textContent = 'กำลังบันทึก…';
   try {
@@ -738,7 +968,14 @@ async function saveNativeAttendance() {
       const response = await getJSON(API.engineering, {action:'save', room:roomKey, date, data:encodeURIComponent(JSON.stringify(engineeringData))});
       if (!response.success) throw new Error(response.error || 'บันทึกไม่สำเร็จ');
     }
-    showToast('บันทึกการเช็กชื่อขึ้น Google Sheets แล้ว');
+    const fingerprint = attendanceFingerprint();
+    const receiptId = `ATT-${date.replaceAll('-','')}-${stableFingerprint({room,subjectId,period,data}).toUpperCase()}`;
+    nativeState.attendanceReceipt = {fingerprint, id:receiptId, savedAt:new Date().toISOString(), period};
+    saveAttendanceDraft();
+    appendAttendanceAudit({type:'cloud-save', receiptId, tool:currentTool.id, teacher, subjectId, room, date, period, counts:Object.fromEntries(attendanceRecordStats(data).map(item => [item.status,item.count]))});
+    renderAttendanceSummary();
+    document.getElementById('nativePassword').value = '';
+    showToast(`บันทึกแล้ว · เลขอ้างอิง ${receiptId}${period ? ' · คาบเรียนเก็บในใบสรุปของแอป' : ''}`);
   } catch (error) { showToast(error.message); }
   finally { button.disabled = false; button.innerHTML = '<svg><use href="#icon-download"></use></svg>บันทึกการเช็กชื่อ'; }
 }
@@ -748,38 +985,57 @@ function attendanceRecordStats(data = {}) {
 }
 
 async function shareAttendanceReport() {
-  const room = document.getElementById('nativeRoom')?.value;
-  const date = document.getElementById('nativeDate')?.value;
-  const teacher = document.getElementById('nativeTeacher')?.selectedOptions?.[0]?.textContent || '';
+  const contextValue = attendanceContext();
+  const {room, date, period, teacher, data} = contextValue;
   const subject = document.getElementById('nativeSubject')?.selectedOptions?.[0]?.textContent || 'เตรียมวิศวกรรมศาสตร์';
   const students = nativeState.roster?.[room] || [];
   if (!room || !date || !students.length) { showToast('กรุณาเลือกห้องและวันที่ก่อนส่งรูปสรุป'); return; }
-  const data = nativeState.attendance[room] || {};
+  if (nativeState.attendanceReceipt?.fingerprint !== attendanceFingerprint(contextValue)) {
+    showToast('ข้อมูลเปลี่ยนหลังบันทึก · กรุณาบันทึกอีกครั้งก่อนส่งรูป');
+    renderAttendanceSummary();
+    return;
+  }
   const stats = attendanceRecordStats(data);
   const canvas = document.createElement('canvas');
-  canvas.width = 1200; canvas.height = 760;
+  const columnCount = 2;
+  const rowsPerColumn = Math.ceil(students.length / columnCount);
+  canvas.width = 1440; canvas.height = 390 + rowsPerColumn * 58 + 110;
   const context = canvas.getContext('2d');
   context.fillStyle = '#f5f7ff'; context.fillRect(0, 0, canvas.width, canvas.height);
   const gradient = context.createLinearGradient(0, 0, canvas.width, 0);
   gradient.addColorStop(0, '#0e3f74'); gradient.addColorStop(1, '#8068dc');
-  context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, 212);
-  context.fillStyle = '#ffffff'; context.font = '700 48px Anuphan, sans-serif'; context.fillText('KNT Classroom · สรุปการเช็กชื่อ', 65, 85);
-  context.font = '400 30px Anuphan, sans-serif'; context.fillText(`${room} · ${date}`, 65, 138);
-  context.font = '400 24px Anuphan, sans-serif'; context.fillText(currentTool.id === 'subject-attendance' ? `${teacher} · ${subject}` : 'เตรียมวิศวกรรมศาสตร์', 65, 180);
-  const colors = ['#2c9b78', '#d69220', '#5d79cc', '#d75b69'];
+  context.fillStyle = gradient; context.fillRect(0, 0, canvas.width, 220);
+  context.fillStyle = '#ffffff'; context.font = '700 46px Anuphan, sans-serif'; context.fillText('KNT Classroom · รายชื่อการเข้าเรียน', 58, 72);
+  context.font = '500 28px Anuphan, sans-serif'; context.fillText(`${room} · ${date}${period ? ` · ${period}` : ''}`, 58, 124);
+  context.font = '400 23px Anuphan, sans-serif'; context.fillText(currentTool.id === 'subject-attendance' ? `${teacher} · ${subject}` : 'เตรียมวิศวกรรมศาสตร์', 58, 166);
+  context.font = '400 19px Anuphan, sans-serif'; context.fillStyle = '#dfe9ff'; context.fillText(`เลขอ้างอิง ${nativeState.attendanceReceipt.id}`, 58, 201);
+  const colors = {'มา':'#2c9b78','สาย':'#d69220','ลา':'#5d79cc','ขาด':'#d75b69'};
   stats.forEach((item, index) => {
-    const x = 65 + index * 278;
-    context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(x, 260, 240, 170, 24); context.fill();
-    context.fillStyle = colors[index]; context.font = '700 66px Anuphan, sans-serif'; context.fillText(String(item.count), x + 28, 338);
-    context.fillStyle = '#53627f'; context.font = '500 28px Anuphan, sans-serif'; context.fillText(item.abbr, x + 28, 390);
+    const x = 58 + index * 332;
+    context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(x, 250, 300, 100, 18); context.fill();
+    context.fillStyle = colors[item.status]; context.font = '700 42px Anuphan, sans-serif'; context.fillText(String(item.count), x + 24, 312);
+    context.fillStyle = '#53627f'; context.font = '500 23px Anuphan, sans-serif'; context.fillText(item.status, x + 100, 308);
   });
-  const present = stats.find(item => item.status === 'มา')?.count || 0;
-  const rate = students.length ? Math.round(present / students.length * 100) : 0;
-  context.fillStyle = '#ffffff'; context.beginPath(); context.roundRect(65, 480, 1070, 175, 24); context.fill();
-  context.fillStyle = '#24345c'; context.font = '700 34px Anuphan, sans-serif'; context.fillText(`นักเรียนทั้งหมด ${students.length} คน · มาเรียน ${rate}%`, 102, 548);
-  context.fillStyle = '#e7ecf7'; context.beginPath(); context.roundRect(102, 582, 950, 24, 12); context.fill();
-  context.fillStyle = '#2c9b78'; context.beginPath(); context.roundRect(102, 582, 950 * rate / 100, 24, 12); context.fill();
-  context.fillStyle = '#7c88a6'; context.font = '400 21px Anuphan, sans-serif'; context.fillText('สร้างโดย KNT Classroom', 65, 714);
+  students.forEach((student, index) => {
+    const column = Math.floor(index / rowsPerColumn);
+    const row = index % rowsPerColumn;
+    const x = 58 + column * 690;
+    const y = 390 + row * 58;
+    context.fillStyle = row % 2 ? '#ffffff' : '#edf1fa';
+    context.beginPath(); context.roundRect(x, y, 650, 48, 10); context.fill();
+    context.fillStyle = '#344466'; context.font = '500 21px Anuphan, sans-serif';
+    context.fillText(`${student.no}. ${student.name}`, x + 18, y + 32, 500);
+    const status = data[student.no];
+    context.fillStyle = colors[status] || '#7c88a6';
+    context.beginPath(); context.roundRect(x + 540, y + 7, 92, 34, 17); context.fill();
+    context.fillStyle = '#ffffff'; context.font = '700 19px Anuphan, sans-serif';
+    context.textAlign = 'center'; context.fillText(status || '—', x + 586, y + 30); context.textAlign = 'left';
+  });
+  context.fillStyle = '#7c88a6'; context.font = '400 19px Anuphan, sans-serif';
+  const savedNote = nativeState.attendanceReceipt.source === 'Google Sheets'
+    ? 'โหลดจากรายการที่บันทึกไว้ใน Google Sheets'
+    : `บันทึกจริงเมื่อ ${new Date(nativeState.attendanceReceipt.savedAt).toLocaleString('th-TH')}`;
+  context.fillText(`นักเรียน ${students.length} คน · ${savedNote} · สร้างโดย KNT Classroom`, 58, canvas.height - 48);
   const filename = `knt-attendance-${room.replace(/[./]/g, '-')}-${date}.png`;
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) { showToast('สร้างรูปสรุปไม่สำเร็จ'); return; }
@@ -847,9 +1103,15 @@ function renderAttendanceRecordDetail(key) {
   const target = document.getElementById('attendanceHistory');
   if (!record || !target) return;
   const students = nativeState.roster?.[record.room] || [];
-  const statusFor = (student, index) => ({'มา':'ม','สาย':'ส','ลา':'ล','ขาด':'ข'})[record.data?.[student.no] || record.data?.[index]] || '—';
+  const statusFor = (student, index) => ({'มา':'ม','สาย':'ส','ลา':'ล','ขาด':'ข'})[attendanceStatusFromRecord(record, student, index)] || '—';
   target.insertAdjacentHTML('beforeend', `<section class="attendance-detail"><div class="native-panel-heading"><div><p class="eyebrow">${escapeText(record.room)} · ${escapeText(record.date)}</p><h2>รายละเอียดรายวัน</h2></div></div><div class="native-table-wrap"><table class="native-table"><thead><tr><th>เลขที่</th><th>นักเรียน</th><th>สถานะ</th></tr></thead><tbody>${students.map((student, index) => `<tr><td>${student.no}</td><td><b>${escapeText(student.name)}</b></td><td>${escapeText(statusFor(student,index))}</td></tr>`).join('')}</tbody></table></div></section>`);
   target.querySelector('.attendance-detail')?.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function attendanceStatusFromRecord(record, student, index) {
+  const data = record?.data || {};
+  const legacyZeroBased = Object.prototype.hasOwnProperty.call(data, '0');
+  return legacyZeroBased ? data[index] : (data[student.no] ?? data[index]);
 }
 
 function attendanceAggregate(records = nativeState.attendanceHistory) {
@@ -859,7 +1121,7 @@ function attendanceAggregate(records = nativeState.attendanceHistory) {
     const students = nativeState.roster?.[record.room] || [];
     students.forEach((student, index) => {
       const key = `${record.room}|${student.no}`, entry = people.get(key) || { room:record.room, no:student.no, name:student.name, มา:0, สาย:0, ลา:0, ขาด:0, total:0 };
-      const status = record.data?.[student.no] || record.data?.[index];
+      const status = attendanceStatusFromRecord(record, student, index);
       if (entry[status] !== undefined) { entry[status]++; entry.total++; }
       people.set(key, entry);
     });
@@ -872,6 +1134,12 @@ function renderAttendanceStats() {
   if (!target) return;
   const { people, dayCount } = attendanceAggregate();
   const roomSummary = new Map();
+  people.forEach(person => {
+    const summary = roomSummary.get(person.room) || {room:person.room, present:0, marked:0};
+    summary.present += person.มา + person.สาย;
+    summary.marked += person.total;
+    roomSummary.set(person.room, summary);
+  });
   people.sort((a,b) => ((b.มา + b.สาย) / (b.total || 1)) - ((a.มา + a.สาย) / (a.total || 1)) || a.name.localeCompare(b.name,'th'));
   target.insertAdjacentHTML('beforeend', `<section class="attendance-detail"><div class="native-panel-heading"><div><p class="eyebrow">${dayCount} รายการบันทึก</p><h2>สถิติรวมการเข้าเรียน</h2></div><button class="outline-button" data-native-action="export-attendance-stats-image">ส่งรูปสถิติ</button></div><div class="attendance-room-summary">${[...roomSummary.values()].map(item => `<div><b>${escapeText(item.room)}</b><strong>${item.marked ? Math.round(item.present / item.marked * 100) : 0}%</strong><span>ม/ส ${item.present}/${item.marked}</span></div>`).join('')}</div><div class="native-table-wrap"><table class="native-table"><thead><tr><th>ห้อง</th><th>เลขที่</th><th>นักเรียน</th><th>ม</th><th>ส</th><th>ล</th><th>ข</th><th>เข้าเรียน</th></tr></thead><tbody>${people.map(person => { const pct = person.total ? Math.round((person.มา + person.สาย) / person.total * 100) : 0; return `<tr><td>${escapeText(person.room)}</td><td>${person.no}</td><td><b>${escapeText(person.name)}</b></td><td>${person.มา}</td><td>${person.สาย}</td><td>${person.ลา}</td><td>${person.ขาด}</td><td><strong>${pct}%</strong></td></tr>`; }).join('')}</tbody></table></div></section>`);
   target.querySelectorAll('.attendance-detail').item(-1)?.scrollIntoView({ behavior:'smooth', block:'start' });
@@ -968,7 +1236,7 @@ function createWorkSet() {
   const key = `${room.trim()}|${subject.trim()}`;
   if (nativeState.workSets[key]) { showToast('มีห้อง/วิชานี้แล้ว'); return; }
   const roster = nativeState.roster?.[room.trim()] || [];
-  nativeState.workSets[key] = {room:room.trim(), subject:subject.trim(), works:[], students:roster.map(student => ({id:uid('s'), no:student.no, name:student.name})), data:{}};
+  nativeState.workSets[key] = {room:room.trim(), subject:subject.trim(), works:[], students:roster.map(student => ({id:uid('s'), schoolId:student.id || '', no:student.no, name:student.name, active:true})), data:{}, submissions:{}, audit:[]};
   nativeState.activeWorkKey = key;
   markWorkDirty('สร้างห้อง/วิชาแล้ว');
   renderWorkEditor();
@@ -977,6 +1245,7 @@ function createWorkSet() {
 function deleteWorkSet() {
   const set = activeWorkSet();
   if (!set || !confirm(`ลบ “${set.room} · ${set.subject}” รวมคะแนนและสถานะทั้งหมด?`)) return;
+  backupWorkDB(`ก่อนลบ ${set.room} ${set.subject}`);
   delete nativeState.workSets[nativeState.activeWorkKey];
   nativeState.activeWorkKey = '';
   markWorkDirty('ลบห้อง/วิชาแล้ว');
@@ -1003,10 +1272,12 @@ function addWorkItem() {
   const name = document.getElementById('newWorkName')?.value.trim();
   const type = document.getElementById('newWorkType')?.value || 'ส่ง';
   const max = Number(document.getElementById('newWorkMax')?.value || 0);
+  const dueAt = document.getElementById('newWorkDue')?.value || '';
   if (!set || !name) { showToast('กรุณาใส่ชื่องานหรือข้อสอบ'); return; }
-  const work = {id:uid('w'), name, type};
+  const work = {id:uid('w'), name, type, status:'open', openAt:'', dueAt, closeAt:'', instructions:''};
   if (type === 'สอบ') work.max = max;
   set.works.push(work);
+  workAudit(set, 'work-created', {workId:work.id, name:work.name, dueAt});
   markWorkDirty('เพิ่มงานแล้ว');
   renderWorkEditor();
 }
@@ -1015,7 +1286,9 @@ function deleteWorkItem(index) {
   const set = activeWorkSet();
   const work = set?.works[index];
   if (!work || !confirm(`ลบงาน “${work.name}” และคะแนน/สถานะของงานนี้?`)) return;
+  backupWorkDB(`ก่อนลบงาน ${work.name}`);
   Object.values(set.data).forEach(values => { if (values) delete values[work.id]; });
+  Object.values(set.submissions || {}).forEach(values => { if (values) delete values[work.id]; });
   set.works.splice(index, 1);
   markWorkDirty('ลบงานแล้ว');
   renderWorkEditor();
@@ -1031,6 +1304,13 @@ function editWorkItem(index) {
     const max = prompt('คะแนนเต็ม', String(work.max || 0));
     if (max !== null) work.max = Math.max(0, Number(max) || 0);
   }
+  if (work.type !== 'สอบ') {
+    const due = prompt('กำหนดส่ง (YYYY-MM-DD HH:mm) หรือเว้นว่าง', work.dueAt ? String(work.dueAt).replace('T',' ').slice(0,16) : '');
+    if (due !== null) work.dueAt = due.trim() ? due.trim().replace(' ','T') : '';
+    const instructions = prompt('คำสั่งงาน/หมายเหตุ', work.instructions || '');
+    if (instructions !== null) work.instructions = instructions.trim();
+  }
+  workAudit(set, 'work-edited', {workId:work.id});
   markWorkDirty('แก้ไขงานแล้ว'); renderWorkEditor();
 }
 
@@ -1048,9 +1328,9 @@ function deleteWorkStudent(index) {
   const set = activeWorkSet();
   const student = set?.students[index];
   if (!student || !confirm(`ลบ ${student.name} ออกจากห้องนี้?`)) return;
-  delete set.data[student.id];
-  set.students.splice(index, 1);
-  markWorkDirty('ลบนักเรียนแล้ว');
+  student.active = false;
+  workAudit(set, 'student-deactivated', {studentId:student.id, name:student.name});
+  markWorkDirty('ย้ายนักเรียนออกจากรายชื่อใช้งานแล้ว (ข้อมูลเดิมยังอยู่)');
   renderWorkEditor();
 }
 
@@ -1070,13 +1350,87 @@ function showWorkPendingReport() {
   if (!set || !target) return;
   if (!target.hidden) { target.hidden = true; target.innerHTML = ''; return; }
   const sendWorks = set.works.filter(work => work.type !== 'สอบ');
-  const pendingRows = set.students.map(student => ({student, missing:sendWorks.filter(work => workValue(set, student.id, work.id) !== true)})).filter(row => row.missing.length);
-  const totalCells = set.students.length * sendWorks.length;
+  const activeStudents = set.students.filter(student => student.active !== false);
+  const dueWorks = sendWorks.filter(work => workIsDue(work));
+  const pendingRows = activeStudents.map(student => ({student, missing:dueWorks.filter(work => workIsPending(set, student.id, work))})).filter(row => row.missing.length);
+  const totalCells = activeStudents.length * dueWorks.length;
   const pendingCells = pendingRows.reduce((sum,row) => sum + row.missing.length, 0);
   const sentPercent = totalCells ? Math.round((totalCells - pendingCells) / totalCells * 100) : 0;
   target.hidden = false;
-  target.innerHTML = `<div class="work-report-summary"><div><strong>${sentPercent}%</strong><span>อัตราส่ง</span></div><div><strong>${pendingRows.length}</strong><span>นักเรียนมีงานค้าง</span></div><div><strong>${pendingCells}</strong><span>งานค้างทั้งหมด</span></div></div><div class="pending-student-list">${pendingRows.map(row => `<article><span class="student-no">${escapeText(row.student.no)}</span><div><b>${escapeText(row.student.name)}</b><small>${row.missing.map(work => escapeText(work.name)).join(' · ')}</small></div></article>`).join('') || '<div class="native-empty">ส่งงานครบทุกคน</div>'}</div>`;
+  target.innerHTML = `<div class="work-report-summary"><div><strong>${sentPercent}%</strong><span>อัตราส่งเฉพาะงานถึงกำหนด</span></div><div><strong>${pendingRows.length}</strong><span>นักเรียนมีงานค้าง</span></div><div><strong>${pendingCells}</strong><span>งานค้างทั้งหมด</span></div></div><p class="work-report-note">งานที่ยังไม่ถึงกำหนดส่งจะไม่ถูกนับเป็นงานค้าง</p><div class="pending-student-list">${pendingRows.map(row => `<article><span class="student-no">${escapeText(row.student.no)}</span><div><b>${escapeText(row.student.name)}</b><small>${row.missing.map(work => escapeText(work.name)).join(' · ')}</small></div></article>`).join('') || '<div class="native-empty">ส่งงานที่ถึงกำหนดครบทุกคน</div>'}</div>`;
   target.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function editSubmissionStatus(studentId, workId) {
+  const set = activeWorkSet();
+  const student = set?.students.find(item => String(item.id) === String(studentId));
+  const work = set?.works.find(item => String(item.id) === String(workId));
+  if (!set || !student || !work || work.type === 'สอบ') return;
+  const statuses = Object.entries(WORK_STATUS);
+  const current = workSubmission(set, student.id, work.id).status;
+  const menu = statuses.map(([key,label], index) => `${index + 1}. ${label}${key === current ? ' (ปัจจุบัน)' : ''}`).join('\n');
+  const answer = prompt(`${student.name} · ${work.name}\nเลือกสถานะ:\n${menu}`, String(Math.max(1, statuses.findIndex(([key]) => key === current) + 1)));
+  if (answer === null) return;
+  const selected = statuses[Number(answer) - 1];
+  if (!selected) { showToast('กรุณาเลือกหมายเลขสถานะ 1–7'); return; }
+  let status = selected[0];
+  if (status === 'submitted' && work.dueAt && Date.now() > new Date(work.dueAt).getTime()) status = 'late';
+  setWorkSubmission(set, student.id, work.id, status);
+  workAudit(set, 'submission-status', {studentId:student.id, workId:work.id, status});
+  markWorkDirty(`อัปเดตเป็น “${WORK_STATUS[status]}” แล้ว`);
+  renderWorkEditor();
+}
+
+function restoreWorkBackup() {
+  try {
+    const backups = JSON.parse(localStorage.getItem(WORK_BACKUP_KEY) || '[]');
+    if (!backups.length) { showToast('ยังไม่มีข้อมูลสำรองในอุปกรณ์นี้'); return; }
+    const menu = backups.map((backup,index) => `${index + 1}. ${new Date(backup.at).toLocaleString('th-TH')} · ${backup.reason}`).join('\n');
+    const answer = prompt(`เลือกข้อมูลสำรองที่จะคืน (มี ${backups.length} ชุด)\n${menu}`, '1');
+    if (answer === null) return;
+    const selected = backups[Number(answer) - 1];
+    if (!selected || !confirm(`คืนข้อมูลสำรอง “${selected.reason}”?\nร่างปัจจุบันจะถูกสำรองไว้อีกชุดก่อน`)) return;
+    backupWorkDB('ก่อนคืนข้อมูลสำรอง');
+    nativeState.workDB = normalizeWorkDB(selected.data);
+    nativeState.workSets = nativeState.workDB.sets;
+    nativeState.activeWorkKey = '';
+    markWorkDirty('คืนข้อมูลสำรองแล้ว');
+    renderWorkSetList();
+  } catch { showToast('อ่านข้อมูลสำรองไม่สำเร็จ'); }
+}
+
+async function shareWorkReport() {
+  const set = activeWorkSet();
+  if (!set) return;
+  const dueWorks = set.works.filter(work => work.type !== 'สอบ' && workIsDue(work));
+  const rows = set.students.filter(student => student.active !== false).map(student => ({
+    student, missing:dueWorks.filter(work => workIsPending(set, student.id, work))
+  })).filter(row => row.missing.length);
+  const canvas = document.createElement('canvas');
+  canvas.width = 1440; canvas.height = Math.max(650, 320 + rows.length * 58);
+  const c = canvas.getContext('2d');
+  c.fillStyle='#f5f7ff'; c.fillRect(0,0,canvas.width,canvas.height);
+  const gradient=c.createLinearGradient(0,0,canvas.width,0); gradient.addColorStop(0,'#0e3f74'); gradient.addColorStop(1,'#8068dc');
+  c.fillStyle=gradient; c.fillRect(0,0,canvas.width,210);
+  c.fillStyle='#fff'; c.font='700 46px Anuphan, sans-serif'; c.fillText('KNT Classroom · รายงานงานค้าง',58,72);
+  c.font='500 28px Anuphan, sans-serif'; c.fillText(`${set.room} · ${set.subject}`,58,122);
+  c.font='400 21px Anuphan, sans-serif'; c.fillText(`เฉพาะงานที่ถึงกำหนด · ${rows.length} คนมีงานค้าง · สร้าง ${new Date().toLocaleString('th-TH')}`,58,168);
+  c.fillStyle='#53627f'; c.font='700 22px Anuphan, sans-serif'; c.fillText('นักเรียน',58,265); c.fillText('งานที่ยังไม่ส่ง',620,265);
+  rows.forEach((row,index) => {
+    const y=310+index*58; c.fillStyle=index%2?'#fff':'#e9eef8'; c.fillRect(42,y-34,1356,48);
+    c.fillStyle='#263558'; c.font='500 20px Anuphan, sans-serif'; c.fillText(`${row.student.no}. ${row.student.name}`,58,y,520);
+    c.fillStyle='#b64f5c'; c.fillText(row.missing.map(work => work.name).join(' · '),620,y,740);
+  });
+  if (!rows.length) { c.fillStyle='#2c9b78'; c.font='700 38px Anuphan, sans-serif'; c.fillText('ส่งงานที่ถึงกำหนดครบทุกคนแล้ว',58,330); }
+  const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
+  if (!blob) return;
+  const filename = `${set.room}-${set.subject}-งานค้าง-${todayISO()}.png`.replace(/[\\/:*?"<>|]/g,'-');
+  const file = new File([blob],filename,{type:'image/png'});
+  if (navigator.canShare?.({files:[file]})) {
+    try { await navigator.share({files:[file],title:`รายงานงานค้าง ${set.room}`}); return; } catch (error) { if (error.name === 'AbortError') return; }
+  }
+  const url=URL.createObjectURL(blob), link=document.createElement('a'); link.href=url; link.download=filename; link.click(); URL.revokeObjectURL(url);
+  showToast('บันทึกรูปรายงานงานค้างแล้ว');
 }
 
 async function useRoomRoster() {
@@ -1085,29 +1439,67 @@ async function useRoomRoster() {
   const roster = await ensureRoster();
   const students = roster[set.room] || [];
   if (!students.length) { showToast(`ไม่พบทะเบียนห้อง ${set.room}`); return; }
-  if (set.students.length && !confirm(`แทนรายชื่อเดิม ${set.students.length} คน ด้วยทะเบียน ${students.length} คน?`)) return;
-  set.students = students.map(student => ({id:uid('s'), no:student.no, name:student.name}));
-  set.data = {};
-  markWorkDirty('นำเข้าทะเบียนแล้ว');
+  if (set.students.length && !confirm(`รวมทะเบียน ${students.length} คนกับรายชื่อเดิม โดยรักษาคะแนนและสถานะทั้งหมดไว้?`)) return;
+  backupWorkDB(`ก่อนรวมทะเบียน ${set.room}`);
+  mergeWorkStudents(set, students);
+  workAudit(set, 'roster-merged', {count:students.length});
+  markWorkDirty('รวมทะเบียนแล้ว · คะแนนและสถานะเดิมยังอยู่');
   renderWorkEditor();
+}
+
+function mergeWorkStudents(set, incoming) {
+  const bySchoolId = new Map(set.students.filter(student => student.schoolId).map(student => [String(student.schoolId), student]));
+  const byNo = new Map(set.students.map(student => [String(student.no), student]));
+  const matched = new Set();
+  incoming.forEach((item, index) => {
+    const schoolId = String(item.schoolId || item.id || '').trim();
+    const no = String(item.no || index + 1).trim();
+    const existing = (schoolId && bySchoolId.get(schoolId)) || byNo.get(no);
+    if (existing) {
+      existing.schoolId = schoolId || existing.schoolId || '';
+      existing.no = item.no || existing.no;
+      existing.name = String(item.name || existing.name).trim();
+      existing.active = true;
+      matched.add(existing.id);
+    } else {
+      const created = {id:uid('s'), schoolId, no:item.no || index + 1, name:String(item.name || '').trim(), active:true};
+      set.students.push(created); matched.add(created.id);
+    }
+  });
+  set.students.forEach(student => { if (!matched.has(student.id)) student.active = false; });
 }
 
 async function saveWorkCloud(button) {
   const password = document.getElementById('workCloudPassword')?.value.trim();
   if (!password) { showToast('กรุณาใส่รหัสบันทึกของครู'); return; }
-  if (!confirm('บันทึกข้อมูลร่างนี้ทับข้อมูลติดตามงานบน Google Sheets?')) return;
+  if (!confirm('ยืนยันบันทึกร่างนี้ขึ้น Google Sheets? ระบบจะตรวจว่ามีคนอื่นแก้ข้อมูลก่อนเสมอ')) return;
   button.disabled = true;
   button.textContent = 'กำลังบันทึก…';
   setWorkCloudStatus('กำลังบันทึกขึ้นคลาวด์…');
   try {
+    const latest = await getJSON(API.work);
+    if (!latest?.ok || !latest.data) throw new Error('ตรวจข้อมูลล่าสุดจากคลาวด์ไม่ได้ จึงยังไม่บันทึกเพื่อป้องกันข้อมูลหาย');
+    const latestFingerprint = stableFingerprint(normalizeWorkDB(latest.data));
+    if (!nativeState.workBaselineFingerprint || latestFingerprint !== nativeState.workBaselineFingerprint) {
+      backupWorkDB('ร่างก่อนพบข้อมูลชนกัน');
+      throw new Error('ข้อมูลบนคลาวด์มีการเปลี่ยนแปลง กรุณาโหลดใหม่และตรวจร่างก่อนบันทึก');
+    }
+    backupWorkDB('ก่อนบันทึกขึ้นคลาวด์');
     const response = await fetch(API.work, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({password, data:nativeState.workDB})});
     const result = await response.json();
     if (!result?.ok) throw new Error(result?.error || 'บันทึกไม่สำเร็จ');
+    const verified = await getJSON(API.work);
+    if (!verified?.ok || !verified.data) throw new Error('เซิร์ฟเวอร์ตอบว่าบันทึกแล้ว แต่ตรวจซ้ำไม่ได้ กรุณาอย่าบันทึกทับจนกว่าจะโหลดใหม่');
+    const verifiedDB = normalizeWorkDB(verified.data);
+    const localFingerprint = stableFingerprint(normalizeWorkDB(nativeState.workDB));
+    const verifiedFingerprint = stableFingerprint(verifiedDB);
+    if (verifiedFingerprint !== localFingerprint) throw new Error('ข้อมูลหลังบันทึกไม่ตรงกับร่าง ระบบเก็บข้อมูลสำรองไว้แล้ว');
+    nativeState.workBaselineFingerprint = verifiedFingerprint;
     nativeState.workDirty = false;
     cacheWorkDraft();
     document.getElementById('workCloudPassword').value = '';
     setWorkCloudStatus(`บันทึกแล้ว ${new Date().toLocaleTimeString('th-TH')}`, true);
-    showToast('บันทึกขึ้น Google Sheets แล้ว');
+    showToast('บันทึกและตรวจซ้ำกับ Google Sheets แล้ว');
   } catch (error) { setWorkCloudStatus(`บันทึกไม่สำเร็จ · ${error.message}`); showToast(error.message); }
   finally { button.disabled = false; button.innerHTML = '<svg><use href="#icon-download"></use></svg>บันทึกขึ้น Google Sheets'; }
 }
@@ -1133,7 +1525,7 @@ function rowsToWorkStudents(rows) {
     const nameParts = [];
     cells.forEach(cell => { if (!no && /^\d{1,3}$/.test(cell)) no = cell; else nameParts.push(cell); });
     const name = nameParts.join(' ').replace(/\s+/g,' ').trim();
-    if (name) students.push({id:uid('s'), no:no || students.length + 1, name});
+    if (name) students.push({no:no || students.length + 1, name, schoolId:''});
   });
   return students;
 }
@@ -1146,7 +1538,7 @@ async function importWorkStudents(file) {
     if (file.name.toLowerCase().endsWith('.json')) {
       const data = JSON.parse(await file.text());
       const list = Array.isArray(data) ? data : data.students;
-      students = (list || []).map((student,index) => ({id:uid('s'), no:student.no || index + 1, name:String(student.name || '').trim()})).filter(student => student.name);
+      students = (list || []).map((student,index) => ({schoolId:student.schoolId || student.studentId || '', no:student.no || index + 1, name:String(student.name || '').trim()})).filter(student => student.name);
     } else if (/\.xlsx?$/.test(file.name.toLowerCase())) {
       await ensureSheetJS();
       const workbook = XLSX.read(await file.arrayBuffer(), {type:'array'});
@@ -1157,10 +1549,11 @@ async function importWorkStudents(file) {
       students = rowsToWorkStudents(rows);
     }
     if (!students.length) throw new Error('ไม่พบรายชื่อในไฟล์');
-    if (set.students.length && !confirm(`แทนรายชื่อเดิม ${set.students.length} คน ด้วย ${students.length} คนจากไฟล์?`)) return;
-    set.students = students;
-    set.data = {};
-    markWorkDirty(`นำเข้านักเรียน ${students.length} คนแล้ว`);
+    if (set.students.length && !confirm(`รวมรายชื่อ ${students.length} คนจากไฟล์ โดยรักษาคะแนนและสถานะเดิมไว้?`)) return;
+    backupWorkDB(`ก่อนนำเข้ารายชื่อ ${file.name}`);
+    mergeWorkStudents(set, students);
+    workAudit(set, 'students-imported', {count:students.length, file:file.name});
+    markWorkDirty(`รวมรายชื่อนักเรียน ${students.length} คนแล้ว · ข้อมูลเดิมยังอยู่`);
     renderWorkEditor();
   } catch (error) { showToast(error.message || 'นำเข้ารายชื่อไม่สำเร็จ'); }
 }
@@ -1174,7 +1567,12 @@ async function exportWorkExcel() {
     set.works.forEach(work => {
       const value = workValue(set, student.id, work.id);
       if (work.type === 'สอบ') row[`${work.name} (คะแนนเต็ม ${work.max || 0})`] = value ?? '';
-      else { row[work.name] = value === true ? 'ส่งแล้ว' : 'ยังไม่ส่ง'; if (value !== true) pending++; }
+      else {
+        const submission = workSubmission(set, student.id, work.id);
+        row[work.name] = WORK_STATUS[submission.status] || submission.status;
+        row[`${work.name} (เวลาส่ง)`] = submission.submittedAt ? new Date(submission.submittedAt).toLocaleString('th-TH') : '';
+        if (workIsPending(set, student.id, work)) pending++;
+      }
     });
     row['งานค้าง'] = pending;
     return row;
@@ -1243,9 +1641,10 @@ async function handleWorkScan(rawCode) {
     const score = Number(document.getElementById('scanWorkScore')?.value || 0);
     setWorkValue(set, student.id, work.id, score); textValue = `คะแนน ${score}`;
   } else {
-    const current = workValue(set, student.id, work.id) === true;
+    const current = WORK_COMPLETE.has(workSubmission(set, student.id, work.id).status);
     const next = action === 'toggle' ? !current : action !== 'missing';
-    setWorkValue(set, student.id, work.id, next); textValue = next ? 'ส่งแล้ว' : 'ยังไม่ส่ง';
+    const statusValue = next ? (work.dueAt && Date.now() > new Date(work.dueAt).getTime() ? 'late' : 'submitted') : 'unsubmitted';
+    setWorkSubmission(set, student.id, work.id, statusValue); textValue = WORK_STATUS[statusValue];
   }
   markWorkDirty('บันทึกผลสแกนแล้ว');
   status.classList.remove('error'); status.textContent = `✓ ${student.name} · ${work.name} · ${textValue}`;
@@ -1258,8 +1657,19 @@ async function handleNativeAction(button) {
   const action = button.dataset.nativeAction;
   if (action === 'mark-all-present') {
     const room = document.getElementById('nativeRoom')?.value;
-    (nativeState.roster?.[room] || []).forEach(student => { nativeState.attendance[room][student.no] = 'มา'; });
-    renderAttendanceRoster(); showToast('ทำเครื่องหมายมาครบแล้ว');
+    const students = nativeState.roster?.[room] || [];
+    if (!students.length) { showToast('กรุณาเลือกห้องเรียน'); return; }
+    if (!confirm(`ยืนยันทำเครื่องหมาย “มา” ทั้ง ${students.length} คน?\nคุณยังแก้คนที่สาย ลา หรือขาดได้ก่อนบันทึก`)) return;
+    nativeState.attendanceUndo = {room, data:{...(nativeState.attendance[room] || {})}};
+    students.forEach(student => { nativeState.attendance[room][student.no] = 'มา'; });
+    invalidateAttendanceReceipt(); saveAttendanceDraft();
+    const undo = document.querySelector('[data-native-action="undo-attendance"]');
+    if (undo) undo.hidden = false;
+    renderAttendanceRoster(); showToast('ทำเครื่องหมายมาครบแล้ว · ตรวจคนที่ไม่มาก่อนบันทึก');
+  }
+  if (action === 'undo-attendance') {
+    const undo = nativeState.attendanceUndo;
+    if (undo) { nativeState.attendance[undo.room] = {...undo.data}; nativeState.attendanceUndo = null; invalidateAttendanceReceipt(); saveAttendanceDraft(); renderAttendanceRoster(); button.hidden = true; showToast('ย้อนกลับสถานะก่อนมาครบแล้ว'); }
   }
   if (action === 'save-attendance') await saveNativeAttendance();
   if (action === 'share-attendance-report') await shareAttendanceReport();
@@ -1272,7 +1682,13 @@ async function handleNativeAction(button) {
   if (action === 'export-attendance-excel') exportAttendanceExcel();
   if (action === 'export-attendance-stats-image') await shareAttendanceStatsImage();
   if (action === 'refresh-work') {
-    if (!nativeState.workDirty || confirm('โหลดข้อมูลจากคลาวด์และทิ้งร่างที่ยังไม่ได้บันทึก?')) await loadWorkData();
+    if (nativeState.workDirty) {
+      if (!confirm('โหลดข้อมูลล่าสุดจากคลาวด์? ร่างปัจจุบันจะถูกเก็บเป็นข้อมูลสำรองก่อน')) return;
+      backupWorkDB('ร่างก่อนโหลดข้อมูลล่าสุดจากคลาวด์');
+      nativeState.workDirty = false;
+      cacheWorkDraft();
+    }
+    await loadWorkData();
   }
   if (action === 'back-work-sets') { await closeWorkScanner(); nativeState.activeWorkKey = ''; renderWorkSetList(); }
   if (action === 'new-work-set') createWorkSet();
@@ -1280,6 +1696,8 @@ async function handleNativeAction(button) {
   if (action === 'delete-work-set') deleteWorkSet();
   if (action === 'edit-work-set') editWorkSet();
   if (action === 'show-work-report') showWorkPendingReport();
+  if (action === 'share-work-report') await shareWorkReport();
+  if (action === 'restore-work-backup') restoreWorkBackup();
   if (action === 'add-work-item') addWorkItem();
   if (action === 'edit-work-item') editWorkItem(Number(button.dataset.workIndex));
   if (action === 'delete-work-item') deleteWorkItem(Number(button.dataset.workIndex));
@@ -1296,10 +1714,7 @@ async function handleNativeAction(button) {
     if (code) { await handleWorkScan(code); document.getElementById('manualScanCode').value = ''; }
     else showToast('กรุณาใส่รหัสนักเรียนหรือเลขที่');
   }
-  if (action === 'toggle-work-status') {
-    const set = activeWorkSet();
-    if (set) { const current = workValue(set, button.dataset.studentId, button.dataset.workId) === true; setWorkValue(set, button.dataset.studentId, button.dataset.workId, !current); markWorkDirty('อัปเดตสถานะส่งงานแล้ว'); renderWorkEditor(); }
-  }
+  if (action === 'edit-submission-status') editSubmissionStatus(button.dataset.studentId, button.dataset.workId);
   if (action === 'refresh-grades') await loadGradeData();
   if (action === 'refresh-exams') await loadExamData();
   if (action === 'refresh-fund') await loadFundData();
@@ -1346,6 +1761,8 @@ document.addEventListener('click', event => {
     const room = document.getElementById('nativeRoom')?.value;
     if (room) {
       nativeState.attendance[room][attendanceTarget.dataset.attendanceNo] = attendanceTarget.dataset.status;
+      invalidateAttendanceReceipt();
+      saveAttendanceDraft();
       renderAttendanceRoster();
     }
     return;
@@ -1417,14 +1834,26 @@ document.addEventListener('change', event => {
     if (work?.type === 'สอบ') document.getElementById('scanWorkAction').value = 'score';
     if (work?.max) document.getElementById('scanWorkScore').max = work.max;
   }
+  if (event.target.id === 'workFocusSelect') {
+    nativeState.activeWorkFocus = event.target.value;
+    renderWorkEditor();
+  }
 });
 
 document.addEventListener('change', event => {
   if (event.target.id === 'nativeRoom') {
     if (currentTool?.id === 'subject-attendance') loadSelectedAttendanceRecord();
-    else renderAttendanceRoster();
+    else { nativeState.attendance[event.target.value] = {}; restoreAttendanceDraft() || renderAttendanceRoster(); }
   }
-  if (event.target.id === 'nativeDate' && currentTool?.id === 'subject-attendance') loadSelectedAttendanceRecord();
+  if (event.target.id === 'nativeDate') {
+    invalidateAttendanceReceipt();
+    if (currentTool?.id === 'subject-attendance') loadSelectedAttendanceRecord();
+    else {
+      const room = document.getElementById('nativeRoom')?.value;
+      if (room) nativeState.attendance[room] = {};
+      restoreAttendanceDraft() || renderAttendanceRoster();
+    }
+  }
   if (event.target.id === 'nativeTeacher') {
     renderSubjectOptions();
     nativeState.subjectRecords = [];
@@ -1439,6 +1868,12 @@ document.addEventListener('change', event => {
       [...roomSelect.options].forEach(option => { if (option.value) option.hidden = allowed.size > 0 && !allowed.has(option.value); });
     }
     loadSubjectRecords();
+  }
+  if (event.target.id === 'nativePeriod') {
+    invalidateAttendanceReceipt();
+    const room = document.getElementById('nativeRoom')?.value;
+    if (room) nativeState.attendance[room] = {};
+    restoreAttendanceDraft() || renderAttendanceRoster();
   }
   if (event.target.id === 'attendanceHistoryDate') {
     const value = event.target.value;
