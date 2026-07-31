@@ -1,4 +1,4 @@
-const CACHE_NAME = "knt-talent-v3";
+const CACHE_NAME = "knt-talent-v4";
 const APP_FILES = ["./", "index.html", "styles.css", "questions.js", "app.js", "manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

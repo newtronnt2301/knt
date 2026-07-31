@@ -54,7 +54,7 @@
       <section class="start-panel">
         <div class="section-heading">
           <div><span class="step-label">ขั้นที่ 1</span><h2>เลือกระดับที่ต้องการฝึก</h2></div>
-          <p>เริ่มจากระดับ 1 เพื่อวางพื้นฐาน หรือเลือกระดับ 2 เพื่อฝึกโจทย์หลายขั้นใกล้สนามจริง</p>
+          <p>เลือกฝึกได้ตั้งแต่ระดับวางพื้นฐาน ระดับใกล้สนามจริง ไปจนถึงระดับฝึกคัดตัว</p>
         </div>
         <div class="level-grid">
           <button class="level-card selected" type="button" data-level="1">
@@ -71,12 +71,12 @@
             <p>โจทย์หลายขั้นและตัวเลือกที่วัดความเข้าใจ</p>
             <span class="level-meta">30 ข้อ · เฉลยหลังส่ง</span>
           </button>
-          <button class="level-card locked" type="button" disabled>
+          <button class="level-card" type="button" data-level="3">
             <span class="level-number">03</span>
-            <span class="level-state">เร็ว ๆ นี้</span>
+            <span class="level-state ready">พร้อมฝึก</span>
             <strong>ฝึกคัดตัว</strong>
             <p>เชื่อมหลายแนวคิดและตรวจความรอบคอบ</p>
-            <span class="level-meta">กำลังจัดทำ</span>
+            <span class="level-meta">30 ข้อ · เฉลยหลังส่ง</span>
           </button>
         </div>
 
@@ -130,6 +130,14 @@
         </aside>
 
         <article class="question-shell" id="questionShell">
+          <section class="solution-navigator" id="solutionNavigator" hidden>
+            <div class="solution-navigator-head">
+              <div><span>เลือกดูเฉลย</span><strong>แตะหมายเลขข้อที่ต้องการ</strong></div>
+              <button class="secondary-button" id="backToResultButton" type="button">กลับหน้าสรุป</button>
+            </div>
+            <div class="solution-question-grid" id="solutionQuestionGrid"></div>
+            <div class="solution-legend"><span><i class="correct"></i>ตอบถูก</span><span><i class="wrong"></i>ตอบผิด</span><span><i class="current"></i>ข้อที่กำลังดู</span></div>
+          </section>
           <div class="question-meta">
             <span class="topic-chip" id="topicChip">เซต</span>
             <span class="difficulty-chip" id="difficultyChip">พื้นฐาน</span>
@@ -185,7 +193,7 @@
         <section class="result-card next-practice-card">
           <div><span class="step-label">ก้าวต่อไป</span><h2 id="nextAdviceTitle">ทบทวนจุดที่ยังไม่มั่นใจ</h2><p id="nextAdviceText"></p></div>
           <div class="result-actions">
-            <button class="primary-button" id="reviewMistakesButton" type="button">ดูเฉลยละเอียดทุกข้อ</button>
+            <button class="primary-button" id="reviewMistakesButton" type="button">เลือกข้อเพื่อดูเฉลย</button>
             <button class="secondary-button" id="homeButton" type="button">กลับหน้าแรก</button>
           </div>
         </section>

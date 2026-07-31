@@ -7,7 +7,8 @@
   const LETTERS = ["ก", "ข", "ค", "ง"];
   const LEVELS = {
     1: { name: "ตั้งหลักสนามจริง" },
-    2: { name: "ใกล้สนามจริง" }
+    2: { name: "ใกล้สนามจริง" },
+    3: { name: "ฝึกคัดตัว" }
   };
   const questionsById = new Map(window.TALENT_QUESTIONS.map((q) => [q.id, q]));
   const $ = (id) => document.getElementById(id);
@@ -171,8 +172,8 @@
     const total = session.questionOrder.length;
     const answered = Object.keys(session.answers).filter((key) => session.questionOrder.includes(key)).length;
 
-    $("questionCounter").textContent = `ข้อ ${session.current + 1} จาก ${total}`;
-    $("answeredCounter").textContent = `ตอบแล้ว ${answered} ข้อ`;
+    $("questionCounter").textContent = reviewing ? `เฉลยข้อ ${session.current + 1} จาก ${total}` : `ข้อ ${session.current + 1} จาก ${total}`;
+    $("answeredCounter").textContent = reviewing ? `ถูก ${calculateStats().correct} ข้อ` : `ตอบแล้ว ${answered} ข้อ`;
     $("progressBar").style.width = `${(answered / total) * 100}%`;
     $("questionNumber").textContent = reviewing ? `เฉลยข้อที่ ${session.current + 1}` : `ข้อ ${session.current + 1}`;
     $("questionPrompt").textContent = question.prompt;
@@ -181,6 +182,7 @@
       ? "พื้นฐานสำคัญ"
       : question.difficulty === 2 ? "ประยุกต์" : "โจทย์หลายขั้น";
     $("flagButton").classList.toggle("active", Boolean(session.flagged[id]));
+    $("flagButton").hidden = reviewing;
     $("flagButton").setAttribute("aria-pressed", String(Boolean(session.flagged[id])));
     $("flagButton").textContent = session.flagged[id] ? "★ ทำเครื่องหมายไว้" : "☆ ยังไม่แน่ใจ";
 
@@ -211,10 +213,35 @@
     $("nextButton").textContent = session.current === total - 1
       ? (reviewing ? "กลับหน้าสรุป →" : "ส่งคำตอบและดูผล →")
       : (reviewing ? "ดูเฉลยข้อต่อไป →" : "ข้อต่อไป →");
+    renderSolutionNavigator(reviewing);
     renderTopicMiniList();
     renderSolution(question, checked, selected);
     renderMath($("questionShell") || document.querySelector(".question-shell"));
     questionOpenedAt = Date.now();
+  }
+
+  function renderSolutionNavigator(reviewing) {
+    $("solutionNavigator").hidden = !reviewing;
+    if (!reviewing) return;
+    $("solutionQuestionGrid").innerHTML = session.questionOrder.map((id, index) => {
+      const question = questionsById.get(id);
+      const correct = session.answers[id] === question.answer;
+      const state = correct ? "correct" : "wrong";
+      const current = index === session.current ? "current" : "";
+      return `<button class="solution-number ${state} ${current}" type="button" data-index="${index}" aria-label="ดูเฉลยข้อ ${index + 1}">${index + 1}</button>`;
+    }).join("");
+    $("solutionQuestionGrid").querySelectorAll(".solution-number").forEach((button) => {
+      button.addEventListener("click", () => jumpToSolution(Number(button.dataset.index)));
+    });
+  }
+
+  function jumpToSolution(index) {
+    if (session.reviewMode !== "solutions" || index < 0 || index >= session.questionOrder.length) return;
+    saveElapsed();
+    session.current = index;
+    persistSession();
+    renderQuestion();
+    $("questionShell").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function selectAnswer(answer) {
@@ -569,6 +596,7 @@
       else moveQuestion(1);
     });
     $("reviewMistakesButton").addEventListener("click", reviewSolutions);
+    $("backToResultButton").addEventListener("click", showResult);
     $("homeButton").addEventListener("click", () => {
       updateHomeState();
       showScreen("home");
