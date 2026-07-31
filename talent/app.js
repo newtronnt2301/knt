@@ -799,7 +799,7 @@
     $("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       $("loginError").textContent = "";
-      const button = event.submitter;
+      const button = event.submitter || event.currentTarget.querySelector('button[type="submit"]');
       button.disabled = true;
       button.textContent = "กำลังเข้าสู่ระบบ…";
       try {
@@ -813,7 +813,7 @@
     $("registerForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       $("registerError").textContent = "";
-      const button = event.submitter;
+      const button = event.submitter || event.currentTarget.querySelector('button[type="submit"]');
       button.disabled = true;
       button.textContent = "กำลังสร้างรหัส…";
       try {
@@ -980,7 +980,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=6", { updateViaCache: "none" }).catch(() => {});
     }
   }
 
