@@ -2,6 +2,8 @@
   "use strict";
 
   const SHEET_URL = "https://script.google.com/macros/s/AKfycbw3eNbBuhg-P-dLxBeZkYIggp0FW9GM1TdL1wVd1XeyxvwRTzw4BcMNiPBEyyWH1le-/exec";
+  const ACCOUNT_API_URL = window.KNT_TALENT_API_URL || "https://script.google.com/macros/s/AKfycbyiCKS6zFxQikF1hFmJm8_Xq4BP3_vH4UeF-lyWzUVB_mhcaCFYSHfyS2XNDyYV8U78/exec";
+  const AUTH_KEY = "kntTalentAuthV1";
   const SESSION_KEY = "kntTalentSessionV2";
   const PROFILE_KEY = "kntTalentProfileV1";
   const LETTERS = ["ก", "ข", "ค", "ง"];
@@ -18,8 +20,14 @@
   let selectedTeacherKey = "";
   let selectedLevel = 1;
   let toastTimer = null;
+  let auth = null;
+  let dashboardData = { attempts: [], answers: [] };
+  let pendingRegisteredAuth = null;
+  let teacherToken = "";
 
   const screens = {
+    auth: $("authScreen"),
+    dashboard: $("dashboardScreen"),
     home: $("homeScreen"),
     practice: $("practiceScreen"),
     result: $("resultScreen"),
@@ -59,16 +67,18 @@
     return values;
   }
 
-  function newSession(student, level = selectedLevel) {
-    const questionIds = window.TALENT_QUESTIONS.filter((q) => q.level === level).map((q) => q.id);
-    const ids = [...questionIds].sort(() => Math.random() - 0.5);
+  function newSession(student, level = selectedLevel, selectedIds = null, mode = "online", paperCode = "") {
+    const questionIds = selectedIds || window.TALENT_QUESTIONS.filter((q) => q.level === level).map((q) => q.id);
+    const ids = mode === "paper" ? [...questionIds].slice(0, 30) : [...questionIds].sort(() => Math.random() - 0.5).slice(0, 30);
     const optionOrders = {};
-    ids.forEach((id) => { optionOrders[id] = shuffleIndexes(questionsById.get(id).options.length); });
+    ids.forEach((id) => { optionOrders[id] = mode === "paper" ? questionsById.get(id).options.map((_, index) => index) : shuffleIndexes(questionsById.get(id).options.length); });
     return {
       version: 2,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       level,
       student,
+      mode,
+      paperCode,
       questionOrder: ids,
       optionOrders,
       current: 0,
@@ -331,6 +341,17 @@
     return Math.max(1, Math.round(Object.values(activeSession.timeByQuestion).reduce((sum, value) => sum + value, 0) / 1000));
   }
 
+  async function apiPost(action, payload = {}) {
+    const response = await fetch(ACCOUNT_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action, ...payload })
+    });
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error || "API_ERROR");
+    return data.data;
+  }
+
   async function saveSheetRow(activeSession, subject, score, total) {
     const params = new URLSearchParams({
       action: "exam_save",
@@ -350,6 +371,34 @@
     const duration = durationSeconds(completedSession);
     setCloudStatus("syncing");
     try {
+      if (auth?.token) {
+        const accountResult = await apiPost("attempt_submit", {
+          token: auth.token,
+          attempt: {
+            id: completedSession.id,
+            level: completedSession.level,
+            mode: completedSession.mode || "online",
+            paperCode: completedSession.paperCode || "",
+            questionIds: completedSession.questionOrder,
+            durationSec: duration,
+            startedAt: completedSession.startedAt,
+            answers: completedSession.questionOrder.map((id) => {
+              const question = questionsById.get(id);
+              return {
+                questionId: id,
+                topic: question.topic,
+                skill: question.concept,
+                selected: completedSession.answers[id],
+                correct: question.answer,
+                isCorrect: completedSession.answers[id] === question.answer,
+                timeMs: completedSession.timeByQuestion[id] || 0,
+                flagged: Boolean(completedSession.flagged[id])
+              };
+            })
+          }
+        });
+        if (accountResult.dashboard) dashboardData = accountResult.dashboard;
+      }
       const rows = [
         saveSheetRow(completedSession, `KNT-TALENT|v1|L${completedSession.level}|summary|${completedSession.id}|${duration}`, stats.correct, stats.total),
         ...Object.entries(stats.topics).map(([topic, value]) =>
@@ -413,8 +462,8 @@
   function exitToHome() {
     saveAndMark();
     closeExitModal();
-    updateHomeState();
-    showScreen("home");
+    if (auth) loadDashboard();
+    else showScreen("auth");
     toast("บันทึกไว้แล้ว กลับมาทำต่อได้ทุกเมื่อ");
   }
 
@@ -480,7 +529,32 @@
       const response = await fetch(`${SHEET_URL}?action=exam_get`);
       if (!response.ok) throw new Error("load failed");
       const data = await response.json();
-      teacherStudents = buildTeacherStudents(Array.isArray(data.list) ? data.list : []);
+      const allRows = Array.isArray(data.list) ? [...data.list] : [];
+      if (teacherToken) {
+        try {
+          const modern = await apiGet("teacher_data", { teacherToken });
+          const studentMap = new Map((modern.students || []).map((student) => [student.studentId, student]));
+          const answerMap = new Map();
+          (modern.answers || []).forEach((answer) => {
+            const key = `${answer.attemptId}|${answer.topic}`;
+            if (!answerMap.has(key)) answerMap.set(key, { score: 0, total: 0 });
+            const value = answerMap.get(key);
+            value.total += 1;
+            if (answer.isCorrect) value.score += 1;
+          });
+          (modern.attempts || []).forEach((attempt) => {
+            const student = studentMap.get(attempt.studentId);
+            if (!student) return;
+            const base = { timestamp: attempt.completedAt, room: student.room || student.grade, no: student.no, name: student.fullName };
+            allRows.push({ ...base, subject: `KNT-TALENT|v1|L${attempt.level}|summary|${attempt.id}|${attempt.durationSec}`, score: attempt.score, total: attempt.total });
+            Object.keys(window.TALENT_TOPICS).forEach((topic) => {
+              const value = answerMap.get(`${attempt.id}|${topic}`);
+              if (value) allRows.push({ ...base, subject: `KNT-TALENT|v1|L${attempt.level}|topic:${topic}|${attempt.id}|${attempt.durationSec}`, score: value.score, total: value.total });
+            });
+          });
+        } catch { /* keep legacy teacher data available */ }
+      }
+      teacherStudents = buildTeacherStudents(allRows);
       renderTeacherList();
       if (teacherStudents.length) selectTeacherStudent(selectedTeacherKey || teacherStudents[0].key);
       else $("studentDetail").innerHTML = '<div class="empty-detail"><span>ยังไม่มีผลการฝึก</span><p>เมื่อนักเรียนทำแบบฝึกระดับใดระดับหนึ่งจบ ข้อมูลจะปรากฏที่นี่</p></div>';
@@ -549,6 +623,169 @@
       </div></section>`;
   }
 
+  function loadAuth() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(AUTH_KEY));
+      if (stored?.token && stored?.student) return stored;
+    } catch { /* ignore broken local data */ }
+    return null;
+  }
+
+  function saveAuth(nextAuth) {
+    auth = nextAuth;
+    if (auth) localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    else localStorage.removeItem(AUTH_KEY);
+  }
+
+  function accountStudent() {
+    const student = auth?.student || {};
+    return { name: student.fullName || student.username || "นักเรียน", room: student.room || student.grade || "–", no: student.no || "–", studentId: student.studentId || "" };
+  }
+
+  async function apiGet(action, params = {}) {
+    const query = new URLSearchParams({ action, ...params });
+    const response = await fetch(`${ACCOUNT_API_URL}?${query.toString()}`);
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error || "API_ERROR");
+    return data.data || data.student || data.paper;
+  }
+
+  function accountError(error) {
+    const messages = {
+      USERNAME_INVALID: "ชื่อผู้ใช้ต้องเป็นอังกฤษ ตัวเลข จุด ขีด หรือขีดล่าง 4–24 ตัว",
+      USERNAME_TAKEN: "ชื่อผู้ใช้นี้มีคนใช้แล้ว ลองเติมตัวเลขท้ายชื่อ",
+      PASSWORD_INVALID: "รหัสผ่านต้องมีอย่างน้อย 8 ตัว",
+      NAME_INVALID: "กรุณากรอกชื่อ-นามสกุลจริง",
+      LOGIN_INVALID: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+      RECOVERY_INVALID: "ชื่อผู้ใช้หรือรหัสกู้คืนไม่ถูกต้อง",
+      SESSION_EXPIRED: "หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่",
+      AUTH_REQUIRED: "กรุณาเข้าสู่ระบบใหม่",
+      PAPER_NOT_FOUND: "ไม่พบรหัสชุดกระดาษนี้ กรุณาตรวจตัวอักษรอีกครั้ง"
+    };
+    return messages[error?.message] || "ยังเชื่อมต่อระบบไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง";
+  }
+
+  function setAuthTab(tab) {
+    const registering = tab === "register";
+    $("loginTab").classList.toggle("active", !registering);
+    $("registerTab").classList.toggle("active", registering);
+    $("loginForm").hidden = registering;
+    $("registerForm").hidden = !registering;
+    (registering ? $("registerName") : $("loginUsername")).focus();
+  }
+
+  async function loadDashboard() {
+    if (!auth?.token) { showScreen("auth"); return; }
+    showScreen("dashboard");
+    $("dashboardGreeting").textContent = `สวัสดี ${auth.student.fullName || auth.student.username}`;
+    try {
+      dashboardData = await apiGet("dashboard", { token: auth.token });
+      if (dashboardData.student) {
+        auth.student = dashboardData.student;
+        saveAuth(auth);
+      }
+      renderDashboard();
+    } catch (error) {
+      if (["AUTH_REQUIRED", "SESSION_EXPIRED", "ACCOUNT_DISABLED"].includes(error.message)) {
+        saveAuth(null);
+        showScreen("auth");
+        toast(accountError(error));
+        return;
+      }
+      renderDashboard();
+      toast(accountError(error));
+    }
+  }
+
+  function seenQuestionIds(level) {
+    return new Set((dashboardData.answers || []).filter((answer) => Number(answer.level) === level).map((answer) => answer.questionId));
+  }
+
+  function chooseQuestionIds(level, count = 30) {
+    const pool = window.TALENT_QUESTIONS.filter((question) => question.level === level).map((question) => question.id);
+    const seen = seenQuestionIds(level);
+    const fresh = pool.filter((id) => !seen.has(id)).sort(() => Math.random() - 0.5);
+    if (fresh.length >= count) {
+      if (level === 3 && count === 30) {
+        const balanced = Object.keys(window.TALENT_TOPICS).flatMap((topic) => fresh.filter((id) => questionsById.get(id).topic === topic).slice(0, 5));
+        if (balanced.length === 30) return balanced.sort(() => Math.random() - 0.5);
+      }
+      return fresh.slice(0, count);
+    }
+    const wrongCounts = {};
+    (dashboardData.answers || []).filter((answer) => Number(answer.level) === level && !answer.isCorrect).forEach((answer) => { wrongCounts[answer.questionId] = (wrongCounts[answer.questionId] || 0) + 1; });
+    const review = pool.filter((id) => seen.has(id)).sort((a, b) => (wrongCounts[b] || 0) - (wrongCounts[a] || 0) || Math.random() - 0.5);
+    return [...fresh, ...review].slice(0, Math.min(count, pool.length));
+  }
+
+  function startAccountPractice(level) {
+    const stored = loadStoredSession();
+    if (stored && !stored.completedAt && stored.student?.studentId === auth?.student?.studentId) {
+      if (confirm("มีแบบฝึกที่ยังทำไม่จบ ต้องการทำชุดเดิมต่อหรือไม่?")) { beginPractice(stored); return; }
+    }
+    selectedLevel = level;
+    beginPractice(newSession(accountStudent(), level, chooseQuestionIds(level)));
+  }
+
+  function renderDashboard() {
+    const attempts = [...(dashboardData.attempts || [])].sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+    const answers = dashboardData.answers || [];
+    const latest = attempts.at(-1);
+    const recent = attempts.slice(-3).map((attempt) => Math.round((attempt.score / attempt.total) * 100));
+    const recentAverage = recent.length ? Math.round(recent.reduce((sum, value) => sum + value, 0) / recent.length) : null;
+    const firstPercent = attempts.length ? Math.round((attempts[0].score / attempts[0].total) * 100) : null;
+    const growth = recentAverage == null || attempts.length < 2 ? null : recentAverage - firstPercent;
+    $("dashLatest").textContent = latest ? `${Math.round((latest.score / latest.total) * 100)}%` : "–";
+    $("dashLatestLevel").textContent = latest ? `ระดับ ${latest.level} · ${latest.score}/${latest.total} ข้อ` : "ยังไม่เคยฝึก";
+    $("dashAverage").textContent = recentAverage == null ? "–" : `${recentAverage}%`;
+    $("dashAttempts").textContent = `${attempts.length} รอบ`;
+    $("dashQuestionCount").textContent = `${answers.length} ข้อที่บันทึกแล้ว`;
+    $("dashGrowth").textContent = growth == null ? "–" : `${growth > 0 ? "+" : ""}${growth}%`;
+    $("dashGrowth").className = growth > 0 ? "growth-up" : growth < 0 ? "growth-down" : "";
+
+    $("dashboardLevelGrid").innerHTML = [1, 2, 3].map((level) => {
+      const total = window.TALENT_QUESTIONS.filter((question) => question.level === level).length;
+      const fresh = Math.max(0, total - seenQuestionIds(level).size);
+      return `<button class="dash-level ${fresh < 30 ? "exhausted" : ""}" type="button" data-dashboard-level="${level}"><span>LEVEL ${String(level).padStart(2, "0")}</span><strong>${LEVELS[level].name}</strong><small>${total} ข้อในคลัง · ยังไม่เคยทำ ${fresh} ข้อ</small><b>${fresh >= 30 ? "เริ่มชุดใหม่ 30 ข้อ →" : fresh > 0 ? `ทำข้อใหม่ ${fresh} ข้อ + ทบทวนจุดอ่อน →` : "ทบทวนจุดอ่อนโดยไม่คิดว่าเป็นข้อใหม่ →"}</b></button>`;
+    }).join("");
+    $("dashboardLevelGrid").querySelectorAll("[data-dashboard-level]").forEach((button) => button.addEventListener("click", () => startAccountPractice(Number(button.dataset.dashboardLevel))));
+
+    const topicStats = {};
+    Object.keys(window.TALENT_TOPICS).forEach((topic) => { topicStats[topic] = { correct: 0, total: 0 }; });
+    answers.forEach((answer) => { if (topicStats[answer.topic]) { topicStats[answer.topic].total += 1; if (answer.isCorrect) topicStats[answer.topic].correct += 1; } });
+    $("studentTopicProgress").innerHTML = Object.entries(topicStats).map(([topic, value]) => {
+      const percent = value.total ? Math.round((value.correct / value.total) * 100) : 0;
+      return `<div class="topic-result-row"><div class="topic-result-name"><span>${escapeHtml(window.TALENT_TOPICS[topic].short)}</span><small>${value.total ? `${value.correct}/${value.total} ข้อ` : "ยังไม่มีข้อมูล"}</small></div><div class="result-bar"><i style="width:${percent}%"></i></div><strong>${value.total ? `${percent}%` : "–"}</strong></div>`;
+    }).join("");
+
+    const weakTopics = Object.entries(topicStats).filter(([, value]) => value.total).sort((a, b) => (a[1].correct / a[1].total) - (b[1].correct / b[1].total)).slice(0, 3);
+    $("readingPlan").innerHTML = weakTopics.length ? weakTopics.map(([topic, value], index) => {
+      const pct = Math.round((value.correct / value.total) * 100);
+      const action = pct < 50 ? "อ่านแนวคิดพื้นฐานและตัวอย่างทีละขั้น" : pct < 75 ? "ทบทวนข้อที่ผิด แล้วลองทำโดยไม่ดูเฉลย" : "เก็บรายละเอียดโจทย์หลายขั้น";
+      return `<div class="plan-row"><span><strong>${index + 1}. ${escapeHtml(window.TALENT_TOPICS[topic].label)}</strong><small>${action}</small></span><b>${pct}%</b></div>`;
+    }).join("") : '<div class="empty-dashboard">เมื่อทำแบบฝึกครั้งแรก ระบบจะจัดแผนอ่านให้ตามข้อที่ตอบผิดจริง</div>';
+
+    const latestByQuestion = new Map();
+    answers.forEach((answer) => latestByQuestion.set(answer.questionId, answer));
+    const mistakes = [...latestByQuestion.values()].filter((answer) => !answer.isCorrect && questionsById.has(answer.questionId)).slice(-8).reverse();
+    $("mistakeNotebook").innerHTML = mistakes.length ? mistakes.map((answer) => {
+      const question = questionsById.get(answer.questionId);
+      return `<div class="notebook-row"><span><strong>${escapeHtml(window.TALENT_TOPICS[question.topic].short)} · ${escapeHtml(answer.questionId)}</strong><small>${escapeHtml(question.concept)}</small></span><button type="button" data-review-id="${escapeHtml(answer.questionId)}">ดูเฉลย</button></div>`;
+    }).join("") : '<div class="empty-dashboard">ยังไม่มีข้อที่ต้องทบทวน ทำแบบฝึกแล้วข้อที่ผิดจะมาอยู่ตรงนี้</div>';
+    $("mistakeNotebook").querySelectorAll("[data-review-id]").forEach((button) => button.addEventListener("click", () => reviewSavedMistake(button.dataset.reviewId)));
+  }
+
+  function reviewSavedMistake(questionId) {
+    const answer = [...(dashboardData.answers || [])].reverse().find((item) => item.questionId === questionId);
+    if (!answer || !questionsById.has(questionId)) return;
+    const review = newSession(accountStudent(), Number(answer.level), [questionId]);
+    review.answers[questionId] = Number(answer.selected);
+    review.completedAt = new Date().toISOString();
+    review.reviewMode = "solutions";
+    review.synced = true;
+    beginPractice(review);
+  }
+
   function openTeacherLogin() {
     $("teacherLoginModal").hidden = false;
     $("teacherLoginError").textContent = "";
@@ -557,6 +794,76 @@
   }
 
   function bindEvents() {
+    $("loginTab").addEventListener("click", () => setAuthTab("login"));
+    $("registerTab").addEventListener("click", () => setAuthTab("register"));
+    $("loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("loginError").textContent = "";
+      const button = event.submitter;
+      button.disabled = true;
+      button.textContent = "กำลังเข้าสู่ระบบ…";
+      try {
+        const data = await apiPost("login", { username: $("loginUsername").value.trim(), password: $("loginPassword").value });
+        saveAuth(data);
+        $("loginPassword").value = "";
+        await loadDashboard();
+      } catch (error) { $("loginError").textContent = accountError(error); }
+      finally { button.disabled = false; button.textContent = "เข้าสู่ระบบ →"; }
+    });
+    $("registerForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("registerError").textContent = "";
+      const button = event.submitter;
+      button.disabled = true;
+      button.textContent = "กำลังสร้างรหัส…";
+      try {
+        const data = await apiPost("register", {
+          fullName: $("registerName").value.trim(), school: $("registerSchool").value.trim(), grade: $("registerGrade").value.trim(),
+          room: $("registerRoom").value.trim(), no: $("registerNo").value.trim(), username: $("registerUsername").value.trim(), password: $("registerPassword").value
+        });
+        pendingRegisteredAuth = { token: data.token, student: data.student };
+        $("newRecoveryCode").textContent = data.recoveryCode;
+        $("recoveryCodeModal").hidden = false;
+      } catch (error) { $("registerError").textContent = accountError(error); }
+      finally { button.disabled = false; button.textContent = "สมัครและเริ่มฝึก →"; }
+    });
+    $("confirmRecoveryCode").addEventListener("click", async () => {
+      $("recoveryCodeModal").hidden = true;
+      saveAuth(pendingRegisteredAuth);
+      pendingRegisteredAuth = null;
+      await loadDashboard();
+    });
+    $("forgotPassword").addEventListener("click", () => { $("recoveryModal").hidden = false; $("recoveryError").textContent = ""; });
+    $("cancelRecovery").addEventListener("click", () => { $("recoveryModal").hidden = true; });
+    $("recoveryForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("recoveryError").textContent = "";
+      try {
+        await apiPost("reset_password", { username: $("recoveryUsername").value.trim(), recoveryCode: $("recoveryCode").value.trim(), newPassword: $("recoveryPassword").value });
+        $("recoveryModal").hidden = true;
+        $("loginUsername").value = $("recoveryUsername").value.trim();
+        setAuthTab("login");
+        toast("ตั้งรหัสผ่านใหม่แล้ว กรุณาเข้าสู่ระบบ");
+      } catch (error) { $("recoveryError").textContent = accountError(error); }
+    });
+    $("logoutButton").addEventListener("click", async () => {
+      const token = auth?.token;
+      saveAuth(null);
+      dashboardData = { attempts: [], answers: [] };
+      showScreen("auth");
+      if (token) apiPost("logout", { token }).catch(() => {});
+    });
+    $("paperModeButton").addEventListener("click", () => { $("paperModal").hidden = false; $("paperError").textContent = ""; $("paperCodeInput").focus(); });
+    $("cancelPaper").addEventListener("click", () => { $("paperModal").hidden = true; });
+    $("loadPaper").addEventListener("click", async () => {
+      $("paperError").textContent = "";
+      try {
+        const paper = await apiGet("paper_get", { code: $("paperCodeInput").value.trim().toUpperCase() });
+        if (!paper.questionIds.every((id) => questionsById.has(id))) throw new Error("PAPER_NOT_FOUND");
+        $("paperModal").hidden = true;
+        beginPractice(newSession(accountStudent(), paper.level, paper.questionIds, "paper", paper.paperCode));
+      } catch (error) { $("paperError").textContent = accountError(error); }
+    });
     document.querySelectorAll(".level-card[data-level]").forEach((card) => {
       card.addEventListener("click", () => selectLevel(Number(card.dataset.level)));
     });
@@ -598,14 +905,17 @@
     $("reviewMistakesButton").addEventListener("click", reviewSolutions);
     $("backToResultButton").addEventListener("click", showResult);
     $("homeButton").addEventListener("click", () => {
-      updateHomeState();
-      showScreen("home");
+      if (auth) loadDashboard();
+      else showScreen("auth");
     });
     $("teacherEntry").addEventListener("click", openTeacherLogin);
     $("cancelTeacherLogin").addEventListener("click", () => { $("teacherLoginModal").hidden = true; });
-    $("teacherLoginForm").addEventListener("submit", (event) => {
+    $("teacherLoginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      if ($("teacherCode").value !== "newtron05") {
+      try {
+        const data = await apiPost("teacher_login", { code: $("teacherCode").value });
+        teacherToken = data.teacherToken;
+      } catch {
         $("teacherLoginError").textContent = "รหัสครูไม่ถูกต้อง กรุณาลองอีกครั้ง";
         return;
       }
@@ -614,15 +924,39 @@
       loadTeacherData();
     });
     $("teacherBack").addEventListener("click", () => {
-      showScreen("home");
-      updateHomeState();
+      if (auth) loadDashboard();
+      else showScreen("auth");
     });
     $("refreshTeacher").addEventListener("click", loadTeacherData);
+    $("createPaperButton").addEventListener("click", () => { $("createPaperModal").hidden = false; $("createPaperError").textContent = ""; });
+    $("cancelCreatePaper").addEventListener("click", () => { $("createPaperModal").hidden = true; });
+    $("generatePaper").addEventListener("click", async () => {
+      const level = Number($("paperLevelSelect").value);
+      const levelPool = window.TALENT_QUESTIONS.filter((question) => question.level === level);
+      const ids = level === 3
+        ? Object.keys(window.TALENT_TOPICS).flatMap((topic) => levelPool.filter((question) => question.topic === topic).sort(() => Math.random() - 0.5).slice(0, 5).map((question) => question.id)).sort(() => Math.random() - 0.5)
+        : levelPool.map((question) => question.id).sort(() => Math.random() - 0.5).slice(0, 30);
+      $("createPaperError").textContent = "";
+      try {
+        const paper = await apiPost("paper_create", { teacherToken, level, questionIds: ids });
+        $("createPaperModal").hidden = true;
+        $("printPaperCode").textContent = `รหัสชุดกระดาษ ${paper.paperCode} · ระดับ ${level} · 30 ข้อ`;
+        $("printPaperQuestions").innerHTML = paper.questionIds.map((id, index) => {
+          const question = questionsById.get(id);
+          return `<article class="print-question"><p>${index + 1}. <span class="math-content">${escapeHtml(question.prompt)}</span></p><div class="print-choices">${question.options.map((option, optionIndex) => `<span>${LETTERS[optionIndex]}. <span class="math-content">${escapeHtml(option)}</span></span>`).join("")}</div></article>`;
+        }).join("");
+        $("printPaper").hidden = false;
+        renderMath($("printPaper"));
+        setTimeout(() => window.print(), 120);
+      } catch (error) { $("createPaperError").textContent = accountError(error); }
+    });
+    window.addEventListener("afterprint", () => { $("printPaper").hidden = true; });
     $("teacherSearch").addEventListener("input", renderTeacherList);
     $("exitModal").addEventListener("click", (event) => { if (event.target === $("exitModal")) closeExitModal(); });
     $("teacherLoginModal").addEventListener("click", (event) => {
       if (event.target === $("teacherLoginModal")) $("teacherLoginModal").hidden = true;
     });
+    ["recoveryModal", "paperModal", "createPaperModal"].forEach((id) => $(id).addEventListener("click", (event) => { if (event.target === $(id)) $(id).hidden = true; }));
     window.addEventListener("popstate", () => {
       if (screens.practice.classList.contains("active")) {
         history.pushState({ kntTalentPractice: true }, "", location.href);
@@ -642,6 +976,9 @@
     selectLevel(1);
     updateHomeState();
     renderMath(document.body);
+    auth = loadAuth();
+    if (auth) loadDashboard();
+    else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
       navigator.serviceWorker.register("sw.js").catch(() => {});
     }

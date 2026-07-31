@@ -1,5 +1,5 @@
-const CACHE_NAME = "knt-talent-v4";
-const APP_FILES = ["./", "index.html", "styles.css", "questions.js", "app.js", "manifest.webmanifest"];
+const CACHE_NAME = "knt-talent-v5";
+const APP_FILES = ["./", "index.html", "styles.css", "questions.js", "questions-hard-2.js", "app.js", "manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_FILES)));

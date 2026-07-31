@@ -29,7 +29,68 @@
   </header>
 
   <main>
-    <section class="screen home-screen active" id="homeScreen">
+    <section class="screen auth-screen active" id="authScreen">
+      <div class="auth-layout">
+        <div class="auth-intro">
+          <span class="eyebrow">พื้นที่ฝึกส่วนตัวของนักเรียน</span>
+          <h1>ทุกครั้งที่ฝึก<br><span>เห็นว่าตัวเองเก่งขึ้นตรงไหน</span></h1>
+          <p>สมัครเพียงครั้งเดียว ระบบจะเก็บคะแนน ข้อที่เคยทำ จุดแข็ง จุดที่ควรอ่านซ้ำ และสมุดข้อผิดของนักเรียนแต่ละคน</p>
+          <div class="auth-benefits">
+            <span>✓ ไม่สุ่มข้อเดิมจนกว่าข้อใหม่จะหมด</span>
+            <span>✓ ดูพัฒนาการรายบทและรายทักษะ</span>
+            <span>✓ ฝึกออนไลน์หรือกรอกคำตอบจากชุดกระดาษ</span>
+          </div>
+        </div>
+        <div class="auth-card">
+          <div class="auth-tabs" role="tablist">
+            <button class="active" id="loginTab" type="button">เข้าสู่ระบบ</button>
+            <button id="registerTab" type="button">สมัครรหัสใหม่</button>
+          </div>
+          <form id="loginForm" class="auth-form">
+            <div class="auth-heading"><h2>ยินดีต้อนรับกลับมา</h2><p>เข้าสู่พื้นที่พัฒนาการของตัวเอง</p></div>
+            <label><span>ชื่อผู้ใช้</span><input id="loginUsername" autocomplete="username" placeholder="เช่น somchai12" required></label>
+            <label><span>รหัสผ่าน</span><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required></label>
+            <p class="form-error" id="loginError"></p>
+            <button class="primary-button auth-submit" type="submit">เข้าสู่ระบบ →</button>
+            <button class="text-button" id="forgotPassword" type="button">ลืมรหัสผ่าน / ใช้รหัสกู้คืน</button>
+          </form>
+          <form id="registerForm" class="auth-form" hidden>
+            <div class="auth-heading"><h2>สร้างรหัสนักเรียน</h2><p>ชื่อจริงใช้แสดงพัฒนาการให้ครูผู้ฝึก</p></div>
+            <label class="wide"><span>ชื่อ-นามสกุล</span><input id="registerName" autocomplete="name" placeholder="ชื่อและนามสกุลจริง" required></label>
+            <label class="wide"><span>โรงเรียน</span><input id="registerSchool" autocomplete="organization" placeholder="ชื่อโรงเรียน" required></label>
+            <div class="form-two"><label><span>ระดับชั้น</span><input id="registerGrade" placeholder="เช่น ม.5" required></label><label><span>ห้อง</span><input id="registerRoom" placeholder="เช่น 5/1" required></label></div>
+            <div class="form-two"><label><span>เลขที่</span><input id="registerNo" inputmode="numeric" required></label><label><span>ชื่อผู้ใช้</span><input id="registerUsername" autocomplete="username" placeholder="อังกฤษ/ตัวเลข 4 ตัวขึ้นไป" required></label></div>
+            <label class="wide"><span>รหัสผ่าน</span><input id="registerPassword" type="password" autocomplete="new-password" minlength="8" placeholder="อย่างน้อย 8 ตัว" required></label>
+            <p class="form-error" id="registerError"></p>
+            <button class="primary-button auth-submit" type="submit">สมัครและเริ่มฝึก →</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen dashboard-screen" id="dashboardScreen">
+      <div class="dashboard-head">
+        <div><span class="eyebrow">พื้นที่ของฉัน</span><h1 id="dashboardGreeting">สวัสดี</h1><p id="dashboardSubline">วันนี้อยากพัฒนาทักษะไหนต่อ?</p></div>
+        <div class="dashboard-head-actions"><button class="secondary-button" id="paperModeButton" type="button">ชุดกระดาษ</button><button class="ghost-button" id="logoutButton" type="button">ออกจากระบบ</button></div>
+      </div>
+      <div class="dashboard-stat-grid">
+        <article><span>คะแนนรอบล่าสุด</span><strong id="dashLatest">–</strong><small id="dashLatestLevel">ยังไม่เคยฝึก</small></article>
+        <article><span>เฉลี่ย 3 รอบล่าสุด</span><strong id="dashAverage">–</strong><small>ดูแนวโน้ม ไม่ตัดสินจากรอบเดียว</small></article>
+        <article><span>ฝึกสะสม</span><strong id="dashAttempts">0 รอบ</strong><small id="dashQuestionCount">0 ข้อ</small></article>
+        <article><span>พัฒนาการ</span><strong id="dashGrowth">–</strong><small>เทียบรอบแรกกับค่าเฉลี่ยล่าสุด</small></article>
+      </div>
+      <section class="dashboard-panel choose-practice-panel">
+        <div class="section-heading"><div><span class="step-label">เริ่มฝึก</span><h2>เลือกระดับแบบไม่ทำข้อเดิม</h2></div><p id="freshQuestionNote">ระบบจะเลือกข้อใหม่ก่อนเสมอ</p></div>
+        <div class="dashboard-level-grid" id="dashboardLevelGrid"></div>
+      </section>
+      <div class="dashboard-columns">
+        <section class="dashboard-panel"><div class="section-heading"><div><span class="step-label">แผนอ่านก่อนสอบ</span><h2>ควรอ่านอะไรต่อ</h2></div></div><div id="readingPlan" class="reading-plan"></div></section>
+        <section class="dashboard-panel"><div class="section-heading"><div><span class="step-label">สมุดข้อผิด</span><h2>ข้อที่ควรกลับมาดู</h2></div></div><div id="mistakeNotebook" class="mistake-notebook"></div></section>
+      </div>
+      <section class="dashboard-panel"><div class="section-heading"><div><span class="step-label">พัฒนาการรายบท</span><h2>ความแม่นยำของฉัน</h2></div></div><div id="studentTopicProgress" class="topic-results"></div></section>
+    </section>
+
+    <section class="screen home-screen" id="homeScreen">
       <div class="hero">
         <div class="hero-copy">
           <span class="eyebrow">คณิตศาสตร์ ม.5 · คนเก่งในโรงเรียนท้องถิ่น</span>
@@ -204,7 +265,7 @@
       <div class="teacher-header">
         <button class="exit-button" id="teacherBack" type="button">← กลับหน้าแรก</button>
         <div><span class="eyebrow">ระบบครูผู้ฝึก</span><h1>พัฒนาการนักเรียน</h1><p>สรุปจากแบบฝึกที่นักเรียนทำเสร็จแล้ว</p></div>
-        <button class="secondary-button" id="refreshTeacher" type="button">โหลดข้อมูลใหม่</button>
+        <div class="teacher-head-actions"><button class="secondary-button" id="createPaperButton" type="button">สร้างชุดกระดาษ</button><button class="secondary-button" id="refreshTeacher" type="button">โหลดข้อมูลใหม่</button></div>
       </div>
       <div class="teacher-toolbar">
         <label class="search-box"><span>ค้นหานักเรียน</span><input id="teacherSearch" type="search" placeholder="ชื่อ ห้อง หรือเลขที่"></label>
@@ -247,11 +308,37 @@
     </form>
   </div>
 
+  <div class="modal-backdrop" id="recoveryModal" hidden>
+    <form class="modal-card teacher-login-card" id="recoveryForm">
+      <div class="modal-icon">กู้</div><h2>ตั้งรหัสผ่านใหม่</h2><p>ใช้รหัสกู้คืนที่ได้รับตอนสมัคร</p>
+      <label><span>ชื่อผู้ใช้</span><input id="recoveryUsername" autocomplete="username" required></label>
+      <label><span>รหัสกู้คืน</span><input id="recoveryCode" autocomplete="one-time-code" required></label>
+      <label><span>รหัสผ่านใหม่</span><input id="recoveryPassword" type="password" minlength="8" autocomplete="new-password" required></label>
+      <p class="form-error" id="recoveryError"></p>
+      <div class="modal-actions"><button class="secondary-button" id="cancelRecovery" type="button">ยกเลิก</button><button class="primary-button" type="submit">ตั้งรหัสใหม่</button></div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="recoveryCodeModal" hidden>
+    <div class="modal-card recovery-code-card"><div class="modal-icon">✓</div><h2>สมัครสำเร็จ</h2><p>จดรหัสนี้เก็บไว้ ใช้ตั้งรหัสผ่านใหม่หากลืม</p><strong id="newRecoveryCode"></strong><small>ระบบจะแสดงรหัสนี้เพียงครั้งเดียว</small><button class="primary-button" id="confirmRecoveryCode" type="button">บันทึกไว้แล้ว เข้าสู่ระบบ</button></div>
+  </div>
+
+  <div class="modal-backdrop" id="paperModal" hidden>
+    <div class="modal-card paper-modal-card"><div class="modal-icon">กระดาษ</div><h2>ฝึกจากชุดกระดาษ</h2><p>กรอกรหัสบนหัวกระดาษ แล้วเลือกคำตอบทีละข้อ ระบบจะตรวจและบันทึกเข้าพัฒนาการเดียวกัน</p><label><span>รหัสชุดกระดาษ</span><input id="paperCodeInput" placeholder="เช่น P3-ABC234" autocomplete="off"></label><p class="form-error" id="paperError"></p><div class="modal-actions"><button class="secondary-button" id="cancelPaper" type="button">ยกเลิก</button><button class="primary-button" id="loadPaper" type="button">เปิดชุดคำตอบ</button></div></div>
+  </div>
+
+  <div class="modal-backdrop" id="createPaperModal" hidden>
+    <div class="modal-card paper-modal-card"><div class="modal-icon">พิมพ์</div><h2>สร้างชุดฝึกบนกระดาษ</h2><p>ระบบจะสร้างรหัสประจำชุด นักเรียนกรอกรหัสนี้เมื่อกลับมาตรวจคำตอบออนไลน์</p><label><span>ระดับข้อสอบ</span><select id="paperLevelSelect"><option value="1">ระดับ 1 ตั้งหลักสนามจริง</option><option value="2">ระดับ 2 ใกล้สนามจริง</option><option value="3" selected>ระดับ 3 ฝึกคัดตัว</option></select></label><p class="form-error" id="createPaperError"></p><div class="modal-actions"><button class="secondary-button" id="cancelCreatePaper" type="button">ยกเลิก</button><button class="primary-button" id="generatePaper" type="button">สร้างและเปิดหน้าพิมพ์</button></div></div>
+  </div>
+
+  <section class="print-paper" id="printPaper" hidden><header><h1>KNT Talent · ชุดฝึกคณิตศาสตร์</h1><p>ชื่อ-นามสกุล _________________________ ชั้น ______ เลขที่ ______</p><strong id="printPaperCode"></strong></header><div id="printPaperQuestions"></div></section>
+
   <div class="toast" id="toast" role="status"></div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script src="questions.js"></script>
+  <script src="questions-hard-2.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
