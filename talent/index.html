@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f5ff">
+  <meta name="description" content="KNT Talent เว็บฝึกคณิตศาสตร์คนเก่งในโรงเรียนท้องถิ่น ทำทีละข้อ พร้อมเฉลยละเอียดและติดตามพัฒนาการ">
+  <title>KNT Talent - ฝึกคิดทีละข้อ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="กลับหน้าแรก KNT Talent">
+      <span class="brand-mark">K</span>
+      <span><strong>KNT Talent</strong><small>ฝึกคิดทีละข้อ เก่งขึ้นทีละก้าว</small></span>
+    </a>
+    <div class="header-actions">
+      <span class="cloud-pill" id="cloudStatus"><i></i> บันทึกความคืบหน้าอัตโนมัติ</span>
+      <button class="ghost-button teacher-entry" id="teacherEntry" type="button">สำหรับครู</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="screen home-screen active" id="homeScreen">
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">คณิตศาสตร์ ม.5 · คนเก่งในโรงเรียนท้องถิ่น</span>
+          <h1>เข้าใจทุกข้อ<br><span>ไม่ใช่แค่จำคำตอบ</span></h1>
+          <p>ฝึกแบบโฟกัสทีละข้อ อ่านสบายบนทุกหน้าจอ พร้อมเฉลยทีละขั้นและบอกให้รู้ว่าพลาดตรงไหน</p>
+          <div class="hero-badges">
+            <span>30 ข้อปรนัย</span>
+            <span>6 เนื้อหาหลัก</span>
+            <span>กลับมาทำต่อได้</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbit orbit-a"></div>
+          <div class="orbit orbit-b"></div>
+          <div class="formula-card formula-one">\(f(g(x))\)</div>
+          <div class="formula-card formula-two">\(\log_a xy\)</div>
+          <div class="formula-card formula-three">\(A\cap B\)</div>
+          <div class="hero-score"><span>ฝึกวันนี้</span><strong>+1%</strong><small>ทุกก้าวเล็ก ๆ คือพัฒนาการ</small></div>
+        </div>
+      </div>
+
+      <section class="start-panel">
+        <div class="section-heading">
+          <div><span class="step-label">ขั้นที่ 1</span><h2>เลือกระดับที่ต้องการฝึก</h2></div>
+          <p>ระดับ 1 เปิดให้ทดลองแล้ว ส่วนระดับถัดไปจะเพิ่มภายหลัง</p>
+        </div>
+        <div class="level-grid">
+          <button class="level-card selected" type="button" data-level="1">
+            <span class="level-number">01</span>
+            <span class="level-state ready">พร้อมฝึก</span>
+            <strong>ตั้งหลักสนามจริง</strong>
+            <p>ทบทวนพื้นฐานสำคัญและฝึกคิดเป็นขั้นตอน</p>
+            <span class="level-meta">30 ข้อ · เฉลยทันที</span>
+          </button>
+          <button class="level-card locked" type="button" disabled>
+            <span class="level-number">02</span>
+            <span class="level-state">เร็ว ๆ นี้</span>
+            <strong>ใกล้สนามจริง</strong>
+            <p>โจทย์หลายขั้นและตัวเลือกที่วัดความเข้าใจ</p>
+            <span class="level-meta">กำลังจัดทำ</span>
+          </button>
+          <button class="level-card locked" type="button" disabled>
+            <span class="level-number">03</span>
+            <span class="level-state">เร็ว ๆ นี้</span>
+            <strong>ฝึกคัดตัว</strong>
+            <p>เชื่อมหลายแนวคิดและตรวจความรอบคอบ</p>
+            <span class="level-meta">กำลังจัดทำ</span>
+          </button>
+        </div>
+
+        <div class="student-card">
+          <div class="student-card-copy">
+            <span class="step-label">ขั้นที่ 2</span>
+            <h2>บอกชื่อก่อนเริ่มฝึก</h2>
+            <p>ใช้สำหรับบันทึกพัฒนาการให้คุณครูดูเท่านั้น</p>
+          </div>
+          <form id="studentForm" class="student-form">
+            <label><span>ห้องเรียน</span><input id="studentRoom" name="room" placeholder="เช่น ม.5/1" autocomplete="organization-title" required></label>
+            <label><span>เลขที่</span><input id="studentNo" name="no" inputmode="numeric" placeholder="เช่น 12" autocomplete="off" required></label>
+            <label class="name-field"><span>ชื่อ-นามสกุล</span><input id="studentName" name="name" placeholder="ชื่อของนักเรียน" autocomplete="name" required></label>
+            <button class="primary-button start-button" type="submit"><span>เริ่มฝึกระดับ 1</span><b>→</b></button>
+          </form>
+          <div class="resume-card" id="resumeCard" hidden>
+            <div><span>แบบฝึกที่ทำค้างไว้</span><strong id="resumeText"></strong><small>คำตอบทั้งหมดถูกบันทึกอยู่ในเครื่องนี้</small></div>
+            <div class="resume-actions">
+              <button class="primary-button" id="resumeButton" type="button">ทำต่อ</button>
+              <button class="text-button" id="discardButton" type="button">เริ่มใหม่</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-it-works">
+        <div class="section-heading"><div><span class="step-label">วิธีฝึก</span><h2>คิด ตรวจ เข้าใจ แล้วค่อยไปต่อ</h2></div></div>
+        <div class="how-grid">
+          <article><span>1</span><strong>โฟกัสทีละข้อ</strong><p>ไม่มีโจทย์หลายข้อรบกวนสายตา เลือกคำตอบเมื่อพร้อม</p></article>
+          <article><span>2</span><strong>รู้ทันทีว่าพลาดตรงไหน</strong><p>เฉลยอธิบายตามตัวเลือกที่นักเรียนเลือกจริง</p></article>
+          <article><span>3</span><strong>เห็นพัฒนาการ</strong><p>ระบบสรุปความแม่นยำรายบทให้ครูดูหลังฝึกจบ</p></article>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen practice-screen" id="practiceScreen" aria-live="polite">
+      <div class="practice-topbar">
+        <button class="exit-button" id="exitPractice" type="button">← <span>บันทึกและออก</span></button>
+        <div class="practice-progress-wrap">
+          <div class="practice-progress-meta"><span id="questionCounter">ข้อ 1 จาก 30</span><span id="answeredCounter">ตอบแล้ว 0 ข้อ</span></div>
+          <div class="progress-track"><i id="progressBar"></i></div>
+        </div>
+        <div class="practice-student"><span id="practiceStudentName"></span><small>ระดับ 1</small></div>
+      </div>
+
+      <div class="focus-layout">
+        <aside class="focus-side">
+          <div class="focus-level"><span>LEVEL</span><strong>01</strong><small>ตั้งหลักสนามจริง</small></div>
+          <div class="topic-mini-list" id="topicMiniList"></div>
+          <p class="focus-note">ไม่ต้องรีบ ใช้เวลาทำความเข้าใจให้เต็มที่</p>
+        </aside>
+
+        <article class="question-shell">
+          <div class="question-meta">
+            <span class="topic-chip" id="topicChip">เซต</span>
+            <span class="difficulty-chip" id="difficultyChip">พื้นฐาน</span>
+            <button class="flag-button" id="flagButton" type="button" aria-pressed="false">☆ ยังไม่แน่ใจ</button>
+          </div>
+          <div class="question-number" id="questionNumber">ข้อ 1</div>
+          <div class="question-prompt math-content" id="questionPrompt"></div>
+          <div class="choice-list" id="choiceList"></div>
+          <p class="choice-feedback" id="choiceFeedback" role="status"></p>
+
+          <section class="solution-panel" id="solutionPanel" hidden>
+            <div class="solution-result" id="solutionResult"></div>
+            <div class="solution-block">
+              <span>โจทย์นี้วัดอะไร</span>
+              <p class="math-content" id="solutionConcept"></p>
+            </div>
+            <div class="solution-block">
+              <span>วิธีคิดทีละขั้น</span>
+              <ol class="solution-steps math-content" id="solutionSteps"></ol>
+            </div>
+            <div class="solution-block mistake-block" id="mistakeBlock">
+              <span>ทำไมคำตอบที่เลือกจึงผิด</span>
+              <p class="math-content" id="solutionMistake"></p>
+            </div>
+            <div class="solution-two-col">
+              <div class="solution-block check-block"><span>ตรวจคำตอบอย่างไร</span><p class="math-content" id="solutionCheck"></p></div>
+              <div class="solution-block remember-block"><span>จำง่าย ๆ</span><p class="math-content" id="solutionTakeaway"></p></div>
+            </div>
+          </section>
+
+          <div class="question-actions">
+            <button class="secondary-button" id="previousButton" type="button">← ข้อก่อนหน้า</button>
+            <button class="primary-button check-button" id="checkButton" type="button" disabled>ตรวจคำตอบ</button>
+            <button class="primary-button next-button" id="nextButton" type="button" hidden>ข้อต่อไป →</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="screen result-screen" id="resultScreen">
+      <div class="result-hero">
+        <span class="eyebrow">ฝึกระดับ 1 สำเร็จแล้ว</span>
+        <h1 id="resultGreeting">ทำได้ดีมาก</h1>
+        <p>คะแนนเป็นเพียงจุดเริ่มต้น สิ่งสำคัญคือรู้ว่าครั้งต่อไปควรพัฒนาตรงไหน</p>
+        <div class="score-ring"><strong id="scorePercent">0%</strong><span id="scoreFraction">0 จาก 30 ข้อ</span><small id="scorePoints">0 จาก 60 คะแนน</small></div>
+        <div class="sync-message" id="syncMessage">กำลังบันทึกผลให้คุณครู…</div>
+      </div>
+      <div class="result-content">
+        <section class="result-card">
+          <div class="section-heading"><div><span class="step-label">ภาพรวม</span><h2>ความเข้าใจรายบท</h2></div></div>
+          <div class="topic-results" id="topicResults"></div>
+        </section>
+        <section class="result-card next-practice-card">
+          <div><span class="step-label">ก้าวต่อไป</span><h2 id="nextAdviceTitle">ทบทวนจุดที่ยังไม่มั่นใจ</h2><p id="nextAdviceText"></p></div>
+          <div class="result-actions">
+            <button class="primary-button" id="reviewMistakesButton" type="button">ทบทวนข้อที่ผิด</button>
+            <button class="secondary-button" id="homeButton" type="button">กลับหน้าแรก</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="screen teacher-screen" id="teacherScreen">
+      <div class="teacher-header">
+        <button class="exit-button" id="teacherBack" type="button">← กลับหน้าแรก</button>
+        <div><span class="eyebrow">ระบบครูผู้ฝึก</span><h1>พัฒนาการนักเรียน</h1><p>สรุปจากแบบฝึกที่นักเรียนทำเสร็จแล้ว</p></div>
+        <button class="secondary-button" id="refreshTeacher" type="button">โหลดข้อมูลใหม่</button>
+      </div>
+      <div class="teacher-toolbar">
+        <label class="search-box"><span>ค้นหานักเรียน</span><input id="teacherSearch" type="search" placeholder="ชื่อ ห้อง หรือเลขที่"></label>
+        <div class="teacher-summary">
+          <span><small>นักเรียน</small><strong id="teacherStudentCount">0</strong></span>
+          <span><small>รอบฝึกทั้งหมด</small><strong id="teacherAttemptCount">0</strong></span>
+          <span><small>คะแนนเฉลี่ย</small><strong id="teacherAverage">0%</strong></span>
+        </div>
+      </div>
+      <div class="teacher-content">
+        <div class="student-list" id="teacherStudentList"><div class="loading-card">กำลังโหลดข้อมูลจาก Google Sheets…</div></div>
+        <aside class="student-detail" id="studentDetail"><div class="empty-detail"><span>เลือกนักเรียน</span><p>เพื่อดูคะแนนย้อนหลัง พัฒนาการ และความเข้าใจรายบท</p></div></aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="exitModal" hidden>
+    <div class="modal-card">
+      <div class="modal-icon">↩</div>
+      <h2>ต้องการออกจากแบบฝึกหรือไม่?</h2>
+      <p>ระบบบันทึกความคืบหน้าไว้แล้ว สามารถกลับมาฝึกต่อได้ทุกเมื่อ</p>
+      <div class="modal-actions">
+        <button class="secondary-button" id="stayButton" type="button">ฝึกต่อ</button>
+        <button class="primary-button" id="saveExitButton" type="button">บันทึกและออก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="teacherLoginModal" hidden>
+    <form class="modal-card teacher-login-card" id="teacherLoginForm">
+      <div class="modal-icon">ครู</div>
+      <h2>เข้าสู่ระบบครูผู้ฝึก</h2>
+      <p>กรอกรหัสครูเพื่อดูข้อมูลพัฒนาการของนักเรียน</p>
+      <label><span>รหัสครู</span><input id="teacherCode" type="password" inputmode="numeric" autocomplete="current-password" required></label>
+      <p class="form-error" id="teacherLoginError"></p>
+      <div class="modal-actions">
+        <button class="secondary-button" id="cancelTeacherLogin" type="button">ยกเลิก</button>
+        <button class="primary-button" type="submit">ดูพัฒนาการ</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

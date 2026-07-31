@@ -1,0 +1,10 @@
+{
+  "name": "KNT Talent - ฝึกคิดทีละข้อ",
+  "short_name": "KNT Talent",
+  "description": "เว็บฝึกคณิตศาสตร์คนเก่งในโรงเรียนท้องถิ่น พร้อมเฉลยละเอียดและติดตามพัฒนาการ",
+  "lang": "th",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fbfbfe",
+  "theme_color": "#6f5ae8"
+}
