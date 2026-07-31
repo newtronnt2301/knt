@@ -2,7 +2,7 @@
   "use strict";
 
   const SHEET_URL = "https://script.google.com/macros/s/AKfycbw3eNbBuhg-P-dLxBeZkYIggp0FW9GM1TdL1wVd1XeyxvwRTzw4BcMNiPBEyyWH1le-/exec";
-  const SESSION_KEY = "kntTalentSessionV1";
+  const SESSION_KEY = "kntTalentSessionV2";
   const PROFILE_KEY = "kntTalentProfileV1";
   const LETTERS = ["ก", "ข", "ค", "ง"];
   const questionsById = new Map(window.TALENT_QUESTIONS.map((q) => [q.id, q]));
@@ -58,7 +58,7 @@
     const optionOrders = {};
     ids.forEach((id) => { optionOrders[id] = shuffleIndexes(questionsById.get(id).options.length); });
     return {
-      version: 1,
+      version: 2,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       level: 1,
       student,
@@ -66,7 +66,6 @@
       optionOrders,
       current: 0,
       answers: {},
-      checked: {},
       flagged: {},
       timeByQuestion: {},
       startedAt: new Date().toISOString(),
@@ -79,7 +78,7 @@
   function loadStoredSession() {
     try {
       const value = JSON.parse(localStorage.getItem(SESSION_KEY));
-      if (!value || value.version !== 1 || !Array.isArray(value.questionOrder)) return null;
+      if (!value || value.version !== 2 || !Array.isArray(value.questionOrder)) return null;
       if (!value.questionOrder.every((id) => questionsById.has(id))) return null;
       return value;
     } catch {
@@ -150,7 +149,7 @@
     $("topicMiniList").innerHTML = Object.entries(window.TALENT_TOPICS)
       .filter(([key]) => topicCounts[key])
       .map(([key, topic]) => {
-        const done = session.questionOrder.filter((id) => questionsById.get(id).topic === key && session.checked[id]).length;
+      const done = session.questionOrder.filter((id) => questionsById.get(id).topic === key && session.answers[id] !== undefined).length;
         return `<div class="topic-mini ${key === activeTopic ? "active" : ""}"><i></i><span>${escapeHtml(topic.short)}</span><b>${done}/${topicCounts[key]}</b></div>`;
       }).join("");
   }
@@ -159,15 +158,16 @@
     const question = currentQuestion();
     const id = question.id;
     const selected = session.answers[id];
-    const checked = Boolean(session.checked[id]);
+    const reviewing = session.reviewMode === "solutions";
+    const checked = reviewing;
     const order = session.optionOrders[id];
     const total = session.questionOrder.length;
-    const answered = Object.keys(session.checked).filter((key) => session.questionOrder.includes(key)).length;
+    const answered = Object.keys(session.answers).filter((key) => session.questionOrder.includes(key)).length;
 
     $("questionCounter").textContent = `ข้อ ${session.current + 1} จาก ${total}`;
-    $("answeredCounter").textContent = `ตรวจแล้ว ${answered} ข้อ`;
+    $("answeredCounter").textContent = `ตอบแล้ว ${answered} ข้อ`;
     $("progressBar").style.width = `${(answered / total) * 100}%`;
-    $("questionNumber").textContent = session.reviewMode ? `ทบทวนข้อที่ ${session.current + 1}` : `ข้อ ${session.current + 1}`;
+    $("questionNumber").textContent = reviewing ? `เฉลยข้อที่ ${session.current + 1}` : `ข้อ ${session.current + 1}`;
     $("questionPrompt").textContent = question.prompt;
     $("topicChip").textContent = window.TALENT_TOPICS[question.topic].label;
     $("difficultyChip").textContent = question.difficulty === 1 ? "พื้นฐานสำคัญ" : "ประยุกต์เบื้องต้น";
@@ -197,10 +197,11 @@
     });
     $("choiceFeedback").textContent = "";
     $("previousButton").disabled = session.current === 0;
-    $("checkButton").hidden = checked;
-    $("checkButton").disabled = selected === undefined;
-    $("nextButton").hidden = !checked;
-    $("nextButton").textContent = session.current === total - 1 ? "ดูผลการฝึก →" : "ข้อต่อไป →";
+    $("checkButton").hidden = true;
+    $("nextButton").hidden = selected === undefined;
+    $("nextButton").textContent = session.current === total - 1
+      ? (reviewing ? "กลับหน้าสรุป →" : "ส่งคำตอบและดูผล →")
+      : (reviewing ? "ดูเฉลยข้อต่อไป →" : "ข้อต่อไป →");
     renderTopicMiniList();
     renderSolution(question, checked, selected);
     renderMath($("questionShell") || document.querySelector(".question-shell"));
@@ -209,7 +210,7 @@
 
   function selectAnswer(answer) {
     const id = currentQuestion().id;
-    if (session.checked[id]) return;
+    if (session.reviewMode === "solutions") return;
     session.answers[id] = answer;
     persistSession();
     renderQuestion();
@@ -229,19 +230,6 @@
     $("solutionMistake").textContent = correct ? "" : (question.mistakes[selected] || "ลองเปรียบเทียบวิธีคิดของตนเองกับขั้นตอนด้านบนอีกครั้ง");
     $("solutionCheck").textContent = question.check;
     $("solutionTakeaway").textContent = question.takeaway;
-  }
-
-  function checkAnswer() {
-    const question = currentQuestion();
-    if (session.answers[question.id] === undefined) {
-      $("choiceFeedback").textContent = "เลือกคำตอบก่อน แล้วค่อยกดตรวจคำตอบ";
-      return;
-    }
-    saveElapsed();
-    session.checked[question.id] = true;
-    persistSession();
-    renderQuestion();
-    setTimeout(() => $("solutionPanel").scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
   }
 
   function moveQuestion(direction) {
@@ -296,8 +284,7 @@
     $("nextAdviceText").textContent = weakest
       ? `บทนี้ทำได้ ${weakest[1].correct} จาก ${weakest[1].total} ข้อ ลองอ่านเฉลยข้อที่ผิดซ้ำแล้วฝึกอีกครั้ง`
       : "กลับมาเริ่มชุดใหม่ได้ทุกเมื่อ";
-    const wrongCount = session.questionOrder.filter((id) => session.answers[id] !== questionsById.get(id).answer).length;
-    $("reviewMistakesButton").hidden = wrongCount === 0;
+    $("reviewMistakesButton").hidden = false;
     $("syncMessage").textContent = session.reviewMode ? "รอบทบทวนนี้ไม่คิดเป็นคะแนนพัฒนาการ" : session.synced ? "บันทึกผลให้คุณครูแล้ว" : "กำลังบันทึกผลให้คุณครู…";
     showScreen("result");
     renderMath($("resultScreen"));
@@ -354,8 +341,8 @@
     const resumable = stored && !stored.completedAt && !stored.reviewMode;
     $("resumeCard").hidden = !resumable;
     if (resumable) {
-      const done = Object.keys(stored.checked).length;
-      $("resumeText").textContent = `${stored.student.name} · ตรวจแล้ว ${done} จาก ${stored.questionOrder.length} ข้อ`;
+      const done = Object.keys(stored.answers).length;
+      $("resumeText").textContent = `${stored.student.name} · ตอบแล้ว ${done} จาก ${stored.questionOrder.length} ข้อ`;
     }
   }
 
@@ -377,10 +364,15 @@
     toast("บันทึกไว้แล้ว กลับมาทำต่อได้ทุกเมื่อ");
   }
 
-  function reviewMistakes() {
-    const wrongIds = session.questionOrder.filter((id) => session.answers[id] !== questionsById.get(id).answer);
-    if (!wrongIds.length) return;
-    beginPractice(newSession(session.student, wrongIds, true));
+  function reviewSolutions() {
+    session.reviewMode = "solutions";
+    session.current = 0;
+    persistSession();
+    questionOpenedAt = Date.now();
+    $("practiceStudentName").textContent = session.student.name;
+    showScreen("practice");
+    history.pushState({ kntTalentPractice: true }, "", location.href);
+    renderQuestion();
   }
 
   function parseSubject(subject) {
@@ -538,13 +530,13 @@
       persistSession();
       renderQuestion();
     });
-    $("checkButton").addEventListener("click", checkAnswer);
     $("previousButton").addEventListener("click", () => moveQuestion(-1));
     $("nextButton").addEventListener("click", () => {
-      if (session.current === session.questionOrder.length - 1) finishPractice();
+      if (session.current === session.questionOrder.length - 1 && session.reviewMode === "solutions") showResult();
+      else if (session.current === session.questionOrder.length - 1) finishPractice();
       else moveQuestion(1);
     });
-    $("reviewMistakesButton").addEventListener("click", reviewMistakes);
+    $("reviewMistakesButton").addEventListener("click", reviewSolutions);
     $("homeButton").addEventListener("click", () => {
       updateHomeState();
       showScreen("home");

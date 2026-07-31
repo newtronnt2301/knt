@@ -34,7 +34,7 @@
         <div class="hero-copy">
           <span class="eyebrow">คณิตศาสตร์ ม.5 · คนเก่งในโรงเรียนท้องถิ่น</span>
           <h1>เข้าใจทุกข้อ<br><span>ไม่ใช่แค่จำคำตอบ</span></h1>
-          <p>ฝึกแบบโฟกัสทีละข้อ อ่านสบายบนทุกหน้าจอ พร้อมเฉลยทีละขั้นและบอกให้รู้ว่าพลาดตรงไหน</p>
+          <p>ฝึกแบบโฟกัสทีละข้อ อ่านสบายบนทุกหน้าจอ ทำให้ครบก่อน แล้วค่อยดูคะแนนและเฉลยละเอียดภายหลัง</p>
           <div class="hero-badges">
             <span>30 ข้อปรนัย</span>
             <span>6 เนื้อหาหลัก</span>
@@ -62,7 +62,7 @@
             <span class="level-state ready">พร้อมฝึก</span>
             <strong>ตั้งหลักสนามจริง</strong>
             <p>ทบทวนพื้นฐานสำคัญและฝึกคิดเป็นขั้นตอน</p>
-            <span class="level-meta">30 ข้อ · เฉลยทันที</span>
+            <span class="level-meta">30 ข้อ · เฉลยหลังส่ง</span>
           </button>
           <button class="level-card locked" type="button" disabled>
             <span class="level-number">02</span>
@@ -103,10 +103,10 @@
       </section>
 
       <section class="how-it-works">
-        <div class="section-heading"><div><span class="step-label">วิธีฝึก</span><h2>คิด ตรวจ เข้าใจ แล้วค่อยไปต่อ</h2></div></div>
+        <div class="section-heading"><div><span class="step-label">วิธีฝึก</span><h2>คิดต่อเนื่อง แล้วทบทวนหลังส่ง</h2></div></div>
         <div class="how-grid">
           <article><span>1</span><strong>โฟกัสทีละข้อ</strong><p>ไม่มีโจทย์หลายข้อรบกวนสายตา เลือกคำตอบเมื่อพร้อม</p></article>
-          <article><span>2</span><strong>รู้ทันทีว่าพลาดตรงไหน</strong><p>เฉลยอธิบายตามตัวเลือกที่นักเรียนเลือกจริง</p></article>
+          <article><span>2</span><strong>ไม่เฉลยระหว่างทำ</strong><p>ฝึกทำต่อเนื่องเหมือนสนามจริง โดยยังไม่เห็นว่าข้อใดถูกหรือผิด</p></article>
           <article><span>3</span><strong>เห็นพัฒนาการ</strong><p>ระบบสรุปความแม่นยำรายบทให้ครูดูหลังฝึกจบ</p></article>
         </div>
       </section>
@@ -126,7 +126,7 @@
         <aside class="focus-side">
           <div class="focus-level"><span>LEVEL</span><strong>01</strong><small>ตั้งหลักสนามจริง</small></div>
           <div class="topic-mini-list" id="topicMiniList"></div>
-          <p class="focus-note">ไม่ต้องรีบ ใช้เวลาทำความเข้าใจให้เต็มที่</p>
+          <p class="focus-note">ระบบจะแสดงคะแนนและเฉลยละเอียดหลังส่งคำตอบครบชุด</p>
         </aside>
 
         <article class="question-shell">
@@ -162,7 +162,7 @@
 
           <div class="question-actions">
             <button class="secondary-button" id="previousButton" type="button">← ข้อก่อนหน้า</button>
-            <button class="primary-button check-button" id="checkButton" type="button" disabled>ตรวจคำตอบ</button>
+            <button class="primary-button check-button" id="checkButton" type="button" hidden disabled>ตรวจคำตอบ</button>
             <button class="primary-button next-button" id="nextButton" type="button" hidden>ข้อต่อไป →</button>
           </div>
         </article>
@@ -185,7 +185,7 @@
         <section class="result-card next-practice-card">
           <div><span class="step-label">ก้าวต่อไป</span><h2 id="nextAdviceTitle">ทบทวนจุดที่ยังไม่มั่นใจ</h2><p id="nextAdviceText"></p></div>
           <div class="result-actions">
-            <button class="primary-button" id="reviewMistakesButton" type="button">ทบทวนข้อที่ผิด</button>
+            <button class="primary-button" id="reviewMistakesButton" type="button">ดูเฉลยละเอียดทุกข้อ</button>
             <button class="secondary-button" id="homeButton" type="button">กลับหน้าแรก</button>
           </div>
         </section>
