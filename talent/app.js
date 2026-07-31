@@ -5,12 +5,17 @@
   const SESSION_KEY = "kntTalentSessionV2";
   const PROFILE_KEY = "kntTalentProfileV1";
   const LETTERS = ["ก", "ข", "ค", "ง"];
+  const LEVELS = {
+    1: { name: "ตั้งหลักสนามจริง" },
+    2: { name: "ใกล้สนามจริง" }
+  };
   const questionsById = new Map(window.TALENT_QUESTIONS.map((q) => [q.id, q]));
   const $ = (id) => document.getElementById(id);
   let session = null;
   let questionOpenedAt = Date.now();
   let teacherStudents = [];
   let selectedTeacherKey = "";
+  let selectedLevel = 1;
   let toastTimer = null;
 
   const screens = {
@@ -53,14 +58,15 @@
     return values;
   }
 
-  function newSession(student, questionIds = window.TALENT_QUESTIONS.map((q) => q.id), reviewMode = false) {
-    const ids = reviewMode ? [...questionIds] : [...questionIds].sort(() => Math.random() - 0.5);
+  function newSession(student, level = selectedLevel) {
+    const questionIds = window.TALENT_QUESTIONS.filter((q) => q.level === level).map((q) => q.id);
+    const ids = [...questionIds].sort(() => Math.random() - 0.5);
     const optionOrders = {};
     ids.forEach((id) => { optionOrders[id] = shuffleIndexes(questionsById.get(id).options.length); });
     return {
       version: 2,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      level: 1,
+      level,
       student,
       questionOrder: ids,
       optionOrders,
@@ -71,7 +77,7 @@
       startedAt: new Date().toISOString(),
       completedAt: null,
       synced: false,
-      reviewMode
+      reviewMode: false
     };
   }
 
@@ -134,6 +140,7 @@
     questionOpenedAt = Date.now();
     persistSession();
     $("practiceStudentName").textContent = session.student.name;
+    updateLevelLabels(session.level);
     showScreen("practice");
     history.pushState({ kntTalentPractice: true }, "", location.href);
     renderQuestion();
@@ -170,7 +177,9 @@
     $("questionNumber").textContent = reviewing ? `เฉลยข้อที่ ${session.current + 1}` : `ข้อ ${session.current + 1}`;
     $("questionPrompt").textContent = question.prompt;
     $("topicChip").textContent = window.TALENT_TOPICS[question.topic].label;
-    $("difficultyChip").textContent = question.difficulty === 1 ? "พื้นฐานสำคัญ" : "ประยุกต์เบื้องต้น";
+    $("difficultyChip").textContent = question.difficulty === 1
+      ? "พื้นฐานสำคัญ"
+      : question.difficulty === 2 ? "ประยุกต์" : "โจทย์หลายขั้น";
     $("flagButton").classList.toggle("active", Boolean(session.flagged[id]));
     $("flagButton").setAttribute("aria-pressed", String(Boolean(session.flagged[id])));
     $("flagButton").textContent = session.flagged[id] ? "★ ทำเครื่องหมายไว้" : "☆ ยังไม่แน่ใจ";
@@ -268,6 +277,7 @@
   function showResult() {
     const stats = calculateStats();
     const percent = Math.round((stats.correct / stats.total) * 100);
+    $("resultLevelLabel").textContent = `ฝึกระดับ ${session.level} สำเร็จแล้ว`;
     $("resultGreeting").textContent = percent >= 80 ? "ยอดเยี่ยม เห็นวิธีคิดชัดขึ้นแล้ว" : percent >= 60 ? "ทำได้ดี กำลังไปถูกทาง" : "เริ่มเห็นจุดที่ควรเสริมแล้ว";
     $("scorePercent").textContent = `${percent}%`;
     $("scoreFraction").textContent = `${stats.correct} จาก ${stats.total} ข้อ`;
@@ -294,12 +304,12 @@
     return Math.max(1, Math.round(Object.values(activeSession.timeByQuestion).reduce((sum, value) => sum + value, 0) / 1000));
   }
 
-  async function saveSheetRow(subject, score, total) {
+  async function saveSheetRow(activeSession, subject, score, total) {
     const params = new URLSearchParams({
       action: "exam_save",
-      room: session.student.room,
-      no: session.student.no,
-      name: session.student.name,
+      room: activeSession.student.room,
+      no: activeSession.student.no,
+      name: activeSession.student.name,
       subject,
       score: String(score),
       total: String(total)
@@ -308,18 +318,19 @@
   }
 
   async function syncCompletedAttempt() {
-    const stats = calculateStats();
-    const duration = durationSeconds(session);
+    const completedSession = session;
+    const stats = calculateStats(completedSession);
+    const duration = durationSeconds(completedSession);
     setCloudStatus("syncing");
     try {
       const rows = [
-        saveSheetRow(`KNT-TALENT|v1|L1|summary|${session.id}|${duration}`, stats.correct, stats.total),
+        saveSheetRow(completedSession, `KNT-TALENT|v1|L${completedSession.level}|summary|${completedSession.id}|${duration}`, stats.correct, stats.total),
         ...Object.entries(stats.topics).map(([topic, value]) =>
-          saveSheetRow(`KNT-TALENT|v1|L1|topic:${topic}|${session.id}|${duration}`, value.correct, value.total))
+          saveSheetRow(completedSession, `KNT-TALENT|v1|L${completedSession.level}|topic:${topic}|${completedSession.id}|${duration}`, value.correct, value.total))
       ];
       await Promise.all(rows);
-      session.synced = true;
-      persistSession();
+      completedSession.synced = true;
+      if (session?.id === completedSession.id) persistSession();
       $("syncMessage").textContent = "บันทึกผลให้คุณครูแล้ว";
       setCloudStatus("saved");
     } catch {
@@ -344,6 +355,22 @@
       const done = Object.keys(stored.answers).length;
       $("resumeText").textContent = `${stored.student.name} · ตอบแล้ว ${done} จาก ${stored.questionOrder.length} ข้อ`;
     }
+  }
+
+  function selectLevel(level) {
+    if (!LEVELS[level]) return;
+    selectedLevel = level;
+    document.querySelectorAll(".level-card[data-level]").forEach((card) => {
+      card.classList.toggle("selected", Number(card.dataset.level) === level);
+    });
+    $("startButtonText").textContent = `เริ่มฝึกระดับ ${level}`;
+  }
+
+  function updateLevelLabels(level) {
+    const info = LEVELS[level] || LEVELS[1];
+    $("practiceLevelLabel").textContent = `ระดับ ${level}`;
+    $("focusLevelNumber").textContent = String(level).padStart(2, "0");
+    $("focusLevelName").textContent = info.name;
   }
 
   function requestExit() {
@@ -392,7 +419,7 @@
       });
       const student = studentMap.get(key);
       if (!student.attempts.has(parsed.attemptId)) student.attempts.set(parsed.attemptId, {
-        id: parsed.attemptId, timestamp: row.timestamp, duration: parsed.duration, topics: {}
+        id: parsed.attemptId, level: parsed.level, timestamp: row.timestamp, duration: parsed.duration, topics: {}
       });
       const attempt = student.attempts.get(parsed.attemptId);
       const score = Number(row.score) || 0;
@@ -411,11 +438,12 @@
         .filter((attempt) => Number.isFinite(attempt.score) && attempt.total > 0)
         .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
       const latest = attempts.at(-1);
-      const percentages = attempts.map((attempt) => Math.round((attempt.score / attempt.total) * 100));
+      const comparableAttempts = latest ? attempts.filter((attempt) => attempt.level === latest.level) : [];
+      const percentages = comparableAttempts.map((attempt) => Math.round((attempt.score / attempt.total) * 100));
       const recent = percentages.slice(-3);
       const recentAverage = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : 0;
       const growth = percentages.length > 1 ? recentAverage - percentages[0] : 0;
-      return { ...student, attempts, latest, latestPercent: percentages.at(-1) || 0, recentAverage, growth };
+      return { ...student, attempts, latest, latestLevel: latest?.level || "L1", latestPercent: percentages.at(-1) || 0, recentAverage, growth };
     }).sort((a, b) => b.latestPercent - a.latestPercent || a.name.localeCompare(b.name, "th"));
   }
 
@@ -428,7 +456,7 @@
       teacherStudents = buildTeacherStudents(Array.isArray(data.list) ? data.list : []);
       renderTeacherList();
       if (teacherStudents.length) selectTeacherStudent(selectedTeacherKey || teacherStudents[0].key);
-      else $("studentDetail").innerHTML = '<div class="empty-detail"><span>ยังไม่มีผลการฝึก</span><p>เมื่อนักเรียนทำระดับ 1 จบ ข้อมูลจะปรากฏที่นี่</p></div>';
+      else $("studentDetail").innerHTML = '<div class="empty-detail"><span>ยังไม่มีผลการฝึก</span><p>เมื่อนักเรียนทำแบบฝึกระดับใดระดับหนึ่งจบ ข้อมูลจะปรากฏที่นี่</p></div>';
     } catch {
       $("teacherStudentList").innerHTML = '<div class="loading-card">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วกด “โหลดข้อมูลใหม่”</div>';
       toast("ยังโหลดข้อมูลครูไม่ได้");
@@ -451,7 +479,7 @@
       <button class="student-row ${student.key === selectedTeacherKey ? "active" : ""}" type="button" data-key="${escapeHtml(student.key)}">
         <span class="student-avatar">${escapeHtml(student.name.slice(0, 1) || "?")}</span>
         <span><strong>${escapeHtml(student.name)}</strong><small>${escapeHtml(student.room)} · เลขที่ ${escapeHtml(student.no)} · ${student.attempts.length} รอบ</small></span>
-        <span class="student-score"><b>${student.latestPercent}%</b><small class="${student.growth > 0 ? "growth-up" : student.growth < 0 ? "growth-down" : ""}">${student.growth > 0 ? "+" : ""}${student.growth}%</small></span>
+        <span class="student-score"><b>${student.latestPercent}%</b><small>ระดับ ${escapeHtml(student.latestLevel.replace("L", ""))}</small></span>
       </button>`).join("") : `<div class="loading-card">${teacherStudents.length ? "ไม่พบนักเรียนที่ค้นหา" : "ยังไม่มีผลการฝึกในระบบ"}</div>`;
     $("teacherStudentList").querySelectorAll(".student-row").forEach((row) =>
       row.addEventListener("click", () => selectTeacherStudent(row.dataset.key)));
@@ -463,7 +491,8 @@
     selectedTeacherKey = key;
     renderTeacherList();
     const topicTotals = {};
-    student.attempts.slice(-3).forEach((attempt) => Object.entries(attempt.topics).forEach(([topic, value]) => {
+    const comparableAttempts = student.attempts.filter((attempt) => attempt.level === student.latestLevel);
+    comparableAttempts.slice(-3).forEach((attempt) => Object.entries(attempt.topics).forEach(([topic, value]) => {
       if (!topicTotals[topic]) topicTotals[topic] = { score: 0, total: 0 };
       topicTotals[topic].score += value.score;
       topicTotals[topic].total += value.total;
@@ -471,11 +500,11 @@
     const growthClass = student.growth > 0 ? "growth-up" : student.growth < 0 ? "growth-down" : "";
     $("studentDetail").innerHTML = `
       <div class="detail-head"><div><h2>${escapeHtml(student.name)}</h2><p>${escapeHtml(student.room)} · เลขที่ ${escapeHtml(student.no)}</p></div>
-        <div class="detail-latest"><small>ล่าสุด</small><strong>${student.latestPercent}%</strong></div></div>
+        <div class="detail-latest"><small>ล่าสุด · ระดับ ${escapeHtml(student.latestLevel.replace("L", ""))}</small><strong>${student.latestPercent}%</strong></div></div>
       <div class="detail-grid">
         <div class="detail-stat"><span>ฝึกแล้ว</span><strong>${student.attempts.length} รอบ</strong></div>
-        <div class="detail-stat"><span>เฉลี่ย 3 รอบล่าสุด</span><strong>${student.recentAverage}%</strong></div>
-        <div class="detail-stat"><span>พัฒนาการเทียบครั้งแรก</span><strong class="${growthClass}">${student.growth > 0 ? "+" : ""}${student.growth}%</strong></div>
+        <div class="detail-stat"><span>เฉลี่ย 3 รอบล่าสุด · ระดับ ${escapeHtml(student.latestLevel.replace("L", ""))}</span><strong>${student.recentAverage}%</strong></div>
+        <div class="detail-stat"><span>พัฒนาการระดับเดียวกัน</span><strong class="${growthClass}">${student.growth > 0 ? "+" : ""}${student.growth}%</strong></div>
       </div>
       <section class="detail-section"><h3>ความเข้าใจรายบท (ไม่เกิน 3 รอบล่าสุด)</h3>
         ${Object.entries(window.TALENT_TOPICS).map(([key, topic]) => {
@@ -488,7 +517,7 @@
         ${[...student.attempts].reverse().map((attempt, index) => {
           const pct = Math.round((attempt.score / attempt.total) * 100);
           const date = attempt.timestamp ? new Date(attempt.timestamp).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "ไม่ระบุเวลา";
-          return `<div class="attempt-item"><span><b>${index === 0 ? "รอบล่าสุด" : `ย้อนหลัง ${index} รอบ`}</b><small>${escapeHtml(date)} · ${Math.max(1, Math.round(attempt.duration / 60))} นาที</small></span><strong>${attempt.score}/${attempt.total} · ${pct}%</strong></div>`;
+          return `<div class="attempt-item"><span><b>${index === 0 ? "รอบล่าสุด" : `ย้อนหลัง ${index} รอบ`} · ระดับ ${escapeHtml(attempt.level.replace("L", ""))}</b><small>${escapeHtml(date)} · ${Math.max(1, Math.round(attempt.duration / 60))} นาที</small></span><strong>${attempt.score}/${attempt.total} · ${pct}%</strong></div>`;
         }).join("")}
       </div></section>`;
   }
@@ -501,6 +530,9 @@
   }
 
   function bindEvents() {
+    document.querySelectorAll(".level-card[data-level]").forEach((card) => {
+      card.addEventListener("click", () => selectLevel(Number(card.dataset.level)));
+    });
     $("studentForm").addEventListener("submit", (event) => {
       event.preventDefault();
       const student = {
@@ -510,7 +542,7 @@
       };
       if (!student.room || !student.no || !student.name) return;
       localStorage.setItem(PROFILE_KEY, JSON.stringify(student));
-      beginPractice(newSession(student));
+      beginPractice(newSession(student, selectedLevel));
     });
     $("resumeButton").addEventListener("click", () => {
       const stored = loadStoredSession();
@@ -579,6 +611,7 @@
 
   function init() {
     bindEvents();
+    selectLevel(1);
     updateHomeState();
     renderMath(document.body);
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {

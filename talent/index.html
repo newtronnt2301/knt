@@ -54,7 +54,7 @@
       <section class="start-panel">
         <div class="section-heading">
           <div><span class="step-label">ขั้นที่ 1</span><h2>เลือกระดับที่ต้องการฝึก</h2></div>
-          <p>ระดับ 1 เปิดให้ทดลองแล้ว ส่วนระดับถัดไปจะเพิ่มภายหลัง</p>
+          <p>เริ่มจากระดับ 1 เพื่อวางพื้นฐาน หรือเลือกระดับ 2 เพื่อฝึกโจทย์หลายขั้นใกล้สนามจริง</p>
         </div>
         <div class="level-grid">
           <button class="level-card selected" type="button" data-level="1">
@@ -64,12 +64,12 @@
             <p>ทบทวนพื้นฐานสำคัญและฝึกคิดเป็นขั้นตอน</p>
             <span class="level-meta">30 ข้อ · เฉลยหลังส่ง</span>
           </button>
-          <button class="level-card locked" type="button" disabled>
+          <button class="level-card" type="button" data-level="2">
             <span class="level-number">02</span>
-            <span class="level-state">เร็ว ๆ นี้</span>
+            <span class="level-state ready">พร้อมฝึก</span>
             <strong>ใกล้สนามจริง</strong>
             <p>โจทย์หลายขั้นและตัวเลือกที่วัดความเข้าใจ</p>
-            <span class="level-meta">กำลังจัดทำ</span>
+            <span class="level-meta">30 ข้อ · เฉลยหลังส่ง</span>
           </button>
           <button class="level-card locked" type="button" disabled>
             <span class="level-number">03</span>
@@ -90,7 +90,7 @@
             <label><span>ห้องเรียน</span><input id="studentRoom" name="room" placeholder="เช่น ม.5/1" autocomplete="organization-title" required></label>
             <label><span>เลขที่</span><input id="studentNo" name="no" inputmode="numeric" placeholder="เช่น 12" autocomplete="off" required></label>
             <label class="name-field"><span>ชื่อ-นามสกุล</span><input id="studentName" name="name" placeholder="ชื่อของนักเรียน" autocomplete="name" required></label>
-            <button class="primary-button start-button" type="submit"><span>เริ่มฝึกระดับ 1</span><b>→</b></button>
+            <button class="primary-button start-button" type="submit"><span id="startButtonText">เริ่มฝึกระดับ 1</span><b>→</b></button>
           </form>
           <div class="resume-card" id="resumeCard" hidden>
             <div><span>แบบฝึกที่ทำค้างไว้</span><strong id="resumeText"></strong><small>คำตอบทั้งหมดถูกบันทึกอยู่ในเครื่องนี้</small></div>
@@ -119,17 +119,17 @@
           <div class="practice-progress-meta"><span id="questionCounter">ข้อ 1 จาก 30</span><span id="answeredCounter">ตอบแล้ว 0 ข้อ</span></div>
           <div class="progress-track"><i id="progressBar"></i></div>
         </div>
-        <div class="practice-student"><span id="practiceStudentName"></span><small>ระดับ 1</small></div>
+        <div class="practice-student"><span id="practiceStudentName"></span><small id="practiceLevelLabel">ระดับ 1</small></div>
       </div>
 
       <div class="focus-layout">
         <aside class="focus-side">
-          <div class="focus-level"><span>LEVEL</span><strong>01</strong><small>ตั้งหลักสนามจริง</small></div>
+          <div class="focus-level"><span>LEVEL</span><strong id="focusLevelNumber">01</strong><small id="focusLevelName">ตั้งหลักสนามจริง</small></div>
           <div class="topic-mini-list" id="topicMiniList"></div>
           <p class="focus-note">ระบบจะแสดงคะแนนและเฉลยละเอียดหลังส่งคำตอบครบชุด</p>
         </aside>
 
-        <article class="question-shell">
+        <article class="question-shell" id="questionShell">
           <div class="question-meta">
             <span class="topic-chip" id="topicChip">เซต</span>
             <span class="difficulty-chip" id="difficultyChip">พื้นฐาน</span>
@@ -171,7 +171,7 @@
 
     <section class="screen result-screen" id="resultScreen">
       <div class="result-hero">
-        <span class="eyebrow">ฝึกระดับ 1 สำเร็จแล้ว</span>
+        <span class="eyebrow" id="resultLevelLabel">ฝึกระดับ 1 สำเร็จแล้ว</span>
         <h1 id="resultGreeting">ทำได้ดีมาก</h1>
         <p>คะแนนเป็นเพียงจุดเริ่มต้น สิ่งสำคัญคือรู้ว่าครั้งต่อไปควรพัฒนาตรงไหน</p>
         <div class="score-ring"><strong id="scorePercent">0%</strong><span id="scoreFraction">0 จาก 30 ข้อ</span><small id="scorePoints">0 จาก 60 คะแนน</small></div>
