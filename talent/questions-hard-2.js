@@ -1,5 +1,9 @@
 (() => {
-  const commonMistakes = (answer) => [0, 1, 2, 3].map((index) => index === answer ? "" : "คำตอบนี้เกิดจากการใช้ข้อมูลหรือเงื่อนไขไม่ครบ ลองเทียบกับวิธีคิดทีละขั้นด้านล่าง");
+  const commonMistakes = (item) => item.options.map((option, index) => {
+    if (index === item.answer) return "";
+    const startingStep = item.steps[Math.min(index, item.steps.length - 1)];
+    return `ตัวเลือก ${option} ยังไม่ผ่านจุดตรวจ “${item.check}” จุดที่ควรย้อนดูคือ ${startingStep} แล้วคำนวณตามลำดับจนจบ`;
+  });
   const items = [
     {id:"L3B-SET-01",topic:"set",prompt:"ในห้องหนึ่งมีนักเรียน 45 คน ชอบคณิตศาสตร์ 28 คน ชอบวิทยาศาสตร์ 24 คน และชอบทั้งสองวิชา 12 คน นักเรียนที่ไม่ชอบทั้งสองวิชามีกี่คน",options:["3","5","7","9"],answer:1,concept:"หลักบวกลบรวมและส่วนเติมเต็มของยูเนียน",steps:["หาจำนวนที่ชอบอย่างน้อยหนึ่งวิชา: \\(28+24-12=40\\)","นักเรียนทั้งหมดมี 45 คน","ดังนั้นผู้ที่ไม่ชอบทั้งสองวิชามี \\(45-40=5\\) คน"],check:"แยกเป็นคณิตอย่างเดียว 16 คน วิทย์อย่างเดียว 12 คน ทั้งสอง 12 คน รวม 40 คน",takeaway:"หาคนนอกยูเนียนด้วย \\(n(U)-n(A\\cup B)\\)"},
     {id:"L3B-SET-02",topic:"set",prompt:"กำหนด \\(n(A)=35\\), \\(n(B)=27\\) และ \\(n(A\\cap B)=9\\) แล้วจำนวนสมาชิกของผลต่างสมมาตร \\(A\\triangle B\\) เท่ากับเท่าใด",options:["35","44","53","62"],answer:1,concept:"ผลต่างสมมาตรคือสมาชิกที่อยู่เพียงเซตใดเซตหนึ่ง",steps:["ส่วน \\(A-B\\) มี \\(35-9=26\\) สมาชิก","ส่วน \\(B-A\\) มี \\(27-9=18\\) สมาชิก","สองส่วนไม่ซ้ำกัน จึงรวมได้ \\(26+18=44\\)"],check:"ใช้สูตร \\(n(A\\triangle B)=n(A)+n(B)-2n(A\\cap B)=44\\)",takeaway:"อินเตอร์เซกชันถูกนับในทั้งสองเซต จึงต้องลบออกสองครั้ง"},
@@ -40,7 +44,10 @@
   items.forEach((item) => {
     item.level = 3;
     item.difficulty = 3;
-    item.mistakes = item.mistakes || commonMistakes(item.answer);
+    item.mistakes = item.mistakes || commonMistakes(item);
+    item.skill = item.skill || `${item.topic}-multi-step`;
+    item.errorTypes = item.errorTypes || item.options.map((_, index) => index === item.answer ? "" : (index % 3 === 0 ? "concept" : index % 3 === 1 ? "calculation" : "condition"));
+    item.version = 2;
   });
   window.TALENT_QUESTIONS.push(...items);
 })();

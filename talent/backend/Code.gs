@@ -1,19 +1,19 @@
 const KNT_DB_ID = "1nBtGhcMbfKxYbCPLbqIR8yLxHD0k-QjFFyTJ9m4TaCE";
 const KNT_SESSION_DAYS = 30;
-const KNT_TEACHER_HASH = "a96caacc78434461b8664705cbad2a9b490aa2b61ffe78bbc87b5a3e9d607d22"; // SHA-256(newtron05)
+const KNT_TEACHER_HASH = "a96caacc78434461b8664705cbad2a9b490aa2b61ffe78bbc87b5a3e9d607d22";
 
 const KNT_TABLES = {
   Students: ["studentId", "username", "passwordHash", "salt", "fullName", "school", "grade", "room", "no", "recoveryHash", "createdAt", "status"],
   Sessions: ["tokenHash", "studentId", "expiresAt", "createdAt", "lastSeenAt"],
   TalentAttempts: ["attemptId", "studentId", "level", "mode", "paperCode", "score", "total", "durationSec", "startedAt", "completedAt", "questionIds"],
-  TalentAnswers: ["attemptId", "studentId", "questionId", "level", "topic", "skill", "selected", "correct", "isCorrect", "timeMs", "flagged", "answeredAt"],
+  TalentAnswers: ["attemptId", "studentId", "questionId", "level", "topic", "skill", "selected", "correct", "isCorrect", "timeMs", "flagged", "answeredAt", "errorType", "attemptMode", "questionVersion"],
   PaperSets: ["paperCode", "level", "questionIds", "createdBy", "createdAt", "status"]
 };
 
 function doGet(e) {
   const p = e && e.parameter ? e.parameter : {};
   try {
-    if (p.action === "health") return json_({ ok: true, service: "KNT Talent", version: 2 });
+    if (p.action === "health") return json_({ ok: true, service: "KNT Talent", version: 3 });
     if (p.action === "me") return json_({ ok: true, student: publicStudent_(requireStudent_(p.token)) });
     if (p.action === "dashboard") return json_({ ok: true, data: dashboard_(requireStudent_(p.token)) });
     if (p.action === "paper_get") return json_({ ok: true, paper: paperGet_(p.code) });
@@ -60,6 +60,10 @@ function setupTables_() {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       sheet.setFrozenRows(1);
       sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#ede9fe");
+    } else if (sheet.getLastColumn() < headers.length) {
+      const start = sheet.getLastColumn() + 1;
+      sheet.getRange(1, start, 1, headers.length - start + 1).setValues([headers.slice(start - 1)]);
+      sheet.getRange(1, start, 1, headers.length - start + 1).setFontWeight("bold").setBackground("#ede9fe");
     }
   });
 }
@@ -139,7 +143,8 @@ function attemptSubmit_(student, body) {
     return [
       clean_(attempt.id, 80), student.studentId, clean_(answer.questionId, 40), Number(attempt.level),
       clean_(answer.topic, 30), clean_(answer.skill, 160), Number(answer.selected), Number(answer.correct),
-      answer.isCorrect ? 1 : 0, Math.max(0, Number(answer.timeMs) || 0), answer.flagged ? 1 : 0, now
+      answer.isCorrect ? 1 : 0, Math.max(0, Number(answer.timeMs) || 0), answer.flagged ? 1 : 0, now,
+      clean_(answer.errorType, 30), clean_(answer.attemptMode || attempt.mode || "practice", 20), Math.max(1, Number(answer.questionVersion) || 1)
     ];
   });
   const score = answerRows.reduce(function(sum, row) { return sum + Number(row[8]); }, 0);
@@ -174,7 +179,7 @@ function dashboard_(student) {
     return { id: row[0], level: Number(row[2]), mode: row[3], paperCode: row[4], score: Number(row[5]), total: Number(row[6]), durationSec: Number(row[7]), startedAt: row[8], completedAt: row[9], questionIds: safeJson_(row[10], []) };
   });
   const answers = values_(sheet_("TalentAnswers")).filter(function(row) { return row[1] === student.studentId; }).map(function(row) {
-    return { attemptId: row[0], questionId: row[2], level: Number(row[3]), topic: row[4], skill: row[5], selected: Number(row[6]), correct: Number(row[7]), isCorrect: Number(row[8]) === 1, timeMs: Number(row[9]), flagged: Number(row[10]) === 1, answeredAt: row[11] };
+    return { attemptId: row[0], questionId: row[2], level: Number(row[3]), topic: row[4], skill: row[5], selected: Number(row[6]), correct: Number(row[7]), isCorrect: Number(row[8]) === 1, timeMs: Number(row[9]), flagged: Number(row[10]) === 1, answeredAt: row[11], errorType: row[12] || "", attemptMode: row[13] || "practice", questionVersion: Number(row[14]) || 1 };
   });
   return { student: publicStudent_(student), attempts: attempts, answers: answers };
 }
@@ -185,7 +190,7 @@ function teacherData_() {
     return { id: row[0], studentId: row[1], level: Number(row[2]), mode: row[3], paperCode: row[4], score: Number(row[5]), total: Number(row[6]), durationSec: Number(row[7]), completedAt: row[9] };
   });
   const answers = values_(sheet_("TalentAnswers")).map(function(row) {
-    return { attemptId: row[0], studentId: row[1], questionId: row[2], level: Number(row[3]), topic: row[4], skill: row[5], isCorrect: Number(row[8]) === 1, timeMs: Number(row[9]), flagged: Number(row[10]) === 1, answeredAt: row[11] };
+    return { attemptId: row[0], studentId: row[1], questionId: row[2], level: Number(row[3]), topic: row[4], skill: row[5], selected: Number(row[6]), correct: Number(row[7]), isCorrect: Number(row[8]) === 1, timeMs: Number(row[9]), flagged: Number(row[10]) === 1, answeredAt: row[11], errorType: row[12] || "", attemptMode: row[13] || "practice", questionVersion: Number(row[14]) || 1 };
   });
   return { students: students, attempts: attempts, answers: answers };
 }

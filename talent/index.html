@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
   <link rel="manifest" href="manifest.webmanifest?v=6">
 </head>
 <body>
@@ -80,7 +80,13 @@
         <article><span>พัฒนาการ</span><strong id="dashGrowth">–</strong><small>เทียบรอบแรกกับค่าเฉลี่ยล่าสุด</small></article>
       </div>
       <section class="dashboard-panel choose-practice-panel">
-        <div class="section-heading"><div><span class="step-label">เริ่มฝึก</span><h2>เลือกระดับแบบไม่ทำข้อเดิม</h2></div><p id="freshQuestionNote">ระบบจะเลือกข้อใหม่ก่อนเสมอ</p></div>
+        <div class="section-heading"><div><span class="step-label">เริ่มฝึก</span><h2>เลือกรูปแบบและระดับ</h2></div><p id="freshQuestionNote">ระบบจะเลือกข้อใหม่ก่อนเสมอ</p></div>
+        <div class="practice-mode-selector" id="practiceModeSelector" role="group" aria-label="เลือกรูปแบบการฝึก">
+          <button class="mode-option active" type="button" data-practice-mode="practice"><span>ฝึกต่อเนื่อง</span><small>ไม่จับเวลา ข้อใหม่ก่อนเสมอ</small></button>
+          <button class="mode-option" type="button" data-practice-mode="mock"><span>จำลองสอบ</span><small>จับเวลาและสรุปผลเมื่อหมดเวลา</small></button>
+          <button class="mode-option" type="button" data-practice-mode="weak"><span>แก้จุดอ่อน</span><small>ฝึกจากข้อที่เคยผิด ไม่นับปนคะแนนหลัก</small></button>
+        </div>
+        <p class="mode-help" id="practiceModeHelp">เหมาะสำหรับฝึกประจำวัน ทำต่อเนื่องและกลับมาทำต่อได้</p>
         <div class="dashboard-level-grid" id="dashboardLevelGrid"></div>
       </section>
       <div class="dashboard-columns">
@@ -180,7 +186,7 @@
           <div class="practice-progress-meta"><span id="questionCounter">ข้อ 1 จาก 30</span><span id="answeredCounter">ตอบแล้ว 0 ข้อ</span></div>
           <div class="progress-track"><i id="progressBar"></i></div>
         </div>
-        <div class="practice-student"><span id="practiceStudentName"></span><small id="practiceLevelLabel">ระดับ 1</small></div>
+        <div class="practice-student"><span id="practiceStudentName"></span><small id="practiceLevelLabel">ระดับ 1</small><small class="practice-mode-label" id="practiceModeLabel">ฝึกต่อเนื่อง</small><strong class="exam-timer" id="examTimer" hidden>90:00</strong></div>
       </div>
 
       <div class="focus-layout">
@@ -275,6 +281,10 @@
           <span><small>คะแนนเฉลี่ย</small><strong id="teacherAverage">0%</strong></span>
         </div>
       </div>
+      <section class="teacher-quality-panel">
+        <div class="section-heading"><div><span class="step-label">คุณภาพข้อสอบ</span><h2>ข้อที่ควรตรวจสอบ</h2></div><p>วิเคราะห์เมื่อมีผู้ตอบอย่างน้อย 5 ครั้ง</p></div>
+        <div class="item-quality-summary" id="teacherItemQuality"><div class="loading-card">รอข้อมูลการทำข้อสอบ</div></div>
+      </section>
       <div class="teacher-content">
         <div class="student-list" id="teacherStudentList"><div class="loading-card">กำลังโหลดข้อมูลจาก Google Sheets…</div></div>
         <aside class="student-detail" id="studentDetail"><div class="empty-detail"><span>เลือกนักเรียน</span><p>เพื่อดูคะแนนย้อนหลัง พัฒนาการ และความเข้าใจรายบท</p></div></aside>
@@ -337,8 +347,10 @@
 
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-  <script src="questions.js?v=7"></script>
-  <script src="questions-hard-2.js?v=7"></script>
-  <script src="app.js?v=7"></script>
+  <script src="questions.js?v=8"></script>
+  <script src="questions-hard-2.js?v=8"></script>
+  <script src="questions-level3-extra.js?v=8"></script>
+  <script src="questions-level12-extra.js?v=8"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

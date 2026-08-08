@@ -12,6 +12,19 @@
     2: { name: "ใกล้สนามจริง" },
     3: { name: "ฝึกคัดตัว" }
   };
+  const PRACTICE_MODES = {
+    practice: { label: "ฝึกต่อเนื่อง", help: "เหมาะสำหรับฝึกประจำวัน ทำต่อเนื่องและกลับมาทำต่อได้", minutes: 0 },
+    mock: { label: "จำลองสอบ", help: "จับเวลาเหมือนสนามจริง ระดับ 1/2/3 ให้เวลา 60/75/90 นาที", minutes: { 1: 60, 2: 75, 3: 90 } },
+    weak: { label: "แก้จุดอ่อน", help: "เลือกจากข้อที่เคยตอบผิด ผลรอบนี้ไม่นับปนคะแนนพัฒนาการหลัก", minutes: 0 },
+    paper: { label: "ชุดกระดาษ", help: "กรอกคำตอบจากชุดข้อสอบที่ครูสร้าง", minutes: 0 }
+  };
+  const ERROR_TYPE_LABELS = {
+    concept: "ยังไม่เข้าใจแนวคิด",
+    calculation: "คำนวณคลาดเคลื่อน",
+    condition: "พลาดเงื่อนไขหรือโดเมน",
+    sign: "พลาดเครื่องหมายหรือทิศทาง",
+    reading: "อ่านข้อมูลไม่ครบ"
+  };
   const FRACTION_OPERAND = String.raw`(?:\([^()]+\)|\|[^|]+\||\\sqrt(?:\{[^{}]+\}|[A-Za-z0-9]+)|(?:\\[A-Za-z]+(?:_\{[^{}]+\}|_[A-Za-z0-9]+)?[A-Za-z0-9]*|[A-Za-z0-9_]+)(?:\^\{[^{}]+\}|\^[A-Za-z0-9]+)?)`;
   const SLASH_FRACTION = new RegExp(`(${FRACTION_OPERAND})\\s*\\/\\s*(${FRACTION_OPERAND})`, "g");
 
@@ -38,6 +51,11 @@
   }
 
   function enhanceQuestionMath(question) {
+    question.skill = question.skill || `${question.topic}-core`;
+    question.version = Number(question.version) || 1;
+    question.errorTypes = Array.isArray(question.errorTypes) && question.errorTypes.length === 4
+      ? question.errorTypes
+      : question.options.map((_, index) => index === question.answer ? "" : "concept");
     ["prompt", "concept", "check", "takeaway"].forEach((field) => {
       question[field] = readableMath(question[field]);
     });
@@ -52,9 +70,12 @@
   let session = null;
   let questionOpenedAt = Date.now();
   let teacherStudents = [];
+  let teacherAnswers = [];
   let selectedTeacherKey = "";
   let selectedLevel = 1;
+  let selectedPracticeMode = "practice";
   let toastTimer = null;
+  let examTimerId = null;
   let auth = null;
   let dashboardData = { attempts: [], answers: [] };
   let pendingRegisteredAuth = null;
@@ -107,12 +128,14 @@
     const ids = mode === "paper" ? [...questionIds].slice(0, 30) : [...questionIds].sort(() => Math.random() - 0.5).slice(0, 30);
     const optionOrders = {};
     ids.forEach((id) => { optionOrders[id] = mode === "paper" ? questionsById.get(id).options.map((_, index) => index) : shuffleIndexes(questionsById.get(id).options.length); });
+    const normalizedMode = mode === "online" ? "practice" : mode;
+    const minutes = typeof PRACTICE_MODES[normalizedMode]?.minutes === "object" ? PRACTICE_MODES[normalizedMode].minutes[level] : 0;
     return {
       version: 2,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       level,
       student,
-      mode,
+      mode: normalizedMode,
       paperCode,
       questionOrder: ids,
       optionOrders,
@@ -121,6 +144,8 @@
       flagged: {},
       timeByQuestion: {},
       startedAt: new Date().toISOString(),
+      timerEndsAt: minutes ? Date.now() + minutes * 60000 : null,
+      timedOut: false,
       completedAt: null,
       synced: false,
       reviewMode: false
@@ -186,10 +211,40 @@
     questionOpenedAt = Date.now();
     persistSession();
     $("practiceStudentName").textContent = session.student.name;
+    $("practiceModeLabel").textContent = PRACTICE_MODES[session.mode]?.label || "ฝึกต่อเนื่อง";
     updateLevelLabels(session.level);
     showScreen("practice");
     history.pushState({ kntTalentPractice: true }, "", location.href);
+    startExamTimer();
     renderQuestion();
+  }
+
+  function stopExamTimer() {
+    if (examTimerId) clearInterval(examTimerId);
+    examTimerId = null;
+  }
+
+  function startExamTimer() {
+    stopExamTimer();
+    const timer = $("examTimer");
+    timer.hidden = session?.mode !== "mock" || Boolean(session.completedAt);
+    if (timer.hidden) return;
+    const update = () => {
+      const remaining = Math.max(0, Number(session.timerEndsAt || 0) - Date.now());
+      const totalSeconds = Math.ceil(remaining / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      timer.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      timer.classList.toggle("urgent", remaining <= 5 * 60000);
+      if (remaining <= 0) {
+        stopExamTimer();
+        session.timedOut = true;
+        toast("หมดเวลาจำลองสอบ ระบบส่งคำตอบที่ทำไว้แล้ว");
+        finishPractice();
+      }
+    };
+    update();
+    examTimerId = setInterval(update, 1000);
   }
 
   function renderTopicMiniList() {
@@ -338,8 +393,20 @@
     return { correct, total: activeSession.questionOrder.length, topics: stats };
   }
 
+  function inferErrorType(question, selected) {
+    if (selected === question.answer) return "";
+    if (Array.isArray(question.errorTypes) && question.errorTypes[selected]) return question.errorTypes[selected];
+    const note = String(question.mistakes?.[selected] || "");
+    if (/โดเมน|เงื่อนไข|นิยาม|ค่าที่ห้าม|ตรวจคำตอบ/.test(note)) return "condition";
+    if (/เครื่องหมาย|กลับทิศ|สลับ|บวกเป็นลบ|ลบเป็นบวก/.test(note)) return "sign";
+    if (/คำนวณ|บวกลบ|คูณ|หาร|ยกกำลัง|ถอดราก/.test(note)) return "calculation";
+    if (/อ่าน|ไม่ครบ|ละ|ลืม|เลือกข้อมูล/.test(note)) return "reading";
+    return "concept";
+  }
+
   function finishPractice() {
     saveElapsed();
+    stopExamTimer();
     session.completedAt = session.completedAt || new Date().toISOString();
     persistSession();
     showResult();
@@ -349,7 +416,8 @@
   function showResult() {
     const stats = calculateStats();
     const percent = Math.round((stats.correct / stats.total) * 100);
-    $("resultLevelLabel").textContent = `ฝึกระดับ ${session.level} สำเร็จแล้ว`;
+    const modeLabel = PRACTICE_MODES[session.mode]?.label || "ฝึกต่อเนื่อง";
+    $("resultLevelLabel").textContent = `${modeLabel} · ระดับ ${session.level} สำเร็จแล้ว`;
     $("resultGreeting").textContent = percent >= 80 ? "ยอดเยี่ยม เห็นวิธีคิดชัดขึ้นแล้ว" : percent >= 60 ? "ทำได้ดี กำลังไปถูกทาง" : "เริ่มเห็นจุดที่ควรเสริมแล้ว";
     $("scorePercent").textContent = `${percent}%`;
     $("scoreFraction").textContent = `${stats.correct} จาก ${stats.total} ข้อ`;
@@ -363,11 +431,18 @@
     }).join("");
     const weakest = Object.entries(stats.topics).sort((a, b) => (a[1].correct / a[1].total) - (b[1].correct / b[1].total))[0];
     $("nextAdviceTitle").textContent = weakest ? `แนะนำให้ทบทวน “${window.TALENT_TOPICS[weakest[0]].short}”` : "ทบทวนจุดที่ยังไม่มั่นใจ";
+    const errorCounts = {};
+    session.questionOrder.forEach((id) => {
+      const question = questionsById.get(id);
+      const type = inferErrorType(question, session.answers[id]);
+      if (type) errorCounts[type] = (errorCounts[type] || 0) + 1;
+    });
+    const commonError = Object.entries(errorCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
     $("nextAdviceText").textContent = weakest
-      ? `บทนี้ทำได้ ${weakest[1].correct} จาก ${weakest[1].total} ข้อ ลองอ่านเฉลยข้อที่ผิดซ้ำแล้วฝึกอีกครั้ง`
+      ? `บทนี้ทำได้ ${weakest[1].correct} จาก ${weakest[1].total} ข้อ${commonError ? ` และพบว่า “${ERROR_TYPE_LABELS[commonError]}” บ่อยที่สุด` : ""} ลองอ่านเฉลยข้อที่ผิดซ้ำแล้วฝึกโหมดแก้จุดอ่อน`
       : "กลับมาเริ่มชุดใหม่ได้ทุกเมื่อ";
     $("reviewMistakesButton").hidden = false;
-    $("syncMessage").textContent = session.reviewMode ? "รอบทบทวนนี้ไม่คิดเป็นคะแนนพัฒนาการ" : session.synced ? "บันทึกผลให้คุณครูแล้ว" : "กำลังบันทึกผลให้คุณครู…";
+    $("syncMessage").textContent = session.reviewMode || session.mode === "weak" ? "รอบแก้จุดอ่อนนี้แยกจากคะแนนพัฒนาการหลัก" : session.synced ? "บันทึกผลให้คุณครูแล้ว" : "กำลังบันทึกผลให้คุณครู…";
     showScreen("result");
     renderMath($("resultScreen"));
   }
@@ -422,19 +497,22 @@
               return {
                 questionId: id,
                 topic: question.topic,
-                skill: question.concept,
-                selected: completedSession.answers[id],
+                skill: question.skill,
+                selected: Number.isInteger(completedSession.answers[id]) ? completedSession.answers[id] : -1,
                 correct: question.answer,
                 isCorrect: completedSession.answers[id] === question.answer,
                 timeMs: completedSession.timeByQuestion[id] || 0,
-                flagged: Boolean(completedSession.flagged[id])
+                flagged: Boolean(completedSession.flagged[id]),
+                errorType: inferErrorType(question, completedSession.answers[id]),
+                attemptMode: completedSession.mode || "practice",
+                questionVersion: Number(question.version || 1)
               };
             })
           }
         });
         if (accountResult.dashboard) dashboardData = accountResult.dashboard;
       }
-      const rows = [
+      const rows = completedSession.mode === "weak" ? [] : [
         saveSheetRow(completedSession, `KNT-TALENT|v1|L${completedSession.level}|summary|${completedSession.id}|${duration}`, stats.correct, stats.total),
         ...Object.entries(stats.topics).map(([topic, value]) =>
           saveSheetRow(completedSession, `KNT-TALENT|v1|L${completedSession.level}|topic:${topic}|${completedSession.id}|${duration}`, value.correct, value.total))
@@ -496,6 +574,7 @@
 
   function exitToHome() {
     saveAndMark();
+    stopExamTimer();
     closeExitModal();
     if (auth) loadDashboard();
     else showScreen("auth");
@@ -503,6 +582,8 @@
   }
 
   function reviewSolutions() {
+    stopExamTimer();
+    $("examTimer").hidden = true;
     session.reviewMode = "solutions";
     session.current = 0;
     persistSession();
@@ -526,9 +607,10 @@
       if (!parsed) return;
       const key = `${row.room}|${row.no}|${row.name}`;
       if (!studentMap.has(key)) studentMap.set(key, {
-        key, room: String(row.room || ""), no: String(row.no || ""), name: String(row.name || ""), attempts: new Map()
+        key, studentId: String(row.studentId || ""), room: String(row.room || ""), no: String(row.no || ""), name: String(row.name || ""), attempts: new Map()
       });
       const student = studentMap.get(key);
+      if (!student.studentId && row.studentId) student.studentId = String(row.studentId);
       if (!student.attempts.has(parsed.attemptId)) student.attempts.set(parsed.attemptId, {
         id: parsed.attemptId, level: parsed.level, timestamp: row.timestamp, duration: parsed.duration, topics: {}
       });
@@ -560,6 +642,7 @@
 
   async function loadTeacherData() {
     $("teacherStudentList").innerHTML = '<div class="loading-card">กำลังโหลดข้อมูลจาก Google Sheets…</div>';
+    teacherAnswers = [];
     try {
       const response = await fetch(`${SHEET_URL}?action=exam_get`);
       if (!response.ok) throw new Error("load failed");
@@ -568,6 +651,7 @@
       if (teacherToken) {
         try {
           const modern = await apiGet("teacher_data", { teacherToken });
+          teacherAnswers = modern.answers || [];
           const studentMap = new Map((modern.students || []).map((student) => [student.studentId, student]));
           const answerMap = new Map();
           (modern.answers || []).forEach((answer) => {
@@ -578,9 +662,10 @@
             if (answer.isCorrect) value.score += 1;
           });
           (modern.attempts || []).forEach((attempt) => {
+            if (attempt.mode === "weak") return;
             const student = studentMap.get(attempt.studentId);
             if (!student) return;
-            const base = { timestamp: attempt.completedAt, room: student.room || student.grade, no: student.no, name: student.fullName };
+            const base = { timestamp: attempt.completedAt, studentId: student.studentId, room: student.room || student.grade, no: student.no, name: student.fullName };
             allRows.push({ ...base, subject: `KNT-TALENT|v1|L${attempt.level}|summary|${attempt.id}|${attempt.durationSec}`, score: attempt.score, total: attempt.total });
             Object.keys(window.TALENT_TOPICS).forEach((topic) => {
               const value = answerMap.get(`${attempt.id}|${topic}`);
@@ -590,6 +675,7 @@
         } catch { /* keep legacy teacher data available */ }
       }
       teacherStudents = buildTeacherStudents(allRows);
+      renderTeacherItemQuality();
       renderTeacherList();
       if (teacherStudents.length) selectTeacherStudent(selectedTeacherKey || teacherStudents[0].key);
       else $("studentDetail").innerHTML = '<div class="empty-detail"><span>ยังไม่มีผลการฝึก</span><p>เมื่อนักเรียนทำแบบฝึกระดับใดระดับหนึ่งจบ ข้อมูลจะปรากฏที่นี่</p></div>';
@@ -597,6 +683,37 @@
       $("teacherStudentList").innerHTML = '<div class="loading-card">โหลดข้อมูลไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วกด “โหลดข้อมูลใหม่”</div>';
       toast("ยังโหลดข้อมูลครูไม่ได้");
     }
+  }
+
+  function renderTeacherItemQuality() {
+    const stats = new Map();
+    teacherAnswers.filter((answer) => answer.attemptMode !== "weak").forEach((answer) => {
+      if (!questionsById.has(answer.questionId)) return;
+      if (!stats.has(answer.questionId)) stats.set(answer.questionId, { total: 0, correct: 0, times: [], choices: [0, 0, 0, 0] });
+      const value = stats.get(answer.questionId);
+      value.total += 1;
+      if (answer.isCorrect) value.correct += 1;
+      if (Number.isFinite(Number(answer.timeMs))) value.times.push(Number(answer.timeMs));
+      if (Number.isInteger(Number(answer.selected)) && Number(answer.selected) >= 0 && Number(answer.selected) < 4) value.choices[Number(answer.selected)] += 1;
+    });
+    const analyzed = [...stats.entries()].filter(([, value]) => value.total >= 5).map(([id, value]) => {
+      const question = questionsById.get(id);
+      const accuracy = Math.round((value.correct / value.total) * 100);
+      const times = value.times.sort((a, b) => a - b);
+      const medianSec = times.length ? Math.round(times[Math.floor(times.length / 2)] / 1000) : 0;
+      const unusedDistractor = value.total >= 10 && value.choices.some((count, index) => index !== question.answer && count === 0);
+      const flags = [];
+      if (accuracy < 25) flags.push("ยากเกินไป");
+      if (accuracy > 90) flags.push("ง่ายเกินไป");
+      if (unusedDistractor) flags.push("มีตัวลวงไม่ทำงาน");
+      if (medianSec > 240) flags.push("ใช้เวลานานผิดปกติ");
+      return { id, accuracy, medianSec, total: value.total, flags };
+    }).sort((a, b) => b.flags.length - a.flags.length || a.accuracy - b.accuracy);
+    if (!analyzed.length) {
+      $("teacherItemQuality").innerHTML = '<div class="loading-card">ยังมีข้อมูลไม่ถึง 5 คำตอบต่อข้อ ระบบจะเริ่มวิเคราะห์อัตโนมัติเมื่อมีข้อมูลเพียงพอ</div>';
+      return;
+    }
+    $("teacherItemQuality").innerHTML = analyzed.slice(0, 9).map((item) => `<article class="quality-card ${item.flags.length ? "" : "good"}"><strong>${escapeHtml(item.id)}</strong><small>ตอบ ${item.total} ครั้ง · ถูก ${item.accuracy}% · กลาง ${item.medianSec} วินาที</small><b>${item.flags.length ? escapeHtml(item.flags.join(" · ")) : "อยู่ในช่วงเหมาะสม"}</b></article>`).join("");
   }
 
   function renderTeacherList() {
@@ -634,6 +751,12 @@
       topicTotals[topic].total += value.total;
     }));
     const growthClass = student.growth > 0 ? "growth-up" : student.growth < 0 ? "growth-down" : "";
+    const errorCounts = {};
+    teacherAnswers.filter((answer) => answer.studentId === student.studentId && !answer.isCorrect && answer.attemptMode !== "weak").forEach((answer) => {
+      const type = answer.errorType || "concept";
+      errorCounts[type] = (errorCounts[type] || 0) + 1;
+    });
+    const commonErrors = Object.entries(errorCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     $("studentDetail").innerHTML = `
       <div class="detail-head"><div><h2>${escapeHtml(student.name)}</h2><p>${escapeHtml(student.room)} · เลขที่ ${escapeHtml(student.no)}</p></div>
         <div class="detail-latest"><small>ล่าสุด · ระดับ ${escapeHtml(student.latestLevel.replace("L", ""))}</small><strong>${student.latestPercent}%</strong></div></div>
@@ -642,6 +765,7 @@
         <div class="detail-stat"><span>เฉลี่ย 3 รอบล่าสุด · ระดับ ${escapeHtml(student.latestLevel.replace("L", ""))}</span><strong>${student.recentAverage}%</strong></div>
         <div class="detail-stat"><span>พัฒนาการระดับเดียวกัน</span><strong class="${growthClass}">${student.growth > 0 ? "+" : ""}${student.growth}%</strong></div>
       </div>
+      <section class="detail-section"><h3>รูปแบบความผิดพลาดที่ควรแก้</h3>${commonErrors.length ? commonErrors.map(([type, count]) => `<div class="plan-row"><span><strong>${escapeHtml(ERROR_TYPE_LABELS[type] || type)}</strong><small>ใช้กำหนดงานทบทวนครั้งถัดไป</small></span><b>${count} ครั้ง</b></div>`).join("") : '<div class="empty-dashboard">ยังไม่มีข้อมูลข้อผิดเพียงพอ</div>'}</section>
       <section class="detail-section"><h3>ความเข้าใจรายบท (ไม่เกิน 3 รอบล่าสุด)</h3>
         ${Object.entries(window.TALENT_TOPICS).map(([key, topic]) => {
           const value = topicTotals[key] || { score: 0, total: 0 };
@@ -741,7 +865,7 @@
     const seen = seenQuestionIds(level);
     const fresh = pool.filter((id) => !seen.has(id)).sort(() => Math.random() - 0.5);
     if (fresh.length >= count) {
-      if (level === 3 && count === 30) {
+      if (count === 30) {
         const balanced = Object.keys(window.TALENT_TOPICS).flatMap((topic) => fresh.filter((id) => questionsById.get(id).topic === topic).slice(0, 5));
         if (balanced.length === 30) return balanced.sort(() => Math.random() - 0.5);
       }
@@ -753,41 +877,74 @@
     return [...fresh, ...review].slice(0, Math.min(count, pool.length));
   }
 
+  function chooseWeakQuestionIds(level, count = 30) {
+    const latest = new Map();
+    (dashboardData.answers || []).filter((answer) => Number(answer.level) === level).forEach((answer) => latest.set(answer.questionId, answer));
+    const wrongCounts = {};
+    (dashboardData.answers || []).filter((answer) => Number(answer.level) === level && !answer.isCorrect).forEach((answer) => {
+      wrongCounts[answer.questionId] = (wrongCounts[answer.questionId] || 0) + 1;
+    });
+    return [...latest.values()]
+      .filter((answer) => !answer.isCorrect && questionsById.has(answer.questionId))
+      .sort((a, b) => (wrongCounts[b.questionId] || 0) - (wrongCounts[a.questionId] || 0) || Number(b.timeMs || 0) - Number(a.timeMs || 0))
+      .map((answer) => answer.questionId)
+      .slice(0, count);
+  }
+
+  function setPracticeMode(mode) {
+    if (!PRACTICE_MODES[mode] || mode === "paper") return;
+    selectedPracticeMode = mode;
+    document.querySelectorAll("[data-practice-mode]").forEach((button) => button.classList.toggle("active", button.dataset.practiceMode === mode));
+    $("practiceModeHelp").textContent = PRACTICE_MODES[mode].help;
+    renderDashboard();
+  }
+
   function startAccountPractice(level) {
     const stored = loadStoredSession();
     if (stored && !stored.completedAt && stored.student?.studentId === auth?.student?.studentId) {
       if (confirm("มีแบบฝึกที่ยังทำไม่จบ ต้องการทำชุดเดิมต่อหรือไม่?")) { beginPractice(stored); return; }
     }
     selectedLevel = level;
-    beginPractice(newSession(accountStudent(), level, chooseQuestionIds(level)));
+    const ids = selectedPracticeMode === "weak" ? chooseWeakQuestionIds(level) : chooseQuestionIds(level);
+    if (!ids.length) {
+      toast("ระดับนี้ยังไม่มีข้อที่ตอบผิด ลองฝึกต่อเนื่องหรือจำลองสอบก่อน");
+      return;
+    }
+    beginPractice(newSession(accountStudent(), level, ids, selectedPracticeMode));
   }
 
   function renderDashboard() {
-    const attempts = [...(dashboardData.attempts || [])].sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+    const allAttempts = [...(dashboardData.attempts || [])].sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+    const attempts = allAttempts.filter((attempt) => attempt.mode !== "weak");
     const answers = dashboardData.answers || [];
+    const scoredAnswers = answers.filter((answer) => answer.attemptMode !== "weak");
     const latest = attempts.at(-1);
-    const recent = attempts.slice(-3).map((attempt) => Math.round((attempt.score / attempt.total) * 100));
+    const comparableAttempts = latest ? attempts.filter((attempt) => Number(attempt.level) === Number(latest.level)) : [];
+    const recent = comparableAttempts.slice(-3).map((attempt) => Math.round((attempt.score / attempt.total) * 100));
     const recentAverage = recent.length ? Math.round(recent.reduce((sum, value) => sum + value, 0) / recent.length) : null;
-    const firstPercent = attempts.length ? Math.round((attempts[0].score / attempts[0].total) * 100) : null;
-    const growth = recentAverage == null || attempts.length < 2 ? null : recentAverage - firstPercent;
+    const firstPercent = comparableAttempts.length ? Math.round((comparableAttempts[0].score / comparableAttempts[0].total) * 100) : null;
+    const growth = recentAverage == null || comparableAttempts.length < 2 ? null : recentAverage - firstPercent;
     $("dashLatest").textContent = latest ? `${Math.round((latest.score / latest.total) * 100)}%` : "–";
     $("dashLatestLevel").textContent = latest ? `ระดับ ${latest.level} · ${latest.score}/${latest.total} ข้อ` : "ยังไม่เคยฝึก";
     $("dashAverage").textContent = recentAverage == null ? "–" : `${recentAverage}%`;
     $("dashAttempts").textContent = `${attempts.length} รอบ`;
-    $("dashQuestionCount").textContent = `${answers.length} ข้อที่บันทึกแล้ว`;
+    $("dashQuestionCount").textContent = `${scoredAnswers.length} ข้อในพัฒนาการหลัก`;
     $("dashGrowth").textContent = growth == null ? "–" : `${growth > 0 ? "+" : ""}${growth}%`;
     $("dashGrowth").className = growth > 0 ? "growth-up" : growth < 0 ? "growth-down" : "";
 
     $("dashboardLevelGrid").innerHTML = [1, 2, 3].map((level) => {
       const total = window.TALENT_QUESTIONS.filter((question) => question.level === level).length;
       const fresh = Math.max(0, total - seenQuestionIds(level).size);
-      return `<button class="dash-level ${fresh < 30 ? "exhausted" : ""}" type="button" data-dashboard-level="${level}"><span>LEVEL ${String(level).padStart(2, "0")}</span><strong>${LEVELS[level].name}</strong><small>${total} ข้อในคลัง · ยังไม่เคยทำ ${fresh} ข้อ</small><b>${fresh >= 30 ? "เริ่มชุดใหม่ 30 ข้อ →" : fresh > 0 ? `ทำข้อใหม่ ${fresh} ข้อ + ทบทวนจุดอ่อน →` : "ทบทวนจุดอ่อนโดยไม่คิดว่าเป็นข้อใหม่ →"}</b></button>`;
+      const weak = chooseWeakQuestionIds(level).length;
+      const meta = selectedPracticeMode === "weak" ? `มี ${weak} ข้อที่ควรแก้` : `${total} ข้อในคลัง · ยังไม่เคยทำ ${fresh} ข้อ`;
+      const action = selectedPracticeMode === "weak" ? (weak ? `เริ่มแก้จุดอ่อน ${weak} ข้อ →` : "ยังไม่มีข้อผิดในระดับนี้") : selectedPracticeMode === "mock" ? "เริ่มจำลองสอบ 30 ข้อ →" : fresh >= 30 ? "เริ่มชุดใหม่ 30 ข้อ →" : fresh > 0 ? `ทำข้อใหม่ ${fresh} ข้อ + ทบทวน →` : "ทบทวนข้อเดิม →";
+      return `<button class="dash-level ${selectedPracticeMode === "weak" && !weak ? "exhausted" : fresh < 30 ? "exhausted" : ""}" type="button" data-dashboard-level="${level}" ${selectedPracticeMode === "weak" && !weak ? "disabled" : ""}><span>LEVEL ${String(level).padStart(2, "0")}</span><strong>${LEVELS[level].name}</strong><small>${meta}</small><b>${action}</b></button>`;
     }).join("");
     $("dashboardLevelGrid").querySelectorAll("[data-dashboard-level]").forEach((button) => button.addEventListener("click", () => startAccountPractice(Number(button.dataset.dashboardLevel))));
 
     const topicStats = {};
     Object.keys(window.TALENT_TOPICS).forEach((topic) => { topicStats[topic] = { correct: 0, total: 0 }; });
-    answers.forEach((answer) => { if (topicStats[answer.topic]) { topicStats[answer.topic].total += 1; if (answer.isCorrect) topicStats[answer.topic].correct += 1; } });
+    scoredAnswers.forEach((answer) => { if (topicStats[answer.topic]) { topicStats[answer.topic].total += 1; if (answer.isCorrect) topicStats[answer.topic].correct += 1; } });
     $("studentTopicProgress").innerHTML = Object.entries(topicStats).map(([topic, value]) => {
       const percent = value.total ? Math.round((value.correct / value.total) * 100) : 0;
       return `<div class="topic-result-row"><div class="topic-result-name"><span>${escapeHtml(window.TALENT_TOPICS[topic].short)}</span><small>${value.total ? `${value.correct}/${value.total} ข้อ` : "ยังไม่มีข้อมูล"}</small></div><div class="result-bar"><i style="width:${percent}%"></i></div><strong>${value.total ? `${percent}%` : "–"}</strong></div>`;
@@ -829,6 +986,9 @@
   }
 
   function bindEvents() {
+    document.querySelectorAll("[data-practice-mode]").forEach((button) => {
+      button.addEventListener("click", () => setPracticeMode(button.dataset.practiceMode));
+    });
     $("loginTab").addEventListener("click", () => setAuthTab("login"));
     $("registerTab").addEventListener("click", () => setAuthTab("register"));
     $("loginForm").addEventListener("submit", async (event) => {
@@ -968,9 +1128,9 @@
     $("generatePaper").addEventListener("click", async () => {
       const level = Number($("paperLevelSelect").value);
       const levelPool = window.TALENT_QUESTIONS.filter((question) => question.level === level);
-      const ids = level === 3
-        ? Object.keys(window.TALENT_TOPICS).flatMap((topic) => levelPool.filter((question) => question.topic === topic).sort(() => Math.random() - 0.5).slice(0, 5).map((question) => question.id)).sort(() => Math.random() - 0.5)
-        : levelPool.map((question) => question.id).sort(() => Math.random() - 0.5).slice(0, 30);
+      const ids = Object.keys(window.TALENT_TOPICS)
+        .flatMap((topic) => levelPool.filter((question) => question.topic === topic).sort(() => Math.random() - 0.5).slice(0, 5).map((question) => question.id))
+        .sort(() => Math.random() - 0.5);
       $("createPaperError").textContent = "";
       try {
         const paper = await apiPost("paper_create", { teacherToken, level, questionIds: ids });
