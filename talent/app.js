@@ -12,6 +12,41 @@
     2: { name: "ใกล้สนามจริง" },
     3: { name: "ฝึกคัดตัว" }
   };
+  const FRACTION_OPERAND = String.raw`(?:\([^()]+\)|\|[^|]+\||\\sqrt(?:\{[^{}]+\}|[A-Za-z0-9]+)|(?:\\[A-Za-z]+(?:_\{[^{}]+\}|_[A-Za-z0-9]+)?[A-Za-z0-9]*|[A-Za-z0-9_]+)(?:\^\{[^{}]+\}|\^[A-Za-z0-9]+)?)`;
+  const SLASH_FRACTION = new RegExp(`(${FRACTION_OPERAND})\\s*\\/\\s*(${FRACTION_OPERAND})`, "g");
+
+  function stripFractionParentheses(operand) {
+    return operand.startsWith("(") && operand.endsWith(")") ? operand.slice(1, -1).trim() : operand;
+  }
+
+  function stackSlashFractions(math) {
+    let formatted = math;
+    for (let pass = 0; pass < 5; pass += 1) {
+      const next = formatted.replace(SLASH_FRACTION, (_, numerator, denominator) =>
+        `\\dfrac{${stripFractionParentheses(numerator)}}{${stripFractionParentheses(denominator)}}`
+      );
+      if (next === formatted) break;
+      formatted = next;
+    }
+    return formatted;
+  }
+
+  function readableMath(value) {
+    return String(value ?? "")
+      .replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => `\\(${stackSlashFractions(math)}\\)`)
+      .replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => `\\[${stackSlashFractions(math)}\\]`);
+  }
+
+  function enhanceQuestionMath(question) {
+    ["prompt", "concept", "check", "takeaway"].forEach((field) => {
+      question[field] = readableMath(question[field]);
+    });
+    ["options", "steps", "mistakes"].forEach((field) => {
+      question[field] = (question[field] || []).map(readableMath);
+    });
+  }
+
+  window.TALENT_QUESTIONS.forEach(enhanceQuestionMath);
   const questionsById = new Map(window.TALENT_QUESTIONS.map((q) => [q.id, q]));
   const $ = (id) => document.getElementById(id);
   let session = null;
@@ -271,7 +306,7 @@
       ? "✓ ถูกต้อง เก็บวิธีคิดนี้ไว้ใช้กับโจทย์ที่ยากขึ้นได้เลย"
       : `ยังไม่ถูก — คำตอบที่ถูกคือ ${LETTERS[session.optionOrders[question.id].indexOf(question.answer)]}. ${question.options[question.answer]}`;
     $("solutionConcept").textContent = question.concept;
-    $("solutionSteps").innerHTML = question.steps.map((step) => `<li>${step}</li>`).join("");
+    $("solutionSteps").innerHTML = question.steps.map((step) => `<li><div>${step}</div></li>`).join("");
     $("mistakeBlock").hidden = correct;
     $("solutionMistake").textContent = correct ? "" : (question.mistakes[selected] || "ลองเปรียบเทียบวิธีคิดของตนเองกับขั้นตอนด้านบนอีกครั้ง");
     $("solutionCheck").textContent = question.check;
@@ -980,7 +1015,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js?v=6", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=7", { updateViaCache: "none" }).catch(() => {});
     }
   }
 
