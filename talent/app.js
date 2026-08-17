@@ -1191,7 +1191,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js?v=9", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=10", { updateViaCache: "none" }).catch(() => {});
     }
   }
 
