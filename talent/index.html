@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
   <link rel="manifest" href="manifest.webmanifest?v=6">
 </head>
 <body>
@@ -341,16 +341,40 @@
     <div class="modal-card paper-modal-card"><div class="modal-icon">พิมพ์</div><h2>สร้างชุดฝึกบนกระดาษ</h2><p>ระบบจะสร้างรหัสประจำชุด นักเรียนกรอกรหัสนี้เมื่อกลับมาตรวจคำตอบออนไลน์</p><label><span>ระดับข้อสอบ</span><select id="paperLevelSelect"><option value="1">ระดับ 1 ตั้งหลักสนามจริง</option><option value="2">ระดับ 2 ใกล้สนามจริง</option><option value="3" selected>ระดับ 3 ฝึกคัดตัว</option></select></label><p class="form-error" id="createPaperError"></p><div class="modal-actions"><button class="secondary-button" id="cancelCreatePaper" type="button">ยกเลิก</button><button class="primary-button" id="generatePaper" type="button">สร้างและเปิดหน้าพิมพ์</button></div></div>
   </div>
 
-  <section class="print-paper" id="printPaper" hidden><header><h1>KNT Talent · ชุดฝึกคณิตศาสตร์</h1><p>ชื่อ-นามสกุล _________________________ ชั้น ______ เลขที่ ______</p><strong id="printPaperCode"></strong></header><div id="printPaperQuestions"></div></section>
+  <section class="print-paper" id="printPaper" hidden>
+    <header class="print-paper-header">
+      <div class="print-title-row">
+        <div>
+          <span class="print-kicker">แบบฝึกคณิตศาสตร์สำหรับนักเรียน</span>
+          <h1>KNT Talent</h1>
+        </div>
+        <div class="print-code-card">
+          <span>รหัสชุดกระดาษ</span>
+          <strong id="printPaperCode"></strong>
+        </div>
+      </div>
+      <div class="print-student-fields">
+        <span>ชื่อ-นามสกุล <i></i></span>
+        <span>ชั้น <i></i></span>
+        <span>เลขที่ <i></i></span>
+      </div>
+      <div class="print-instructions">
+        <strong>คำชี้แจง</strong>
+        <span>เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว ทำเครื่องหมายลงในกระดาษคำถาม และเก็บรหัสชุดไว้สำหรับกรอกคำตอบออนไลน์</span>
+      </div>
+    </header>
+    <main class="print-question-list" id="printPaperQuestions"></main>
+    <footer class="print-page-footer"><span id="printFooterCode"></span><span>KNT Talent · เก็บกระดาษชุดนี้ไว้จนกว่าจะตรวจคำตอบเสร็จ</span></footer>
+  </section>
 
   <div class="toast" id="toast" role="status"></div>
 
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-  <script src="questions.js?v=8"></script>
-  <script src="questions-hard-2.js?v=8"></script>
-  <script src="questions-level3-extra.js?v=8"></script>
-  <script src="questions-level12-extra.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="questions.js?v=9"></script>
+  <script src="questions-hard-2.js?v=9"></script>
+  <script src="questions-level3-extra.js?v=9"></script>
+  <script src="questions-level12-extra.js?v=9"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

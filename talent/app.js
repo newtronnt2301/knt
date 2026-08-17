@@ -114,6 +114,18 @@
     });
   }
 
+  function useSingleColumnPrintChoices(options) {
+    return options.some((option) => {
+      const text = String(option || "");
+      return text.length > 24 || /\\(?:d?frac|begin|substack|left|right|cases|matrix)|\\\\/.test(text);
+    });
+  }
+
+  async function waitForPrintLayout() {
+    if (document.fonts?.ready) await document.fonts.ready;
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+
   function shuffleIndexes(length) {
     const values = Array.from({ length }, (_, index) => index);
     for (let index = values.length - 1; index > 0; index -= 1) {
@@ -1135,14 +1147,18 @@
       try {
         const paper = await apiPost("paper_create", { teacherToken, level, questionIds: ids });
         $("createPaperModal").hidden = true;
-        $("printPaperCode").textContent = `รหัสชุดกระดาษ ${paper.paperCode} · ระดับ ${level} · 30 ข้อ`;
+        $("printPaperCode").innerHTML = `${escapeHtml(paper.paperCode)}<small>ระดับ ${level} · 30 ข้อ</small>`;
+        $("printFooterCode").textContent = `รหัสชุด ${paper.paperCode}`;
         $("printPaperQuestions").innerHTML = paper.questionIds.map((id, index) => {
           const question = questionsById.get(id);
-          return `<article class="print-question"><p>${index + 1}. <span class="math-content">${escapeHtml(question.prompt)}</span></p><div class="print-choices">${question.options.map((option, optionIndex) => `<span>${LETTERS[optionIndex]}. <span class="math-content">${escapeHtml(option)}</span></span>`).join("")}</div></article>`;
+          const choiceLayout = useSingleColumnPrintChoices(question.options) ? " print-choices--single" : "";
+          const repeatHeader = `KNT Talent · รหัสชุด ${paper.paperCode} · ระดับ ${level} · หน้า ${Math.floor(index / 5) + 1} จาก 6`;
+          return `<article class="print-question" data-print-header="${escapeHtml(repeatHeader)}"><div class="print-question-heading"><span class="print-question-number">${index + 1}</span><div class="print-question-prompt math-content">${escapeHtml(question.prompt)}</div></div><div class="print-choices${choiceLayout}">${question.options.map((option, optionIndex) => `<div class="print-choice"><span class="print-choice-letter">${LETTERS[optionIndex]}.</span><span class="print-choice-text math-content">${escapeHtml(option)}</span></div>`).join("")}</div></article>`;
         }).join("");
         $("printPaper").hidden = false;
         renderMath($("printPaper"));
-        setTimeout(() => window.print(), 120);
+        await waitForPrintLayout();
+        window.print();
       } catch (error) { $("createPaperError").textContent = accountError(error); }
     });
     window.addEventListener("afterprint", () => { $("printPaper").hidden = true; });
@@ -1175,7 +1191,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js?v=8", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=9", { updateViaCache: "none" }).catch(() => {});
     }
   }
 

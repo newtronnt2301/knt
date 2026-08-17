@@ -620,7 +620,44 @@ input {
 @media(max-width:760px){.practice-mode-selector{grid-template-columns:1fr}.item-quality-summary{grid-template-columns:1fr}.practice-student{min-width:90px}.exam-timer{font-size:.82rem}}
 
 .paper-modal-card select{width:100%;border:1px solid #dcd5eb;border-radius:12px;padding:13px 14px;font:inherit;background:#fff}.teacher-head-actions{display:flex;gap:8px}.print-paper{display:none}
-@media print{body>*:not(.print-paper){display:none!important}.print-paper{display:block!important;color:#111;background:#fff;padding:0;font-family:"Noto Sans Thai",sans-serif}.print-paper header{border-bottom:2px solid #222;padding-bottom:12px;margin-bottom:18px}.print-paper header h1{margin:0 0 8px}.print-paper header strong{display:block;margin-top:10px;font-size:18px}.print-question{break-inside:avoid;margin:0 0 15px;font-size:13px}.print-question p{margin:0 0 6px;font-weight:700}.print-choices{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px}.print-choices span{display:block}}
+@page{size:A4 portrait;margin:14mm 15mm 17mm}
+@media print{
+  html,body{width:210mm;min-height:297mm;background:#fff!important}
+  body{margin:0!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body>*:not(.print-paper){display:none!important}
+  .print-paper{display:block!important;width:auto;color:#151515;background:#fff;padding:0;font-family:"TH SarabunPSK","Sarabun","Noto Sans Thai",sans-serif;font-size:16pt;line-height:1.42}
+  .print-paper-header{margin:0 0 7mm;border:0}
+  .print-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10mm;padding-bottom:4mm;border-bottom:1.5pt solid #161616}
+  .print-kicker{display:block;margin-bottom:1mm;color:#444;font-size:11pt;font-weight:700;letter-spacing:.02em}
+  .print-title-row h1{margin:0;font-family:"Noto Sans Thai","TH SarabunPSK",sans-serif;font-size:25pt;line-height:1.08;letter-spacing:-.025em}
+  .print-code-card{min-width:59mm;padding:2.5mm 4mm;border:1.2pt solid #161616;border-radius:2.5mm;text-align:center}
+  .print-code-card>span{display:block;font-size:10.5pt;font-weight:700;line-height:1.2}
+  .print-code-card strong{display:block;margin-top:.5mm;font-family:"Noto Sans Thai",sans-serif;font-size:16pt;line-height:1.2;letter-spacing:.045em}
+  .print-code-card small{display:block;margin-top:1mm;font-family:"TH SarabunPSK","Sarabun","Noto Sans Thai",sans-serif;font-size:10.5pt;font-weight:600;letter-spacing:0}
+  .print-student-fields{display:grid;grid-template-columns:1fr 30mm 28mm;gap:6mm;margin:4mm 0 3mm;font-size:14pt}
+  .print-student-fields span{display:flex;align-items:flex-end;gap:2mm;white-space:nowrap}
+  .print-student-fields i{display:block;min-width:0;flex:1;height:6mm;border-bottom:.7pt solid #333}
+  .print-instructions{display:grid;grid-template-columns:auto 1fr;gap:2mm;padding:2.4mm 3mm;border-left:3pt solid #222;background:#f1f1f1;font-size:12pt;line-height:1.35}
+  .print-instructions strong{white-space:nowrap}
+  .print-question-list{display:block}
+  .print-question{break-inside:avoid-page;page-break-inside:avoid;margin:0 0 5mm;padding:0 0 4.5mm;border-bottom:.55pt solid #d0d0d0;font-size:14.5pt;line-height:1.48}
+  .print-question:nth-child(5n+1):not(:first-child){break-before:page;page-break-before:always}
+  .print-question:nth-child(5n+1):not(:first-child)::before{content:attr(data-print-header);display:block;margin:0 0 6mm;padding:0 0 2.5mm;border-bottom:1pt solid #222;color:#333;font-family:"Noto Sans Thai","TH SarabunPSK",sans-serif;font-size:10.5pt;font-weight:700;line-height:1.2;letter-spacing:.015em}
+  .print-question:last-child{border-bottom:0}
+  .print-question-heading{display:grid;grid-template-columns:8mm minmax(0,1fr);align-items:start;gap:1.5mm;font-weight:700}
+  .print-question-number{display:grid;width:6.8mm;height:6.8mm;place-items:center;border-radius:50%;color:#fff;background:#1c1c1c;font-family:"Noto Sans Thai",sans-serif;font-size:10.5pt;line-height:1}
+  .print-question-prompt{min-width:0;padding-top:.1mm}
+  .print-choices{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.2mm 9mm;margin:2.5mm 0 0 9.5mm}
+  .print-choices--single{grid-template-columns:1fr;gap:1.5mm}
+  .print-choice{display:grid;grid-template-columns:7mm minmax(0,1fr);align-items:start;gap:1mm;min-width:0}
+  .print-choice-letter{font-weight:700;white-space:nowrap}
+  .print-choice-text{min-width:0;overflow-wrap:break-word}
+  .print-paper .math-content .katex{font-size:.98em;line-height:1.25;white-space:normal}
+  .print-paper .katex-display{margin:1.5mm 0;text-align:left;overflow:visible}
+  .print-paper .katex-display>.katex{white-space:normal;text-align:left}
+  .print-page-footer{display:flex;justify-content:space-between;gap:8mm;margin-top:6mm;padding-top:2mm;border-top:.5pt solid #999;color:#555;font-size:9.5pt;line-height:1.2}
+  .print-page-footer span:first-child{font-family:"Noto Sans Thai",sans-serif;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
