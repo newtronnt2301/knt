@@ -135,11 +135,51 @@
     return values;
   }
 
-  function newSession(student, level = selectedLevel, selectedIds = null, mode = "online", paperCode = "") {
+  function cloneQuestionSnapshot(question) {
+    if (!question) return null;
+    return {
+      id: String(question.id),
+      level: Number(question.level),
+      topic: String(question.topic),
+      difficulty: Number(question.difficulty),
+      prompt: String(question.prompt),
+      options: question.options.map(String),
+      answer: Number(question.answer),
+      concept: String(question.concept || ""),
+      steps: (question.steps || []).map(String),
+      mistakes: (question.mistakes || []).map(String),
+      check: String(question.check || ""),
+      takeaway: String(question.takeaway || ""),
+      skill: String(question.skill || `${question.topic}-core`),
+      errorTypes: (question.errorTypes || []).map(String),
+      version: Number(question.version || 1)
+    };
+  }
+
+  function prepareQuestionSnapshots(questions) {
+    if (!Array.isArray(questions)) return {};
+    return questions.reduce((result, source) => {
+      const question = cloneQuestionSnapshot(source);
+      if (!question?.id || question.options.length !== 4 || !Number.isInteger(question.answer) || question.answer < 0 || question.answer > 3) return result;
+      enhanceQuestionMath(question);
+      result[question.id] = question;
+      return result;
+    }, {});
+  }
+
+  function sessionQuestion(activeSession, id) {
+    return activeSession?.questionSnapshots?.[id] || questionsById.get(id);
+  }
+
+  function newSession(student, level = selectedLevel, selectedIds = null, mode = "online", paperCode = "", selectedQuestions = null) {
     const questionIds = selectedIds || window.TALENT_QUESTIONS.filter((q) => q.level === level).map((q) => q.id);
+    const questionSnapshots = mode === "paper" ? prepareQuestionSnapshots(selectedQuestions) : {};
     const ids = mode === "paper" ? [...questionIds].slice(0, 30) : [...questionIds].sort(() => Math.random() - 0.5).slice(0, 30);
     const optionOrders = {};
-    ids.forEach((id) => { optionOrders[id] = mode === "paper" ? questionsById.get(id).options.map((_, index) => index) : shuffleIndexes(questionsById.get(id).options.length); });
+    ids.forEach((id) => {
+      const question = questionSnapshots[id] || questionsById.get(id);
+      optionOrders[id] = mode === "paper" ? question.options.map((_, index) => index) : shuffleIndexes(question.options.length);
+    });
     const normalizedMode = mode === "online" ? "practice" : mode;
     const minutes = typeof PRACTICE_MODES[normalizedMode]?.minutes === "object" ? PRACTICE_MODES[normalizedMode].minutes[level] : 0;
     return {
@@ -150,6 +190,7 @@
       mode: normalizedMode,
       paperCode,
       questionOrder: ids,
+      questionSnapshots,
       optionOrders,
       current: 0,
       answers: {},
@@ -168,7 +209,7 @@
     try {
       const value = JSON.parse(localStorage.getItem(SESSION_KEY));
       if (!value || value.version !== 2 || !Array.isArray(value.questionOrder)) return null;
-      if (!value.questionOrder.every((id) => questionsById.has(id))) return null;
+      if (!value.questionOrder.every((id) => value.questionSnapshots?.[id] || questionsById.has(id))) return null;
       return value;
     } catch {
       return null;
@@ -215,7 +256,7 @@
   }
 
   function currentQuestion() {
-    return questionsById.get(session.questionOrder[session.current]);
+    return sessionQuestion(session, session.questionOrder[session.current]);
   }
 
   function beginPractice(nextSession) {
@@ -263,13 +304,13 @@
     const activeTopic = currentQuestion().topic;
     const topicCounts = {};
     session.questionOrder.forEach((id) => {
-      const topic = questionsById.get(id).topic;
+      const topic = sessionQuestion(session, id).topic;
       topicCounts[topic] = (topicCounts[topic] || 0) + 1;
     });
     $("topicMiniList").innerHTML = Object.entries(window.TALENT_TOPICS)
       .filter(([key]) => topicCounts[key])
       .map(([key, topic]) => {
-      const done = session.questionOrder.filter((id) => questionsById.get(id).topic === key && session.answers[id] !== undefined).length;
+      const done = session.questionOrder.filter((id) => sessionQuestion(session, id).topic === key && session.answers[id] !== undefined).length;
         return `<div class="topic-mini ${key === activeTopic ? "active" : ""}"><i></i><span>${escapeHtml(topic.short)}</span><b>${done}/${topicCounts[key]}</b></div>`;
       }).join("");
   }
@@ -336,7 +377,7 @@
     $("solutionNavigator").hidden = !reviewing;
     if (!reviewing) return;
     $("solutionQuestionGrid").innerHTML = session.questionOrder.map((id, index) => {
-      const question = questionsById.get(id);
+      const question = sessionQuestion(session, id);
       const correct = session.answers[id] === question.answer;
       const state = correct ? "correct" : "wrong";
       const current = index === session.current ? "current" : "";
@@ -394,7 +435,7 @@
     const stats = {};
     let correct = 0;
     activeSession.questionOrder.forEach((id) => {
-      const question = questionsById.get(id);
+      const question = sessionQuestion(activeSession, id);
       if (!stats[question.topic]) stats[question.topic] = { correct: 0, total: 0 };
       stats[question.topic].total += 1;
       if (activeSession.answers[id] === question.answer) {
@@ -445,7 +486,7 @@
     $("nextAdviceTitle").textContent = weakest ? `แนะนำให้ทบทวน “${window.TALENT_TOPICS[weakest[0]].short}”` : "ทบทวนจุดที่ยังไม่มั่นใจ";
     const errorCounts = {};
     session.questionOrder.forEach((id) => {
-      const question = questionsById.get(id);
+      const question = sessionQuestion(session, id);
       const type = inferErrorType(question, session.answers[id]);
       if (type) errorCounts[type] = (errorCounts[type] || 0) + 1;
     });
@@ -505,7 +546,7 @@
             durationSec: duration,
             startedAt: completedSession.startedAt,
             answers: completedSession.questionOrder.map((id) => {
-              const question = questionsById.get(id);
+              const question = sessionQuestion(completedSession, id);
               return {
                 questionId: id,
                 topic: question.topic,
@@ -831,7 +872,8 @@
       RECOVERY_INVALID: "ชื่อผู้ใช้หรือรหัสกู้คืนไม่ถูกต้อง",
       SESSION_EXPIRED: "หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่",
       AUTH_REQUIRED: "กรุณาเข้าสู่ระบบใหม่",
-      PAPER_NOT_FOUND: "ไม่พบรหัสชุดกระดาษนี้ กรุณาตรวจตัวอักษรอีกครั้ง"
+      PAPER_NOT_FOUND: "ไม่พบรหัสชุดกระดาษนี้ กรุณาตรวจตัวอักษรอีกครั้ง",
+      PAPER_INVALID: "สร้างชุดกระดาษไม่สำเร็จ กรุณาลองสร้างชุดใหม่อีกครั้ง"
     };
     return messages[error?.message] || "ยังเชื่อมต่อระบบไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองอีกครั้ง";
   }
@@ -1066,9 +1108,11 @@
       $("paperError").textContent = "";
       try {
         const paper = await apiGet("paper_get", { code: $("paperCodeInput").value.trim().toUpperCase() });
-        if (!paper.questionIds.every((id) => questionsById.has(id))) throw new Error("PAPER_NOT_FOUND");
+        const snapshots = prepareQuestionSnapshots(paper.questions);
+        if (!paper.questionIds.every((id) => snapshots[id] || questionsById.has(id))) throw new Error("PAPER_NOT_FOUND");
         $("paperModal").hidden = true;
-        beginPractice(newSession(accountStudent(), paper.level, paper.questionIds, "paper", paper.paperCode));
+        beginPractice(newSession(accountStudent(), paper.level, paper.questionIds, "paper", paper.paperCode, paper.questions));
+        if (!paper.questions?.length) toast("ชุดกระดาษรุ่นเดิม: ระบบใช้คลังข้อสอบปัจจุบันในการตรวจ");
       } catch (error) { $("paperError").textContent = accountError(error); }
     });
     document.querySelectorAll(".level-card[data-level]").forEach((card) => {
@@ -1143,14 +1187,17 @@
       const ids = Object.keys(window.TALENT_TOPICS)
         .flatMap((topic) => levelPool.filter((question) => question.topic === topic).sort(() => Math.random() - 0.5).slice(0, 5).map((question) => question.id))
         .sort(() => Math.random() - 0.5);
+      const questions = ids.map((id) => cloneQuestionSnapshot(questionsById.get(id)));
       $("createPaperError").textContent = "";
       try {
-        const paper = await apiPost("paper_create", { teacherToken, level, questionIds: ids });
+        const paper = await apiPost("paper_create", { teacherToken, level, questionIds: ids, questions });
+        const printQuestions = prepareQuestionSnapshots(paper.questions);
+        if (!paper.questionIds.every((id) => printQuestions[id])) throw new Error("PAPER_INVALID");
         $("createPaperModal").hidden = true;
         $("printPaperCode").innerHTML = `${escapeHtml(paper.paperCode)}<small>ระดับ ${level} · 30 ข้อ</small>`;
         $("printFooterCode").textContent = `รหัสชุด ${paper.paperCode}`;
         $("printPaperQuestions").innerHTML = paper.questionIds.map((id, index) => {
-          const question = questionsById.get(id);
+          const question = printQuestions[id];
           const choiceLayout = useSingleColumnPrintChoices(question.options) ? " print-choices--single" : "";
           const repeatHeader = `KNT Talent · รหัสชุด ${paper.paperCode} · ระดับ ${level} · หน้า ${Math.floor(index / 5) + 1} จาก 6`;
           return `<article class="print-question" data-print-header="${escapeHtml(repeatHeader)}"><div class="print-question-heading"><span class="print-question-number">${index + 1}</span><div class="print-question-prompt math-content">${escapeHtml(question.prompt)}</div></div><div class="print-choices${choiceLayout}">${question.options.map((option, optionIndex) => `<div class="print-choice"><span class="print-choice-letter">${LETTERS[optionIndex]}.</span><span class="print-choice-text math-content">${escapeHtml(option)}</span></div>`).join("")}</div></article>`;
@@ -1191,7 +1238,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js?v=10", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=11", { updateViaCache: "none" }).catch(() => {});
     }
   }
 

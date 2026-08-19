@@ -7,13 +7,13 @@ const KNT_TABLES = {
   Sessions: ["tokenHash", "studentId", "expiresAt", "createdAt", "lastSeenAt"],
   TalentAttempts: ["attemptId", "studentId", "level", "mode", "paperCode", "score", "total", "durationSec", "startedAt", "completedAt", "questionIds"],
   TalentAnswers: ["attemptId", "studentId", "questionId", "level", "topic", "skill", "selected", "correct", "isCorrect", "timeMs", "flagged", "answeredAt", "errorType", "attemptMode", "questionVersion"],
-  PaperSets: ["paperCode", "level", "questionIds", "createdBy", "createdAt", "status"]
+  PaperSets: ["paperCode", "level", "questionIds", "createdBy", "createdAt", "status", "questionsSnapshot"]
 };
 
 function doGet(e) {
   const p = e && e.parameter ? e.parameter : {};
   try {
-    if (p.action === "health") return json_({ ok: true, service: "KNT Talent", version: 3 });
+    if (p.action === "health") return json_({ ok: true, service: "KNT Talent", version: 4, paperSnapshots: true });
     if (p.action === "me") return json_({ ok: true, student: publicStudent_(requireStudent_(p.token)) });
     if (p.action === "dashboard") return json_({ ok: true, data: dashboard_(requireStudent_(p.token)) });
     if (p.action === "paper_get") return json_({ ok: true, paper: paperGet_(p.code) });
@@ -161,9 +161,13 @@ function paperCreate_(student, body) {
   const level = Number(body.level);
   const ids = Array.isArray(body.questionIds) ? body.questionIds.map(String).slice(0, 30) : [];
   if (![1, 2, 3].includes(level) || ids.length !== 30) throw new Error("PAPER_INVALID");
+  // Keep the brief deployment transition compatible with the previous frontend.
+  const questions = Array.isArray(body.questions) && body.questions.length ? paperSnapshots_(body.questions, ids, level) : [];
+  const snapshotJson = JSON.stringify(questions);
+  if (snapshotJson.length > 45000) throw new Error("PAPER_INVALID");
   const code = "P" + level + "-" + randomCode_(6);
-  sheet_("PaperSets").appendRow([code, level, JSON.stringify(ids), student.studentId, new Date().toISOString(), "active"]);
-  return { paperCode: code, level: level, questionIds: ids };
+  sheet_("PaperSets").appendRow([code, level, JSON.stringify(ids), student.studentId, new Date().toISOString(), "active", snapshotJson]);
+  return { paperCode: code, level: level, questionIds: ids, questions: questions };
 }
 
 function paperGet_(code) {
@@ -171,7 +175,29 @@ function paperGet_(code) {
   const rows = values_(sheet_("PaperSets"));
   const row = rows.find(function(value) { return String(value[0]).toUpperCase() === target && value[5] === "active"; });
   if (!row) throw new Error("PAPER_NOT_FOUND");
-  return { paperCode: row[0], level: Number(row[1]), questionIds: JSON.parse(row[2] || "[]") };
+  return { paperCode: row[0], level: Number(row[1]), questionIds: safeJson_(row[2], []), questions: safeJson_(row[6], []) };
+}
+
+function paperSnapshots_(sources, ids, level) {
+  if (!Array.isArray(sources) || sources.length !== ids.length) throw new Error("PAPER_INVALID");
+  return sources.map(function(source, index) {
+    const options = Array.isArray(source.options) ? source.options.map(function(value) { return clean_(value, 1000); }) : [];
+    const answer = Number(source.answer);
+    if (String(source.id) !== ids[index] || Number(source.level) !== level || options.length !== 4 || !Number.isInteger(answer) || answer < 0 || answer > 3) {
+      throw new Error("PAPER_INVALID");
+    }
+    return {
+      id: ids[index], level: level, topic: clean_(source.topic, 30), difficulty: Number(source.difficulty) || level,
+      prompt: clean_(source.prompt, 3000), options: options, answer: answer,
+      concept: clean_(source.concept, 3000),
+      steps: Array.isArray(source.steps) ? source.steps.map(function(value) { return clean_(value, 3000); }) : [],
+      mistakes: Array.isArray(source.mistakes) ? source.mistakes.map(function(value) { return clean_(value, 3000); }) : [],
+      check: clean_(source.check, 3000), takeaway: clean_(source.takeaway, 3000),
+      skill: clean_(source.skill, 160),
+      errorTypes: Array.isArray(source.errorTypes) ? source.errorTypes.map(function(value) { return clean_(value, 30); }) : [],
+      version: Math.max(1, Number(source.version) || 1)
+    };
+  });
 }
 
 function dashboard_(student) {
