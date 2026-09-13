@@ -505,12 +505,12 @@
   }
 
   async function apiPost(action, payload = {}) {
-    const response = await fetch(ACCOUNT_API_URL, {
+    const data = await KNTNetwork.json(ACCOUNT_API_URL, {
+      mutation: true, timeoutMs: 30000,
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action, ...payload })
     });
-    const data = await response.json();
     if (!data.ok) throw new Error(data.error || "API_ERROR");
     return data.data;
   }
@@ -697,9 +697,7 @@
     $("teacherStudentList").innerHTML = '<div class="loading-card">กำลังโหลดข้อมูลจาก Google Sheets…</div>';
     teacherAnswers = [];
     try {
-      const response = await fetch(`${SHEET_URL}?action=exam_get`);
-      if (!response.ok) throw new Error("load failed");
-      const data = await response.json();
+      const data = await KNTNetwork.json(`${SHEET_URL}?action=exam_get`);
       const allRows = Array.isArray(data.list) ? [...data.list] : [];
       if (teacherToken) {
         try {
@@ -856,8 +854,7 @@
 
   async function apiGet(action, params = {}) {
     const query = new URLSearchParams({ action, ...params });
-    const response = await fetch(`${ACCOUNT_API_URL}?${query.toString()}`);
-    const data = await response.json();
+    const data = await KNTNetwork.json(`${ACCOUNT_API_URL}?${query.toString()}`);
     if (!data.ok) throw new Error(data.error || "API_ERROR");
     return data.data || data.student || data.paper;
   }
@@ -1238,7 +1235,7 @@
     if (auth) loadDashboard();
     else showScreen("auth");
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-      navigator.serviceWorker.register("sw.js?v=11", { updateViaCache: "none" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js?v=12", { updateViaCache: "none" }).catch(() => {});
     }
   }
 

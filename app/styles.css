@@ -592,3 +592,30 @@ h3 { margin-bottom: 4px; font-size: 16px; }
   .top-actions { gap: 6px; }
   .role-button { padding-inline: 9px; font-size: 12px; }
 }
+
+/* KNT 2026: quiet surfaces, clearer text and immediate task navigation. */
+:root { --muted:#565367; --shadow:0 3px 14px rgba(37,30,47,.035); --shadow-sm:0 2px 6px rgba(37,30,47,.03); }
+body { background:#faf9f6; }
+.ambient, .teacher-hero-orb { display:none; }
+.card { background:#fff; border-color:#e4dfe7; box-shadow:var(--shadow); }
+.hero { background:#302737; box-shadow:none; border-radius:20px; padding:22px; }
+.hero::before,.hero::after { display:none; }
+.hero .date { background:transparent; padding:0; color:#ecc1cb; margin-bottom:10px; }
+.hero p { color:#e5dfe9; }
+.teacher-hero h1 { font-size:clamp(23px,4vw,32px); }
+.stat-card { border-radius:16px; }
+.bottom-nav,.topbar { background:#faf9f6; backdrop-filter:none; }
+.quick-action { border:1px solid #e4dfe7; box-shadow:none; text-decoration:none; color:inherit; }
+.quick-action small,.stat-card span,.subtitle { color:#625a69; }
+.native-loader { color:#54455e; padding:24px; }
+.demo-notice { font-size:13px; }
+.tool-full-link { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:12px 0; font-size:13px; color:#625a69; }
+.tool-full-link a,.portal-back { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 14px; border:1px solid #ddd4df; border-radius:12px; background:#fff; color:#743a55; font-weight:600; text-decoration:none; }
+.portal-back { font-size:12px; padding:8px; }
+.attention-card>p { padding:15px 15px 0; color:#625a69; font-size:14px; }
+.attention-card>a { margin:0 15px 15px; }
+.connection-status { position:fixed; top:0; left:0; right:0; z-index:200; background:#302737; color:#fff; padding:8px 14px; text-align:center; font-size:13px; pointer-events:none; }
+.connection-status[hidden] { display:none; }
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline:3px solid #995074; outline-offset:3px; }
+@media(max-width:600px){.top-actions{gap:5px}.topbar{padding-inline:12px}.teacher-hero{padding:18px}.view{padding-top:12px}.teacher-stats{margin-top:10px}.demo-notice{line-height:1.6}.quick-action{min-height:88px}.role-button{padding-inline:8px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

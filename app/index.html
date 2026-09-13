@@ -14,14 +14,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
   <title>KNT Classroom</title>
 </head>
 <body>
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
 
-  <div class="app-shell">
+  <div id="connectionStatus" class="connection-status" role="status" hidden></div><div class="app-shell">
     <aside class="desktop-sidebar" aria-label="เมนูหลัก">
       <a class="brand" href="#home" data-route="home" aria-label="KNT Classroom หน้าแรก">
         <img class="brand-mark" src="icons/icon.svg" alt="">
@@ -41,7 +41,7 @@
           <img class="brand-mark" src="icons/icon.svg" alt="">
           <b>KNT Classroom</b>
         </a>
-        <div class="top-actions">
+        <div class="top-actions"><a class="portal-back" href="../" aria-label="กลับหน้าแรก KNT">KNT ↗</a>
           <button class="role-button" type="button" id="roleButton" aria-haspopup="true" aria-expanded="false">
             <svg aria-hidden="true"><use href="#icon-switch"></use></svg>
             <span id="roleLabel">นักเรียน</span>
@@ -93,7 +93,7 @@
     <symbol id="icon-money" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><circle cx="12" cy="12" r="3"/><path d="M7 9H4M20 15h-3"/></symbol>
   </svg>
 
-  <script src="roster-data.js?v=7" defer></script>
-  <script src="app.js?v=17" defer></script>
+  <script src="../js/network.js?v=1" defer></script>
+  <script src="app.js?v=19" defer></script>
 </body>
 </html>

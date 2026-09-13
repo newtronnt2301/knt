@@ -242,18 +242,14 @@ function teacherHomeView() {
       <div class="quick-action-grid">
         <button type="button" data-tool="subject-attendance" class="quick-action blue"><svg><use href="#icon-users"></use></svg><span><b>เริ่มเช็กชื่อ</b><small>รายวิชาและรายคาบ</small></span></button>
         <button type="button" data-tool="submission-tracker" class="quick-action mint"><svg><use href="#icon-qr"></use></svg><span><b>สแกนงานนักเรียน</b><small>QR การ์ดรายบุคคล</small></span></button>
-        <button type="button" data-tool="grades" class="quick-action purple"><svg><use href="#icon-chart"></use></svg><span><b>บันทึกคะแนน</b><small>คะแนนและตัดเกรด</small></span></button>
-        <button type="button" data-tool="plickers" class="quick-action coral"><svg><use href="#icon-camera"></use></svg><span><b>เปิดกล้อง Plickers</b><small>สแกนคำตอบในห้อง</small></span></button>
+        <button type="button" data-tool="grades" class="quick-action purple"><svg><use href="#icon-chart"></use></svg><span><b>ดูคะแนน</b><small>ตารางผลการเรียน</small></span></button>
+        <a href="../plickers/index.html" class="quick-action coral"><svg><use href="#icon-camera"></use></svg><span><b>เปิดกล้อง Plickers</b><small>สแกนคำตอบในห้อง</small></span></a>
       </div>
     </section>
     <div class="teacher-dashboard-grid">
       <section>
-        <div class="section-heading"><div><p class="eyebrow">ตารางสอน</p><h2>คาบเรียนวันนี้</h2></div></div>
-        <div class="stack-list">
-          <article class="schedule-card card"><i class="schedule-line"></i><div><h3>คณิตศาสตร์เพิ่มเติม</h3><p>ม.4/1 · ห้อง 421</p></div><span class="schedule-time">08:30</span></article>
-          <article class="schedule-card card"><i class="schedule-line purple"></i><div><h3>คณิตศาสตร์เพิ่มเติม</h3><p>ม.4/2 · ห้อง 422</p></div><span class="schedule-time">10:20</span></article>
-          <article class="schedule-card card"><i class="schedule-line mint"></i><div><h3>เตรียมวิศวกรรมศาสตร์</h3><p>ม.5 · ห้องปฏิบัติการ</p></div><span class="schedule-time">13:00</span></article>
-        </div>
+        <div class="section-heading"><div><p class="eyebrow">กลับไปยังเครื่องมือ</p><h2>พื้นที่ทำงานของคุณ</h2></div></div>
+        <div class="attention-card card"><p>ตัวเลขด้านบนคำนวณจากร่างในอุปกรณ์นี้ เปิดระบบที่ต้องการเพื่อโหลดข้อมูลล่าสุดจาก Google Sheets</p><a class="outline-button" href="../">ค้นหาและปักหมุดเครื่องมือ ↗</a></div>
       </section>
       <section>
         <div class="section-heading"><div><p class="eyebrow">ต้องดำเนินการ</p><h2>รายการที่ควรตรวจสอบ</h2></div></div>
@@ -313,8 +309,8 @@ function scoresView() {
 
 function toolsView() {
   return `<header class="page-heading"><p class="eyebrow">KNT TOOLBOX</p><h1>เครื่องมือทั้งหมด</h1><p class="subtitle">รวมทุกระบบจากเว็บไซต์เดิมไว้ในแอป KNT Classroom ครบทั้ง ${teacherTools.length} เครื่องมือ</p></header>
-    <div class="filter-pills" data-tool-filters><button class="filter-pill active" data-tool-filter="all">ทั้งหมด</button><button class="filter-pill" data-tool-filter="attendance">เช็กชื่อ</button><button class="filter-pill" data-tool-filter="work">งาน/สแกน</button><button class="filter-pill" data-tool-filter="scores">คะแนน</button><button class="filter-pill" data-tool-filter="activity">กิจกรรม</button><button class="filter-pill" data-tool-filter="utility">อื่นๆ</button></div>
-    <section class="tool-grid all-tools">${teacherTools.map(tool => `<div data-tool-category="${tool.category}">${toolCard(tool)}</div>`).join('')}</section>`;
+    <label class="native-search"><input id="toolSearch" type="search" placeholder="ค้นหาเครื่องมือ" aria-label="ค้นหาเครื่องมือ"></label><div class="filter-pills" data-tool-filters><button class="filter-pill active" data-tool-filter="all">ทั้งหมด</button><button class="filter-pill" data-tool-filter="attendance">เช็กชื่อ</button><button class="filter-pill" data-tool-filter="work">งาน/สแกน</button><button class="filter-pill" data-tool-filter="scores">คะแนน</button><button class="filter-pill" data-tool-filter="activity">กิจกรรม</button><button class="filter-pill" data-tool-filter="utility">อื่นๆ</button></div>
+    <p id="toolSearchStatus" class="muted" role="status">${teacherTools.length} เครื่องมือ</p><section class="tool-grid all-tools">${teacherTools.map(tool => `<div data-tool-category="${tool.category}" data-tool-name="${escapeText(tool.title)}">${toolCard(tool)}</div>`).join('')}</section>`;
 }
 
 function teacherProfileView() {
@@ -389,6 +385,7 @@ function toolView() {
   const backRoute = currentTool.category === 'attendance' ? 'attendance' : currentTool.category === 'work' ? 'teacher-work' : currentTool.category === 'scores' ? 'scores' : 'tools';
   return `<div class="native-tool-shell" data-native-tool="${currentTool.id}">
     <header class="native-tool-header card"><button class="icon-button" type="button" data-route="${backRoute}" aria-label="ย้อนกลับ"><svg style="transform:rotate(180deg)"><use href="#icon-arrow"></use></svg></button><span class="tool-icon ${currentTool.tone}"><svg><use href="#icon-${currentTool.icon}"></use></svg></span><div><p class="eyebrow">เครื่องมือใน KNT Classroom</p><h1>${currentTool.title}</h1><p>${currentTool.description}</p></div></header>
+    <div class="tool-full-link"><a href="${escapeText(currentTool.path)}">เปิดระบบเต็ม ↗</a><span>ใช้เมื่อต้องการความสามารถเพิ่มเติมจากหน้าเดิม</span></div>
     ${nativeToolBody(currentTool)}
   </div>`;
 }
@@ -480,14 +477,25 @@ function restoreAttendanceDraft() {
 
 async function getJSON(url, params = {}) {
   const query = new URLSearchParams(params);
-  const response = await fetch(query.size ? `${url}?${query}` : url);
-  if (!response.ok) throw new Error(`เชื่อมต่อไม่สำเร็จ (${response.status})`);
-  return response.json();
+  const mutation = /^(save|delete|update|create|remove|set|add)/i.test(params.action || '');
+  return KNTNetwork.json(query.size ? `${url}?${query}` : url, {mutation, timeoutMs:mutation ? 30000 : 15000});
 }
 
+let rosterScriptPromise;
 async function ensureRoster() {
+  if (!nativeState.roster && !window.KNT_ROSTER_DATA) {
+    rosterScriptPromise ||= new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'roster-data.js?v=7';
+      const timer = setTimeout(() => reject(new Error('โหลดรายชื่อไม่สำเร็จ กรุณาลองใหม่')), 15000);
+      script.onload = () => { clearTimeout(timer); resolve(); };
+      script.onerror = () => { clearTimeout(timer); reject(new Error('โหลดรายชื่อไม่สำเร็จ กรุณาลองใหม่')); };
+      document.head.append(script);
+    }).catch(error => { rosterScriptPromise = null; throw error; });
+    await rosterScriptPromise;
+  }
   if (!nativeState.roster && window.KNT_ROSTER_DATA) nativeState.roster = window.KNT_ROSTER_DATA;
-  if (!nativeState.roster) nativeState.roster = await fetch('../ส่งงาน/roster.json').then(response => response.json());
+  if (!nativeState.roster) nativeState.roster = await KNTNetwork.json('../ส่งงาน/roster.json');
   return nativeState.roster;
 }
 
@@ -522,6 +530,7 @@ async function loadSubjectRecords() {
   if (connection) connection.textContent = 'กำลังโหลดประวัติวิชา…';
   try {
     const response = await getJSON(API.attendance, {action:'getAll', id:subjectId});
+    if (!connection?.isConnected || document.getElementById('nativeSubject')?.value !== subjectId) return;
     const subject = nativeState.subjects.find(item => String(item.id) === String(subjectId));
     nativeState.subjectRecords = makeSubjectHistoryRecords(response.records || [], subject);
     if (connection) { connection.textContent = 'เชื่อม Google Sheets แล้ว'; connection.classList.add('online'); }
@@ -612,11 +621,19 @@ function renderAttendanceSummary() {
 
 async function initializeAttendance() {
   const connection = document.getElementById('nativeConnection');
+  const toolId = currentTool.id;
+  const sameView = () => connection?.isConnected && currentTool?.id === toolId;
+  const setupPromise = toolId === 'engineering-attendance' ? Promise.resolve(null) : getJSON(API.attendance, {action:'listAll'}).catch(() => null);
   try {
-    const [roster, setup] = await Promise.all([ensureRoster(), getJSON(API.attendance, {action:'listAll'}).catch(() => null)]);
-    populateRoomSelect(roster, currentTool.id === 'engineering-attendance' ? engineeringRooms : null);
+    const roster = await ensureRoster();
+    if (!sameView()) return;
+    populateRoomSelect(roster, toolId === 'engineering-attendance' ? engineeringRooms : null);
+    document.getElementById('nativeDate').value = todayISO();
+    connection.textContent = 'รายชื่อพร้อมแล้ว · กำลังโหลดรายวิชา';
+    const setup = await setupPromise;
+    if (!sameView()) return;
     const subjectSelect = document.getElementById('nativeSubject');
-    if (currentTool.id === 'engineering-attendance') {
+    if (toolId === 'engineering-attendance') {
       subjectSelect.innerHTML = '<option value="engineering">เตรียมวิศวกรรมศาสตร์</option>';
     } else if (setup?.ok) {
       nativeState.teachers = setup.teachers || [];
@@ -624,13 +641,15 @@ async function initializeAttendance() {
       const teacherSelect = document.getElementById('nativeTeacher');
       if (teacherSelect) teacherSelect.innerHTML = '<option value="">เลือกครูผู้สอน</option>' + nativeState.teachers.map(teacher => `<option value="${escapeText(teacher.id)}">${escapeText(teacher.name)}</option>`).join('');
       renderSubjectOptions();
-    } else subjectSelect.innerHTML = '<option value="">ยังโหลดช่องรายวิชาไม่ได้</option>';
-    document.getElementById('nativeDate').value = todayISO();
-    connection.textContent = setup?.ok ? 'เชื่อม Google Sheets แล้ว' : 'ใช้รายชื่อในแอป';
+    } else {
+      subjectSelect.innerHTML = '<option value="">ยังโหลดรายวิชาไม่ได้</option>';
+      connection.innerHTML = 'โหลดรายวิชาไม่ได้ <button type="button" class="outline-button" data-native-action="retry-attendance">ลองโหลดใหม่</button>';
+      return;
+    }
+    connection.textContent = setup?.ok ? 'โหลดรายวิชาแล้ว' : 'รายชื่อในอุปกรณ์พร้อมใช้งาน';
     connection.classList.toggle('online', !!setup?.ok);
   } catch (error) {
-    if (connection) connection.textContent = 'ออฟไลน์';
-    showToast('โหลดรายชื่อนักเรียนไม่สำเร็จ');
+    if (sameView()) connection.innerHTML = 'โหลดรายชื่อไม่ได้ <button type="button" class="outline-button" data-native-action="retry-attendance">ลองโหลดใหม่</button>';
   }
 }
 
@@ -668,7 +687,7 @@ async function loadWorkData() {
       nativeState.workBaselineFingerprint = cached.baselineFingerprint || '';
       setWorkCloudStatus('ออฟไลน · ใช้ร่างในเครื่อง');
       renderWorkSetList();
-    } else target.innerHTML = `<div class="native-error">โหลดข้อมูลไม่ได้<br><small>${escapeText(error.message)}</small></div>`;
+    } else target.innerHTML = `<div class="native-error">โหลดข้อมูลไม่ได้<br><small>${escapeText(error.message)}</small><p><button class="outline-button" data-native-action="refresh-work">ลองโหลดใหม่</button></p></div>`;
   }
 }
 
@@ -841,7 +860,7 @@ async function loadGradeData() {
       const parts = String(item.key).split('_');
       return `<article><span class="tag blue">${escapeText(parts.slice(2).join('_') || 'ผลการเรียน')}</span><h3>ภาคเรียน ${escapeText(parts[1] || '-')} / ${escapeText(parts[0] || '-')}</h3><p>อัปเดตโดย ${escapeText(item.updatedBy || 'ครูผู้สอน')} · ${escapeText(item.lastUpdated || '')}</p><button class="outline-button" data-native-action="view-grade-set" data-grade-key="${escapeText(item.key)}">เปิดตารางผลการเรียน</button></article>`;
     });
-  } catch (error) { target.innerHTML = `<div class="native-error">เชื่อมระบบคะแนนไม่ได้<br><small>${escapeText(error.message)}</small></div>`; }
+  } catch (error) { target.innerHTML = `<div class="native-error">เชื่อมระบบคะแนนไม่ได้<br><small>${escapeText(error.message)}</small><p><button class="outline-button" data-native-action="refresh-grades">ลองโหลดใหม่</button></p></div>`; }
 }
 
 function renderExamRows(rows) {
@@ -858,7 +877,7 @@ async function loadExamData() {
     const response = await getJSON(API.exams, {action:'exam_get'});
     nativeState.examRows = (response.list || []).reverse();
     renderExamRows(nativeState.examRows);
-  } catch (error) { target.innerHTML = `<div class="native-error">เชื่อมระบบข้อสอบไม่ได้<br><small>${escapeText(error.message)}</small></div>`; }
+  } catch (error) { target.innerHTML = `<div class="native-error">เชื่อมระบบข้อสอบไม่ได้<br><small>${escapeText(error.message)}</small><p><button class="outline-button" data-native-action="refresh-exams">ลองโหลดใหม่</button></p></div>`; }
 }
 
 async function loadFundData() {
@@ -869,17 +888,23 @@ async function loadFundData() {
     const data = response.data || response;
     const transactions = data.transactions || data.expenses || [];
     target.innerHTML = `<div class="fund-summary"><div><span>ยอดคงเหลือ</span><strong>${Number(data.balance || 0).toLocaleString('th-TH')} บาท</strong></div><div><span>รายการทั้งหมด</span><strong>${transactions.length}</strong></div></div>${dataCards(transactions.slice(0,12), item => `<article><span class="tag ${Number(item.amount) < 0 ? 'coral' : 'mint'}">${Number(item.amount || 0).toLocaleString('th-TH')} บาท</span><h3>${escapeText(item.title || item.description || 'รายการบัญชี')}</h3><p>${escapeText(item.date || '')}</p></article>`)}`;
-  } catch (error) { target.innerHTML = `<div class="native-error">โหลดบัญชีไม่ได้<br><small>${escapeText(error.message)}</small></div>`; }
+  } catch (error) { target.innerHTML = `<div class="native-error">โหลดบัญชีไม่ได้<br><small>${escapeText(error.message)}</small><p><button class="outline-button" data-native-action="refresh-fund">ลองโหลดใหม่</button></p></div>`; }
 }
 
 async function initNativeTool() {
-  if (!currentTool || !document.querySelector('.native-tool-shell')) return;
-  if (['subject-attendance','engineering-attendance'].includes(currentTool.id)) await initializeAttendance();
-  if (['qr-cards','random-student'].includes(currentTool.id)) { try { const roster = await ensureRoster(); populateRoomSelect(roster); } catch { showToast('โหลดรายชื่อไม่สำเร็จ'); } }
-  if (currentTool.id === 'submission-tracker') { await ensureRoster().catch(() => null); await loadWorkData(); }
-  if (currentTool.id === 'grades') await loadGradeData();
-  if (['exam','results'].includes(currentTool.id)) await loadExamData();
-  if (currentTool.id === 'class-fund') await loadFundData();
+  const shell = document.querySelector('.native-tool-shell');
+  if (!currentTool || !shell) return;
+  const toolId = currentTool.id;
+  if (['subject-attendance','engineering-attendance'].includes(toolId)) return initializeAttendance();
+  if (['qr-cards','random-student'].includes(toolId)) {
+    try { const roster = await ensureRoster(); if (shell.isConnected) populateRoomSelect(roster); }
+    catch { if (shell.isConnected) showToast('โหลดรายชื่อไม่สำเร็จ'); }
+    return;
+  }
+  if (toolId === 'submission-tracker') return Promise.all([ensureRoster().catch(() => null), loadWorkData()]);
+  if (toolId === 'grades') return loadGradeData();
+  if (['exam','results'].includes(toolId)) return loadExamData();
+  if (toolId === 'class-fund') return loadFundData();
 }
 
 let toastTimer;
@@ -905,8 +930,15 @@ function routeTo(route, updateHash = true) {
   const allNavigation = [...studentNavItems, ...teacherNavItems];
   const pageLabel = allNavigation.find(item => item.id === safeRoute)?.label || currentTool?.title || 'KNT Classroom';
   document.title = `${pageLabel} · KNT Classroom`;
-  if (updateHash && location.hash !== `#${safeRoute}`) history.pushState(null, '', `#${safeRoute}`);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.nav-item').forEach(item => { if (item.dataset.route === safeRoute) item.setAttribute('aria-current','page'); else item.removeAttribute('aria-current'); });
+  if (updateHash) {
+    const nextURL = new URL(location.href);
+    nextURL.hash = safeRoute;
+    if (safeRoute === 'tool' && currentTool) nextURL.searchParams.set('tool', currentTool.id);
+    else nextURL.searchParams.delete('tool');
+    if (nextURL.href !== location.href) history.pushState(null, '', nextURL);
+  }
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (safeRoute === 'tool') initNativeTool();
 }
 
@@ -1077,7 +1109,10 @@ async function renderAttendanceHistory() {
     sourceNote = 'Google Sheets และบันทึกในอุปกรณ์นี้';
   }
   if (currentTool.id === 'subject-attendance') {
-    if (!document.getElementById('nativeSubject')?.value && !nativeState.subjectHistoryRecords.length) await loadAllSubjectHistory();
+    if (!document.getElementById('nativeSubject')?.value) {
+      target.innerHTML = '<div class="native-empty"><h2>เลือกรายวิชาก่อนดูประวัติ</h2><p>เลือกวิชาด้านบนเพื่อโหลดเฉพาะข้อมูลที่ต้องการ</p></div>';
+      return;
+    }
     const sourceRecords = document.getElementById('nativeSubject')?.value ? nativeState.subjectRecords : nativeState.subjectHistoryRecords;
     const merged = new Map();
     sourceRecords.forEach(record => merged.set(`${record.subjectId}-${record.date}-${record.room}`, record));
@@ -1485,8 +1520,7 @@ async function saveWorkCloud(button) {
       throw new Error('ข้อมูลบนคลาวด์มีการเปลี่ยนแปลง กรุณาโหลดใหม่และตรวจร่างก่อนบันทึก');
     }
     backupWorkDB('ก่อนบันทึกขึ้นคลาวด์');
-    const response = await fetch(API.work, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({password, data:nativeState.workDB})});
-    const result = await response.json();
+    const result = await KNTNetwork.json(API.work, {method:'POST', mutation:true, timeoutMs:30000, headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({password, data:nativeState.workDB})});
     if (!result?.ok) throw new Error(result?.error || 'บันทึกไม่สำเร็จ');
     const verified = await getJSON(API.work);
     if (!verified?.ok || !verified.data) throw new Error('เซิร์ฟเวอร์ตอบว่าบันทึกแล้ว แต่ตรวจซ้ำไม่ได้ กรุณาอย่าบันทึกทับจนกว่าจะโหลดใหม่');
@@ -1500,7 +1534,7 @@ async function saveWorkCloud(button) {
     document.getElementById('workCloudPassword').value = '';
     setWorkCloudStatus(`บันทึกแล้ว ${new Date().toLocaleTimeString('th-TH')}`, true);
     showToast('บันทึกและตรวจซ้ำกับ Google Sheets แล้ว');
-  } catch (error) { setWorkCloudStatus(`บันทึกไม่สำเร็จ · ${error.message}`); showToast(error.message); }
+  } catch (error) { setWorkCloudStatus(`ยังยืนยันการบันทึกไม่ได้ · ${error.message}`); showToast(error.message); }
   finally { button.disabled = false; button.innerHTML = '<svg><use href="#icon-download"></use></svg>บันทึกขึ้น Google Sheets'; }
 }
 
@@ -1655,6 +1689,7 @@ async function handleWorkScan(rawCode) {
 
 async function handleNativeAction(button) {
   const action = button.dataset.nativeAction;
+  if (action === 'retry-attendance') await initializeAttendance();
   if (action === 'mark-all-present') {
     const room = document.getElementById('nativeRoom')?.value;
     const students = nativeState.roster?.[room] || [];
@@ -1804,9 +1839,7 @@ document.addEventListener('click', event => {
   if (toolFilter) {
     const group = toolFilter.closest('[data-tool-filters]');
     group.querySelectorAll('.filter-pill').forEach(pill => pill.classList.toggle('active', pill === toolFilter));
-    document.querySelectorAll('[data-tool-category]').forEach(card => {
-      card.hidden = toolFilter.dataset.toolFilter !== 'all' && card.dataset.toolCategory !== toolFilter.dataset.toolFilter;
-    });
+    filterToolCards();
   }
 
   if (!event.target.closest('#rolePopover')) {
@@ -1891,8 +1924,13 @@ document.addEventListener('input', event => {
   }
 });
 
-window.addEventListener('popstate', () => routeTo(location.hash.slice(1), false));
+window.addEventListener('popstate', () => {
+  const toolId = new URL(location.href).searchParams.get('tool');
+  if (location.hash === '#tool') currentTool = teacherTools.find(tool => tool.id === toolId) || null;
+  routeTo(location.hash.slice(1), false);
+});
 const initialRoute = location.hash.slice(1);
+if (initialRoute === 'tool') currentTool = teacherTools.find(tool => tool.id === new URL(location.href).searchParams.get('tool')) || null;
 if (['teacher-home', 'attendance', 'teacher-work', 'scores', 'tools', 'teacher-profile', 'tool'].includes(initialRoute)) currentRole = 'teacher';
 renderNavigation();
 syncRoleUI();
@@ -1915,3 +1953,30 @@ installButton.addEventListener('click', async () => {
 window.addEventListener('appinstalled', () => showToast('ติดตั้ง KNT Classroom เรียบร้อยแล้ว'));
 
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+
+let networkSlowTimer;
+window.addEventListener('knt-network', event => {
+  const banner = document.getElementById('connectionStatus');
+  if (!banner) return;
+  clearTimeout(networkSlowTimer);
+  banner.hidden = event.detail.active === 0;
+  if (event.detail.active) {
+    banner.textContent = 'กำลังติดต่อระบบ…';
+    networkSlowTimer = setTimeout(() => banner.textContent = 'ระบบกำลังตอบกลับ กรุณารอสักครู่…', 4000);
+  }
+});
+window.addEventListener('offline', () => showToast('ออฟไลน์ · การบันทึกขึ้นระบบต้องรออินเทอร์เน็ต'));
+window.addEventListener('online', () => showToast('อินเทอร์เน็ตกลับมาแล้ว กดโหลดใหม่เพื่อรับข้อมูลล่าสุด'));
+
+function filterToolCards() {
+  const query = (document.getElementById('toolSearch')?.value || '').trim().toLowerCase();
+  const category = document.querySelector('[data-tool-filter].active')?.dataset.toolFilter || 'all';
+  let count = 0;
+  document.querySelectorAll('[data-tool-category]').forEach(card => {
+    card.hidden = !(category === 'all' || card.dataset.toolCategory === category) || !card.textContent.toLowerCase().includes(query);
+    if (!card.hidden) count++;
+  });
+  const status = document.getElementById('toolSearchStatus');
+  if (status) status.textContent = count ? `${count} เครื่องมือ` : 'ไม่พบเครื่องมือ ลองเปลี่ยนคำค้นหรือเลือกหมวดทั้งหมด';
+}
+document.addEventListener('input', event => { if (event.target.id === 'toolSearch') filterToolCards(); });
