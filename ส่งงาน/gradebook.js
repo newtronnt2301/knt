@@ -174,7 +174,7 @@ function pushNow(){
   }).finally(function(){
     cloudBusy=false;
     if(succeeded&&activeWorkspace===ws&&localDirty&&!syncPaused) schedulePush();
-    var retry=document.getElementById('retrySave');if(retry)retry.hidden=!localDirty||!syncPaused;
+    var retry=document.getElementById('retrySave');if(retry){retry.hidden=!localDirty||!syncPaused;retry.disabled=retryChecking;}
   });
 }
 function refreshFromCloud(cb){
