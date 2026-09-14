@@ -28,8 +28,8 @@
   function setRole(role) {
     const teacher = role === 'teacher';
     document.querySelectorAll('[data-role]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.role === role)));
-    const ids = teacher ? ['classroom','attendance','work','grades'] : ['exam','learning','results','talent'];
-    const descriptions = teacher ? ['ทำงานในพื้นที่เดียว','รายวิชาและรายคาบ','ตรวจและติดตามการส่ง','ระบบจัดการคะแนนเต็มรูปแบบ'] : ['ข้อสอบจากคุณครู','เนื้อหาและแบบฝึกหัด','ตรวจคะแนนและงานที่ต้องแก้','โจทย์ฝึกและทบทวน'];
+    const ids = teacher ? ['work','attendance','classroom','grades'] : ['exam','learning','results','talent'];
+    const descriptions = teacher ? ['สมุดคะแนนและงานที่ใช้ประจำ','รายวิชาและรายคาบ','ทำงานในพื้นที่เดียว','ระบบจัดการคะแนนเต็มรูปแบบ'] : ['ข้อสอบจากคุณครู','เนื้อหาและแบบฝึกหัด','ตรวจคะแนนและงานที่ต้องแก้','โจทย์ฝึกและทบทวน'];
     const target = document.getElementById('quick'); target.replaceChildren();
     ids.forEach((id,i) => { const card=known(id), a=document.createElement('a'); a.href=card.querySelector('a').getAttribute('href'); a.dataset.open=id; const label=document.createElement('span'); label.className='quick-label'; label.textContent=card.querySelector('h3').textContent+' ↗'; const desc=document.createElement('small'); desc.textContent=descriptions[i]; a.append(label,desc);target.append(a); });
   }

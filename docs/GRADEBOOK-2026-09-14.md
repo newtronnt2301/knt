@@ -1,0 +1,7 @@
+# Daily gradebook update — 2026-09-14
+
+Restored the portal work link and teacher quick action to ส่งงาน/index-ส่งงาน.html. Added a navy/teal interface, room metrics, student search, work filter, pending-only view, focused table and Enter-to-next-student score entry. Kept existing workspace and score storage keys and the original roster unchanged. Split roster from startup HTML and defer loading until workspace entry; hidden management tables no longer render on every room selection.
+
+Local drafts persist before network writes. Late reads cannot replace newer edits or another workspace. Writes have a bounded wait and uncertain writes pause for explicit checking rather than automatic retries. Previous cloud snapshots are retained locally (last three). Existing export/backup tools remain. No backend changes or live student-score mutations were made. Concurrent edits from multiple devices still require coordination because the existing backend writes the whole database.
+
+Validation: 24 Node tests pass (8 draft/sync and 16 shared network/cache); JavaScript syntax and diff checks pass. Synthetic local-server browser test saved a score, advanced focus on Enter, filtered one student/one exam, and confirmed a success acknowledgment. Mobile 390 × 844 had document width 390, no horizontal page overflow, and no console errors. These checks are not a measured Core Web Vitals benchmark; Google Apps Script response time can still vary.
