@@ -15,7 +15,7 @@ The portal now has a new task-led layout and a shared navy/teal visual language.
 
 ## Discovered compatibility issue
 
-Plickers loaded npm CommonJS sources directly as browser scripts, causing `module/require is not defined`. It now loads unmodified upstream browser scripts pinned to commit `2203d4b5efb601c39054a341bf04702409699383`. The source URL and license are retained in `assets/vendor/js-aruco/`.
+Plickers loaded npm CommonJS sources directly as browser scripts, causing `module/require is not defined`. It now loads upstream browser scripts (whitespace normalized) pinned to commit `2203d4b5efb601c39054a341bf04702409699383`. The source URL and license are retained in `assets/vendor/js-aruco/`.
 
 ## Validation
 
