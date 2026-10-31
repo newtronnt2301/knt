@@ -3,7 +3,7 @@ const src=fs.readFileSync('ส่งงาน/gradebook.js','utf8').split('/* BE
 const code='/* BEGIN GRADEBOOK SYNC'+src;
 function setup(request){
  const storage=new Map(),timers=[],messages=[],nodes={retrySave:{hidden:true}};
- const ctx={DB:{sets:{room:{data:{student:{exam:4}}}}},activeWorkspace:'A',unlocked:true,cloudBusy:false,pendingPush:false,pushTimer:null,Date,JSON,Number,Promise,Error,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},sessionStorage:{getItem:()=>''},document:{getElementById:id=>nodes[id]},cloudUrl:()=>'/mock',setStatus:m=>messages.push(m),afterDataReady:()=>{},promptUnlock:()=>{},KNTNetwork:{json:request},setTimeout:fn=>{timers.push(fn);return timers.length},clearTimeout:()=>{}};
+ const ctx={DB:{sets:{room:{data:{student:{exam:4}}}}},activeWorkspace:'A',unlocked:true,cloudBusy:false,pendingPush:false,retryChecking:false,pushTimer:null,Date,JSON,Number,Promise,Error,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},sessionStorage:{getItem:()=>''},document:{getElementById:id=>nodes[id]},cloudUrl:()=>'/mock',setStatus:m=>messages.push(m),afterDataReady:()=>{},promptUnlock:()=>{},KNTNetwork:{json:request},setTimeout:fn=>{timers.push(fn);return timers.length},clearTimeout:()=>{}};
  vm.createContext(ctx);vm.runInContext(code,ctx);return {ctx,storage,timers,messages};
 }
 test('refresh never overwrites an existing unsent draft',async()=>{let calls=0;const {ctx}=setup(async()=>{calls++;return {ok:true,data:{sets:{}}}});ctx.save();await ctx.refreshFromCloud();assert.equal(calls,0);assert.equal(ctx.DB.sets.room.data.student.exam,4);});

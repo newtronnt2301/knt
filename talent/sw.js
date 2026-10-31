@@ -1,7 +1,7 @@
 // Only this application's static files belong in its cache. API responses stay on the network.
-const CACHE_NAME = "knt-talent-v12";
+const CACHE_NAME = "knt-talent-v16";
 const CACHE_PREFIX = "knt-talent-";
-const APP_SHELL = ["./", "index.html", "styles.css?v=11", "questions.js?v=11", "questions-hard-2.js?v=11", "questions-level3-extra.js?v=11", "questions-level3-more.js?v=11", "questions-level3-more-b.js?v=11", "questions-level12-extra.js?v=11", "app.js?v=12", "../js/network.js?v=1", "manifest.webmanifest?v=6"];
+const APP_SHELL = ["./", "index.html", "styles.css?v=11", "../assets/knt-ui.css?v=4c6ea4cef3", "questions.js?v=11", "questions-hard-2.js?v=11", "questions-level3-extra.js?v=11", "questions-level3-more.js?v=11", "questions-level3-more-b.js?v=11", "questions-level12-extra.js?v=11", "app.js?v=12", "../js/network.js?v=1", "manifest.webmanifest?v=6"];
 const OPTIONAL_FILES = [];
 const allowed = new Set([...APP_SHELL, ...OPTIONAL_FILES].map(path => new URL(path, self.location.href).href));
 self.addEventListener('install', event => {

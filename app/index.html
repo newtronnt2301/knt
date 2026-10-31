@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0e3f74">
+  <meta name="theme-color" content="#153f45">
   <meta name="description" content="KNT Classroom พื้นที่การเรียนรู้สำหรับนักเรียน">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,18 +13,20 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="stylesheet" href="styles.css?v=11">
   <title>KNT Classroom</title>
+<link rel="stylesheet" href="../assets/knt-ui.css?v=4c6ea4cef3">
+<link rel="stylesheet" href="modern.css?v=c7aeed4e27">
 </head>
-<body>
+<body class="knt-modern">
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
 
   <div id="connectionStatus" class="connection-status" role="status" hidden></div><div class="app-shell">
     <aside class="desktop-sidebar" aria-label="เมนูหลัก">
       <a class="brand" href="#home" data-route="home" aria-label="KNT Classroom หน้าแรก">
-        <img class="brand-mark" src="icons/icon.svg" alt="">
+        <img class="brand-mark" src="../assets/knt-mark.svg" alt="">
         <span><b>KNT</b><small>Classroom</small></span>
       </a>
       <nav class="side-nav"></nav>
@@ -38,7 +40,7 @@
     <main class="main-content">
       <header class="topbar">
         <a class="mobile-brand" href="#home" data-route="home">
-          <img class="brand-mark" src="icons/icon.svg" alt="">
+          <img class="brand-mark" src="../assets/knt-mark.svg" alt="">
           <b>KNT Classroom</b>
         </a>
         <div class="top-actions"><a class="portal-back" href="../" aria-label="กลับหน้าแรก KNT">KNT ↗</a>

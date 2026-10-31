@@ -1,7 +1,7 @@
 // Only this application's static files belong in its cache. API responses stay on the network.
-const CACHE_NAME = "knt-classroom-v21";
+const CACHE_NAME = "knt-classroom-v26";
 const CACHE_PREFIX = "knt-classroom-";
-const APP_SHELL = ["./", "./index.html", "./styles.css?v=10", "./app.js?v=19", "../js/network.js?v=1", "./manifest.webmanifest", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
+const APP_SHELL = ["./", "./index.html", "./styles.css?v=11", "../assets/knt-mark.svg", "./modern.css?v=c7aeed4e27", "../assets/knt-ui.css?v=4c6ea4cef3", "./app.js?v=19", "../js/network.js?v=1", "./manifest.webmanifest", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
 const OPTIONAL_FILES = ["./roster-data.js?v=7"];
 const allowed = new Set([...APP_SHELL, ...OPTIONAL_FILES].map(path => new URL(path, self.location.href).href));
 self.addEventListener('install', event => {

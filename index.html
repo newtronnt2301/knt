@@ -3,24 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#241b29">
+<meta name="theme-color" content="#153d42">
 <meta name="description" content="KNT ครูนิวตรอน — เช็กชื่อ ติดตามงาน เรียนคณิตศาสตร์และทำข้อสอบ เข้าถึงเครื่องมือที่ต้องใช้ได้ทันที">
 <title>KNT · ครูนิวตรอน</title>
 <link rel="icon" href="app/icons/icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/portal.css?v=1">
-<script src="assets/portal.js?v=2" defer>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="stylesheet" href="assets/portal.css?v=3">
+<script src="assets/portal.js?v=3" defer>
 </script>
 </head>
 <body>
 <a class="skip" href="#main">ข้ามไปเนื้อหา</a>
 <header class="top">
 <a class="brand" href="./">
-<span class="brand-mark">K<span>↗</span>
-</span>
-<span>KNT<small>ครูนิวตรอน</small>
+<span class="brand-mark">K<span>•</span></span>
+<span>KNT<small>พื้นที่เรียนรู้ของครูนิวตรอน</small>
 </span>
 </a>
 <nav aria-label="เมนูหลัก">
@@ -30,25 +29,28 @@
 </header>
 <main id="main">
 <section class="intro">
-<div>
-<span class="eyebrow">พื้นที่เรียนรู้ · ครูนิวตรอน</span>
-<h1>พร้อมสำหรับ<br>
-<em>คาบต่อไปของคุณ</em>
-</h1>
-<p>เครื่องมือที่ต้องใช้ อยู่ใกล้แค่คลิกเดียว</p>
+<div class="intro-copy">
+<span class="eyebrow"><span class="live-dot" aria-hidden="true"></span> YOUR EVERYDAY CLASSROOM</span>
+<h1>ทุกเรื่องในห้องเรียน<br><em>ง่ายขึ้น ในที่เดียว</em></h1>
+<p>เตรียมสอน เช็กชื่อ บันทึกคะแนน และติดตามงาน<br class="desktop-break"> พื้นที่เล็ก ๆ ที่ช่วยให้คุณมีเวลาให้นักเรียนมากขึ้น</p>
+<div class="hero-actions"><a class="hero-primary" href="ส่งงาน/index-ส่งงาน.html" data-open="work">เปิดสมุดคะแนน <span aria-hidden="true">↗</span></a><a class="hero-secondary" href="#library">สำรวจเครื่องมือ <span aria-hidden="true">↓</span></a></div>
+<div class="intro-date"><span aria-hidden="true">◷</span><span id="today"></span></div>
 </div>
-<div class="intro-note">
-<span aria-hidden="true">✳</span>
-<p>เรียนรู้ให้เข้าใจ<br>จัดการห้องเรียนให้ง่ายขึ้น</p>
-<small id="today">
-</small>
+<div class="intro-note" aria-hidden="true">
+<div class="workspace-art">
+<div class="art-top"><span class="art-mark">K</span><span>KNT WORKSPACE<small>ให้ทุกคาบเรียน เป็นวันที่ดี</small></span><i>✳</i></div>
+<div class="art-row"><span class="art-icon mint">✓</span><div><b>เช็กชื่อและดูแลนักเรียน</b><small>เริ่มต้นคาบเรียนอย่างพร้อมเพรียง</small></div><span>↗</span></div>
+<div class="art-row"><span class="art-icon amber">∑</span><div><b>ทุกคะแนน มีความหมาย</b><small>บันทึกและติดตามความก้าวหน้า</small></div><span>↗</span></div>
+<div class="art-bottom"><span><i></i> พร้อมสำหรับคาบต่อไป</span><b>TEACH · TRACK · GROW</b></div>
+</div>
+<span class="art-caption">A LITTLE LESS ADMIN. A LITTLE MORE TEACHING.</span>
 </div>
 </section>
 <section class="start" aria-labelledby="start-title">
 <div class="section-top">
 <div>
-<span class="eyebrow">เริ่มตรงนี้</span>
-<h2 id="start-title">วันนี้ต้องการทำอะไร?</h2>
+<span class="eyebrow">QUICK START</span>
+<h2 id="start-title">เริ่มต้นวันของคุณ</h2>
 </div>
 <div class="roles" role="group" aria-label="ทางลัดตามบทบาท">
 <button type="button" data-role="student" aria-pressed="true">นักเรียน</button>
@@ -73,8 +75,8 @@
 <section id="library" class="library">
 <div class="section-top">
 <div>
-<span class="eyebrow">KNT TOOLBOX</span>
-<h2>เครื่องมือทั้งหมด</h2>
+<span class="eyebrow">YOUR TOOLBOX</span>
+<h2>เครื่องมือสำหรับทุกคาบเรียน</h2>
 </div>
 <label class="search">
 <span aria-hidden="true">⌕</span>

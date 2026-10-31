@@ -8,27 +8,9 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            kanit: ['Kanit', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif'],
-          },
-          colors: {
-            spacebg: '#0a0a0b',
-            cream: '#f4f4f6',
-            neon: '#e0102f',
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Static utilities: no browser-side CSS compilation. -->
 
   <!-- html2canvas and html5-qrcode CDNs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -128,8 +110,10 @@
       50% { box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.7); }
     }
   </style>
+<link rel="stylesheet" href="../assets/utilities.css?v=8cf0921fa3">
+<link rel="stylesheet" href="../assets/knt-ui.css?v=4c6ea4cef3">
 </head>
-<body class="select-none font-kanit">
+<body class="select-none font-kanit knt-modern" data-knt-page="results">
 
   <!-- Floating Hamburger Menu Button -->
   <button id="menu-toggle-btn" class="fixed top-6 left-6 z-40 w-12 h-12 rounded-full backdrop-blur-md bg-white/5 border border-white/10 flex items-center justify-center text-white hover:text-red-400 hover:border-red-500/40 hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all duration-300 active:scale-95" aria-label="เปิดเมนูทางลัด">
@@ -800,7 +784,7 @@
     // On Load Initializations
     window.addEventListener('DOMContentLoaded', () => {
       // Start background starfield canvas
-      initStarfield();
+      // Static background: no continuous decorative canvas animation.
       
       // Load classes list from Sheets
       loadClassesList();

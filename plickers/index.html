@@ -8,32 +8,13 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            kanit: ['Kanit', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif'],
-          },
-          colors: {
-            spacebg: '#0a0a0b',
-            cream: '#f4f4f6',
-            neon: '#e0102f',
-            darkcard: '#090D2A',
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Static utilities: no browser-side CSS compilation. -->
 
   <!-- js-aruco CDNs (Adaptive thresholding & polygon matching) -->
-  <script src="https://cdn.jsdelivr.net/npm/js-aruco@0.1.0/src/cv.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/js-aruco@0.1.0/src/aruco.js"></script>
+  <script src="../assets/vendor/js-aruco/cv.js"></script>
+  <script src="../assets/vendor/js-aruco/aruco.js"></script>
 
   <!-- SheetJS CDN (for Excel export) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -113,8 +94,10 @@
       background: rgba(111,255,0,0.04) !important;
     }
   </style>
+<link rel="stylesheet" href="../assets/utilities.css?v=8cf0921fa3">
+<link rel="stylesheet" href="../assets/knt-ui.css?v=4c6ea4cef3">
 </head>
-<body class="select-none font-kanit bg-carbon text-white/90 min-h-screen">
+<body class="select-none font-kanit bg-carbon text-white/90 min-h-screen knt-modern" data-knt-page="plickers">
 
   <!-- Main Container -->
   <div class="w-full min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-[1600px] mx-auto">
@@ -1277,7 +1260,7 @@
         <html>
         <head>
           <meta charset="UTF-8">
-          <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+          <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
           <script src="https://cdn.tailwindcss.com"><\/script>
           <style>
             body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }

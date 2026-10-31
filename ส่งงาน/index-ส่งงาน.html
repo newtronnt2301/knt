@@ -6,8 +6,8 @@
 <title>บันทึกคะแนน / ส่งงาน · KNT Gradebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'"></noscript>
 <style>
   :root{
     --green:#1f6f3e;--green-d:#0f3d20;--green-l:#e8f3ec;
@@ -197,15 +197,16 @@
     font-weight: bold;
   }
 </style>
-<link rel="stylesheet" href="gradebook.css?v=1">
+<link rel="stylesheet" href="gradebook.css?v=3">
+<link rel="stylesheet" href="../assets/knt-ui.css?v=4c6ea4cef3">
 </head>
-<body>
+<body class="knt-modern" data-knt-page="gradebook">
 
 <!-- หน้า Landing Screen สำหรับเลือกครู / สร้างห้องใหม่ -->
 <div id="wsLandingScreen" class="ws-landing-overlay">
   <div class="ws-landing-card">
     <div style="text-align: center; margin-bottom: 20px;">
-      <span style="font-size: 50px;">📦</span>
+      <span class="ws-landing-brand" aria-hidden="true">K.</span>
       <h2 style="font-family: var(--font-chalk); color: var(--green-d); margin-top: 10px; font-size: 24px; letter-spacing: 0.5px;">สมุดคะแนนของคุณครู</h2>
       <p style="font-size: 14px; color: var(--muted); margin-top: 4px;">กรุณาเลือกห้องทำงานครูเพื่อเริ่มต้น</p>
     </div>

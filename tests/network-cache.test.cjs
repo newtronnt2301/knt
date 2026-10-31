@@ -48,7 +48,7 @@ for(const file of ['app/sw.js','talent/sw.js']) {
  });
  test(`${file} uses cached static resources without network`,async()=>{
    let calls=0;const w=worker(file,{cached:new Response('cached'),fetch:async()=>{calls++;throw new Error('offline')}});
-   const path=file.startsWith('app/')?'app/styles.css?v=10':'talent/styles.css?v=11';
+   const path=file.startsWith('app/')?'app/styles.css?v=11':'talent/styles.css?v=11';
    const res=await w.request('https://example.com/knt/'+path).response;
    assert.equal(await res.text(),'cached');assert.equal(calls,0);
  });
