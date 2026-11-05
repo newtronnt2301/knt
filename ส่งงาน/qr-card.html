@@ -214,7 +214,7 @@
   // โหลดรายชื่อห้องเรียนจากทะเบียนกลางผ่าน Local Server
   async function init() {
     try {
-      const response = await fetch('roster.json');
+      const response = await fetch('roster.json?v=20261105-11228', { cache: 'no-store' });
       if (!response.ok) throw new Error('ไม่สามารถเชื่อมต่อไฟล์ทะเบียนได้');
       ROSTER_DATA = await response.json();
       
