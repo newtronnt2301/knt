@@ -213,14 +213,16 @@ function pushNow(){
     if(activeWorkspace!==ws)autoSync();
   });
 }
+function editingScore(){return typeof document!=='undefined'&&document.activeElement&&document.activeElement.matches('#grid input');}
 function refreshFromCloud(cb){
   if(localDirty){if(unlocked)return pushNow().finally(function(){if(cb)cb();});setStatus('มีร่างค้างในเครื่อง · ปลดล็อกเพื่อบันทึกอัตโนมัติ');if(cb)cb();return Promise.resolve();}
-  if(readBusy||cloudBusy){if(cb)cb();return Promise.resolve();}
+  if(readBusy||cloudBusy||editingScore()){if(cb)cb();return Promise.resolve();}
   var url=cloudUrl(),ws=activeWorkspace,revision=localRevision,epoch=++readEpoch;
   if(!url){afterDataReady();if(cb)cb();return Promise.resolve();}
   readBusy=true;setStatus('กำลังตรวจข้อมูลล่าสุดบนคลาวด์…');
   return cloudRead(url).then(function(data){
-    if(ws!==activeWorkspace||epoch!==readEpoch||localDirty||revision!==localRevision)return;
+    if(ws!==activeWorkspace||epoch!==readEpoch||localDirty||revision!==localRevision||editingScore())return;
+    if(sameData(DB,data)){syncBase=cloneData(data);persistDraft();setStatus('ข้อมูลล่าสุดจากคลาวด์ · '+new Date().toLocaleTimeString('th-TH'),'ok');return;}
     if(!backupBeforeReplace(ws,data))return;
     DB=data;syncBase=cloneData(data);persistDraft();syncFailures=0;setStatus('ข้อมูลล่าสุดจากคลาวด์ · '+new Date().toLocaleTimeString('th-TH'),'ok');afterDataReady();
   }).catch(function(error){if(ws===activeWorkspace&&epoch===readEpoch){setStatus('แสดงข้อมูลในเครื่อง · กำลังรอเชื่อมต่อใหม่ · '+error.message,'err');retrySync();}})
