@@ -263,7 +263,7 @@
 <div class="wrap">
 <section class="grade-hero"><div><span class="grade-eyebrow">KNT GRADEBOOK</span><h2>ทุกคะแนน ทุกความก้าวหน้า<br><em>ดูแลได้ในที่เดียว</em></h2><p>บันทึกคะแนน ติดตามงาน และดูภาพรวมของห้องเรียน</p></div><div class="hero-monogram" aria-hidden="true">A<span>+</span></div></section>
 <div id="gradeMetrics" class="grade-metrics" aria-label="สรุปห้องที่เลือก"></div>
-<div class="sync-strip"><button id="btnRefresh" class="ghost small">🔄 ดึงข้อมูลล่าสุด</button><span id="syncDetail" role="status">เลือกห้องทำงานเพื่อเริ่มต้น</span><button type="button" class="ghost small" id="retrySave" hidden>ตรวจและส่งร่างอีกครั้ง</button></div>
+<div class="sync-strip"><button id="btnRefresh" class="ghost small">🔄 ดึงข้อมูลล่าสุด</button><span id="syncDetail" role="status">เลือกห้องทำงานเพื่อเริ่มต้น</span><button type="button" class="ghost small" id="retrySave" hidden>เชื่อมต่อและบันทึกอีกครั้ง</button></div>
   <!-- เลือก/สร้างห้องวิชา -->
   <div class="card">
     <h2>ห้องเรียน · รายวิชา</h2>
@@ -280,7 +280,7 @@
       <input type="file" id="restoreFile" accept="application/json" class="hide">
     </div>
     </details>
-    <div class="hint">ข้อมูลเก็บบน <b>คลาวด์ส่วนกลาง</b> — เปิดเครื่องไหน/มือถือไหนก็เห็นข้อมูลชุดเดียวกัน • <b>ดูได้ทุกคน แต่การบันทึกต้องใส่รหัส</b> (กดปุ่ม 🔒 มุมขวาบนเพื่อปลดล็อก) • กด "🔄 ดึงข้อมูลล่าสุด" เมื่อมีการแก้จากเครื่องอื่น • "สำรองข้อมูล" เก็บไฟล์ไว้กันเหนียว</div>
+    <div class="hint">ข้อมูลเก็บบน <b>คลาวด์ส่วนกลาง</b> — เปิดเครื่องไหน/มือถือไหนก็เห็นข้อมูลชุดเดียวกัน • <b>ดูได้ทุกคน แต่การบันทึกต้องใส่รหัส</b> (กดปุ่ม 🔒 มุมขวาบนเพื่อปลดล็อก) • โหลดข้อมูลล่าสุดอัตโนมัติเมื่อเปิดหน้าเว็บและทุก 20 วินาที • "สำรองข้อมูล" เก็บไฟล์ไว้กันเหนียว</div>
   </div>
 
   <div class="tabs">
@@ -510,6 +510,6 @@
 </dialog>
 
 <script src="../js/network.js?v=1" defer></script>
-<script src="gradebook.js?v=1" defer></script>
+<script src="gradebook.js?v=20261106-sync2" defer></script>
 </body>
 </html>
