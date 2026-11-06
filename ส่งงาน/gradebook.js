@@ -110,16 +110,17 @@ function updateLockUI(){
   else { b.textContent='🔒 บันทึกถูกล็อก'; b.style.borderColor='#fff'; b.style.color='var(--green-d)'; b.title='แตะเพื่อใส่รหัสปลดล็อกการบันทึก'; }
 }
 
-/* BEGIN GRADEBOOK SYNC — local drafts never depend on a network response. */
+/* BEGIN GRADEBOOK SYNC — persist drafts before any network request. */
 var localDirty=false,localRevision=0,syncPaused=false,readEpoch=0,footerTimer;
+var syncBase=null,syncRetryTimer=null,syncFailures=0,readBusy=false;
 function syncKey(ws){return 'hwSyncState_'+ws;}
 function syncMeta(ws){try{return JSON.parse(localStorage.getItem(syncKey(ws)))||{};}catch(e){return {};}}
 function persistDraft(){
   try{
     localStorage.setItem('hwTrackerApp_data_'+activeWorkspace,JSON.stringify(DB));
-    localStorage.setItem(syncKey(activeWorkspace),JSON.stringify({dirty:localDirty,revision:localRevision,savedAt:syncMeta(activeWorkspace).savedAt||null}));
+    localStorage.setItem(syncKey(activeWorkspace),JSON.stringify({dirty:localDirty,revision:localRevision,savedAt:syncMeta(activeWorkspace).savedAt||null,base:syncBase}));
     return true;
-  }catch(e){setStatus('เก็บร่างในเครื่องไม่ได้ กรุณากดสำรองข้อมูลก่อนปิดหน้า','err');return false;}
+  }catch(e){syncPaused=true;setStatus('เก็บร่างในเครื่องไม่ได้ กรุณากดสำรองข้อมูลก่อนปิดหน้า','err');return false;}
 }
 function backupBeforeReplace(ws,next){
   var old=localStorage.getItem('hwTrackerApp_data_'+ws);
@@ -128,70 +129,106 @@ function backupBeforeReplace(ws,next){
     var key='hwRecovery_'+ws,items=JSON.parse(localStorage.getItem(key))||[];
     items.unshift({at:new Date().toISOString(),data:JSON.parse(old)});
     localStorage.setItem(key,JSON.stringify(items.slice(0,3)));return true;
-  }catch(e){setStatus('พื้นที่สำรองไม่พอ ยังเก็บข้อมูลเดิมไว้ กรุณาสำรองข้อมูล','err');return false;}
+  }catch(e){syncPaused=true;setStatus('พื้นที่สำรองไม่พอ ยังเก็บข้อมูลเดิมไว้ กรุณาสำรองข้อมูล','err');return false;}
 }
+function cloneData(data){return JSON.parse(JSON.stringify(data));}
+function sameData(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+// Apply only local changes since the last confirmed cloud snapshot.
+// Arrays of students/works merge by stable ID, including removals.
+function mergeDraft(base,local,remote){
+  if(sameData(local,base))return remote;
+  if(sameData(remote,base)||sameData(local,remote))return local;
+  if(Array.isArray(local)&&Array.isArray(remote)&&local.concat(remote).every(function(x){return x&&typeof x==='object'&&x.id;})){
+    var before=Array.isArray(base)?base:[],out=[];
+    remote.forEach(function(r){var l=local.find(function(x){return x.id===r.id;}),b=before.find(function(x){return x.id===r.id;});if(l)out.push(mergeDraft(b,l,r));else if(!b)out.push(r);});
+    local.forEach(function(l){if(!remote.some(function(r){return r.id===l.id;})&&!before.some(function(b){return b.id===l.id;}) )out.push(l);});
+    return out;
+  }
+  if(local&&remote&&typeof local==='object'&&typeof remote==='object'&&!Array.isArray(local)&&!Array.isArray(remote)){
+    var out={},b=base&&typeof base==='object'?base:{};
+    Object.keys(remote).concat(Object.keys(local),Object.keys(b)).forEach(function(k){
+      if(k==='__proto__'||k==='constructor'||k==='prototype')return;
+      var value=mergeDraft(b[k],local[k],remote[k]);if(value!==undefined)out[k]=value;
+    });return out;
+  }
+  return local; // The pending edit wins if the same field changed on both devices.
+}
+function cloudRead(url){return KNTNetwork.json(url+(url.indexOf('?')<0?'?':'&')+'_sync='+Date.now(),{timeoutMs:30000,cache:'no-store'}).then(function(j){if(!j||!j.ok||!j.data||!j.data.sets)throw new Error('รูปแบบข้อมูลจากคลาวด์ไม่ถูกต้อง');return j.data;});}
 function load(){
   try{DB=JSON.parse(localStorage.getItem('hwTrackerApp_data_'+activeWorkspace))||{sets:{}};}catch(e){DB={sets:{}};}
   if(!DB.sets)DB.sets={};
-  var meta=syncMeta(activeWorkspace);localDirty=!!meta.dirty;localRevision=Number(meta.revision)||0;syncPaused=localDirty;
+  var meta=syncMeta(activeWorkspace);localDirty=!!meta.dirty;localRevision=Number(meta.revision)||0;syncBase=meta.base||null;syncPaused=false;
 }
 function save(){
   localDirty=true;localRevision++;
-  if(!persistDraft()){syncPaused=true;return;}
-  setStatus('เก็บร่างในเครื่องแล้ว · รอส่งขึ้นคลาวด์');
+  if(!persistDraft())return;
+  setStatus('เก็บในเครื่องแล้ว · รอบันทึกอัตโนมัติ');
   if(!cloudUrl()){setStatus('เก็บร่างแล้ว · ยังไม่ได้ตั้งค่าคลาวด์');return;}
   if(!unlocked){promptUnlock();return;}
-  if(syncPaused){setStatus('เก็บร่างแล้ว · กรุณาตรวจและส่งร่างอีกครั้ง');return;}
   schedulePush();
 }
 function schedulePush(){
   clearTimeout(pushTimer);
   if(!localDirty||syncPaused)return;
-  setStatus('เก็บร่างแล้ว · เตรียมบันทึกขึ้นคลาวด์');
-  pushTimer=setTimeout(pushNow,1000);
+  pushTimer=setTimeout(pushNow,700);
+}
+function retrySync(){
+  clearTimeout(syncRetryTimer);
+  if(syncPaused)return;
+  syncRetryTimer=setTimeout(autoSync,Math.min(60000,3000*Math.pow(2,Math.min(syncFailures++,4))));
 }
 function pushNow(){
   var url=cloudUrl();if(!url||!unlocked||!localDirty||syncPaused)return Promise.resolve();
   if(cloudBusy){pendingPush=true;return Promise.resolve();}
-  cloudBusy=true;pendingPush=false;
-  var ws=activeWorkspace,revision=localRevision,snapshot=JSON.stringify(DB),succeeded=false;
-  var enteredPw=sessionStorage.getItem('hwEnteredPassword_'+ws)||'';
-  setStatus('เก็บร่างแล้ว · กำลังบันทึกขึ้นคลาวด์');
-  return KNTNetwork.json(url,{method:'POST',mutation:true,timeoutMs:30000,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({password:enteredPw,data:JSON.parse(snapshot)})})
-  .then(function(j){
-    if(!j||!j.ok)throw new Error((j&&j.error)||'เซิร์ฟเวอร์ยังไม่ยืนยันการบันทึก');
-    succeeded=true;
-    if(activeWorkspace!==ws)return;
-    if(localRevision===revision){
-      localDirty=false;persistDraft();
-      var meta=syncMeta(ws);meta.savedAt=new Date().toISOString();localStorage.setItem(syncKey(ws),JSON.stringify(meta));
-      setStatus('บันทึกขึ้นคลาวด์แล้ว · '+new Date().toLocaleTimeString('th-TH'),'ok');
-    }else setStatus('บันทึกรอบก่อนแล้ว · ยังมีร่างใหม่รอส่ง');
+  cloudBusy=true;pendingPush=false;clearTimeout(syncRetryTimer);syncRetryTimer=null;
+  var ws=activeWorkspace,revision,snapshot;
+  // Both accepted login aliases use the actual cloud write password.
+  var enteredPw=ws==='ครูนิวตรอน'?SAVE_PW:(sessionStorage.getItem('hwEnteredPassword_'+ws)||'');
+  setStatus('กำลังบันทึกอัตโนมัติขึ้นคลาวด์…');
+  return cloudRead(url).then(function(remote){
+    if(activeWorkspace!==ws||!unlocked)return;
+    var merged=mergeDraft(syncBase||{},DB,remote);
+    if(!backupBeforeReplace(ws,merged))return;
+    syncBase=cloneData(remote);DB=cloneData(merged);
+    if(typeof curKey!=='undefined'&&curKey)cur=DB.sets[curKey]||null;
+    revision=localRevision;snapshot=cloneData(DB);
+    if(!persistDraft())return;
+    if(sameData(remote,snapshot))return remote;
+    return KNTNetwork.json(url,{method:'POST',mutation:true,timeoutMs:30000,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({password:enteredPw,data:snapshot})}).then(function(j){
+      if(!j||!j.ok)throw new Error((j&&j.error)||'เซิร์ฟเวอร์ยังไม่ยืนยันการบันทึก');
+      return cloudRead(url).then(function(confirmed){if(!sameData(confirmed,snapshot))throw new Error('กำลังตรวจการบันทึกอีกครั้ง');return confirmed;});
+    });
+  }).then(function(confirmed){
+    if(!confirmed||activeWorkspace!==ws)return;
+    syncBase=cloneData(confirmed);syncFailures=0;
+    if(localRevision===revision){localDirty=false;syncPaused=false;}
+    persistDraft();var meta=syncMeta(ws);meta.savedAt=new Date().toISOString();localStorage.setItem(syncKey(ws),JSON.stringify(meta));
+    if(!localDirty){afterDataReady();setStatus('บันทึกขึ้นคลาวด์แล้ว · '+new Date().toLocaleTimeString('th-TH'),'ok');}
   }).catch(function(error){
     if(activeWorkspace!==ws)return;
-    syncPaused=true;pendingPush=false;clearTimeout(pushTimer);
-    setStatus('ยังยืนยันการบันทึกไม่ได้ · ร่างยังอยู่ในเครื่อง · '+error.message,'err');
+    setStatus('เก็บในเครื่องแล้ว · จะเชื่อมต่อและบันทึกใหม่อัตโนมัติ · '+error.message,'err');retrySync();
   }).finally(function(){
     cloudBusy=false;
-    if(succeeded&&activeWorkspace===ws&&localDirty&&!syncPaused) schedulePush();
-    var retry=document.getElementById('retrySave');if(retry){retry.hidden=!localDirty||!syncPaused;retry.disabled=retryChecking;}
+    if(activeWorkspace===ws&&localDirty&&!syncPaused&&!syncRetryTimer)schedulePush();
+    if(activeWorkspace!==ws)autoSync();
   });
 }
 function refreshFromCloud(cb){
+  if(localDirty){if(unlocked)return pushNow().finally(function(){if(cb)cb();});setStatus('มีร่างค้างในเครื่อง · ปลดล็อกเพื่อบันทึกอัตโนมัติ');if(cb)cb();return Promise.resolve();}
+  if(readBusy||cloudBusy){if(cb)cb();return Promise.resolve();}
   var url=cloudUrl(),ws=activeWorkspace,revision=localRevision,epoch=++readEpoch;
-  if(localDirty||cloudBusy){setStatus('มีร่างที่ยังไม่ยืนยันบนคลาวด์ · เก็บร่างไว้ ไม่โหลดทับ');if(cb)cb();return Promise.resolve();}
   if(!url){afterDataReady();if(cb)cb();return Promise.resolve();}
-  setStatus(Object.keys(DB.sets).length?'แสดงข้อมูลในเครื่อง · กำลังตรวจข้อมูลล่าสุด':'กำลังโหลดห้องเรียนจากคลาวด์…');
-  return KNTNetwork.json(url,{timeoutMs:15000}).then(function(j){
-    if(ws!==activeWorkspace||epoch!==readEpoch)return;
-    if(localDirty||revision!==localRevision){setStatus('มีการแก้ไขใหม่ · เก็บร่างไว้ ไม่โหลดทับ');return;}
-    if(!j||!j.ok||!j.data||!j.data.sets)throw new Error('รูปแบบข้อมูลจากคลาวด์ไม่ถูกต้อง');
-    if(!backupBeforeReplace(ws,j.data))return;
-    DB=j.data;persistDraft();setStatus('โหลดข้อมูลล่าสุดแล้ว · '+new Date().toLocaleTimeString('th-TH'),'ok');afterDataReady();
-  }).catch(function(error){if(ws===activeWorkspace&&epoch===readEpoch)setStatus('โหลดไม่สำเร็จ · ใช้ข้อมูลในเครื่อง · '+error.message,'err');})
-  .finally(function(){if(ws===activeWorkspace&&epoch===readEpoch&&cb)cb();});
+  readBusy=true;setStatus('กำลังตรวจข้อมูลล่าสุดบนคลาวด์…');
+  return cloudRead(url).then(function(data){
+    if(ws!==activeWorkspace||epoch!==readEpoch||localDirty||revision!==localRevision)return;
+    if(!backupBeforeReplace(ws,data))return;
+    DB=data;syncBase=cloneData(data);persistDraft();syncFailures=0;setStatus('ข้อมูลล่าสุดจากคลาวด์ · '+new Date().toLocaleTimeString('th-TH'),'ok');afterDataReady();
+  }).catch(function(error){if(ws===activeWorkspace&&epoch===readEpoch){setStatus('แสดงข้อมูลในเครื่อง · กำลังรอเชื่อมต่อใหม่ · '+error.message,'err');retrySync();}})
+  .finally(function(){readBusy=false;if(cb)cb();});
 }
+function autoSync(){syncRetryTimer=null;if(localDirty){if(unlocked)return pushNow();}else return refreshFromCloud();}
 /* END GRADEBOOK SYNC */
+
 
 function afterDataReady(){
   renderSetBar();
@@ -1117,7 +1154,7 @@ document.getElementById('wsLoginUnlock').onclick = function() {
     sessionStorage.setItem('hwEnteredPassword_' + selectedWsToLogin, pw);
     hideWsLandingOverlay();
     switchWorkspace(selectedWsToLogin);
-    if(localDirty)setStatus('พบร่างที่ยังไม่บันทึก · กรุณาตรวจและส่งร่างอีกครั้ง');
+    if(localDirty)autoSync();
   } else {
     document.getElementById('wsLoginMsg').textContent = '❌ รหัสผ่านไม่ถูกต้อง';
   }
@@ -1549,24 +1586,14 @@ document.getElementById('studentSearch').addEventListener('input',filterStudentR
 document.getElementById('onlyPending').addEventListener('change',filterStudentRows);
 document.getElementById('workFilter').addEventListener('change',renderGrid);
 document.getElementById('focusGrid').onclick=function(){var focused=document.body.classList.toggle('grade-focus');this.setAttribute('aria-pressed',String(focused));this.textContent=focused?'กลับมุมมองปกติ':'ขยายตาราง';};
-document.getElementById('retrySave').onclick=async function(){
-  if(cloudBusy||retryChecking)return;
-  if(!unlocked){promptUnlock();return;}
-  var ws=activeWorkspace,revision=localRevision;
-  retryChecking=true;this.disabled=true;setStatus('กำลังตรวจข้อมูลบนคลาวด์ก่อนส่งร่างอีกครั้ง…');
-  try{
-    var current=await KNTNetwork.json(cloudUrl(),{timeoutMs:15000});
-    if(ws!==activeWorkspace||revision!==localRevision){setStatus('ร่างเปลี่ยนระหว่างตรวจ กรุณากดตรวจอีกครั้ง');return;}
-    if(!current||!current.ok||!current.data)throw new Error('ตรวจข้อมูลบนคลาวด์ไม่ได้');
-    if(JSON.stringify(current.data)===JSON.stringify(DB)){localDirty=false;syncPaused=false;persistDraft();setStatus('ตรวจแล้ว ข้อมูลบนคลาวด์ตรงกับร่าง','ok');return;}
-    if(!confirm('ข้อมูลบนคลาวด์ต่างจากร่างในอุปกรณ์นี้\nหากมีครูคนอื่นแก้ข้อมูล กรุณายกเลิกแล้วสำรองร่างเพื่อตรวจสอบก่อน\n\nต้องการส่งร่างในอุปกรณ์นี้ขึ้นคลาวด์หรือไม่?')){setStatus('เก็บร่างไว้ในอุปกรณ์ ยังไม่ส่งขึ้นคลาวด์');return;}
-    syncPaused=false;await pushNow();
-  }catch(error){setStatus('ตรวจไม่สำเร็จ · ร่างยังอยู่ในเครื่อง · '+error.message,'err');}
-  finally{retryChecking=false;this.disabled=false;this.hidden=!localDirty||!syncPaused;}
-};
+document.getElementById('retrySave').onclick=function(){if(!unlocked){promptUnlock();return;}syncPaused=false;autoSync();};
 window.addEventListener('beforeunload',function(event){if(localDirty||cloudBusy){event.preventDefault();event.returnValue='';}});
-window.addEventListener('offline',function(){setStatus('ออฟไลน์ · เก็บร่างในเครื่อง รอเชื่อมต่อก่อนส่งขึ้นคลาวด์');});
-window.addEventListener('online',function(){setStatus(localDirty?'กลับมาออนไลน์แล้ว · กรุณาตรวจและส่งร่างอีกครั้ง':'กลับมาออนไลน์แล้ว · กดดึงข้อมูลล่าสุด');});
+window.addEventListener('pagehide',function(){if(localDirty)persistDraft();});
+window.addEventListener('offline',function(){setStatus('ออฟไลน์ · เก็บในเครื่องแล้ว จะบันทึกเมื่อเชื่อมต่อใหม่');});
+window.addEventListener('online',autoSync);
+window.addEventListener('focus',function(){if(document.getElementById('wsLandingScreen').classList.contains('hide'))autoSync();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&document.getElementById('wsLandingScreen').classList.contains('hide'))autoSync();});
+setInterval(function(){if(!document.hidden&&document.getElementById('wsLandingScreen').classList.contains('hide'))autoSync();},20000);
 document.querySelector('#grid').addEventListener('keydown',function(event){
   if(event.key!=='Enter'||event.target.type!=='number')return;
   event.preventDefault();var work=event.target.dataset.w,inputs=Array.from(document.querySelectorAll('#grid input[type="number"]')).filter(function(el){return el.dataset.w===work&&!el.closest('tr').hidden;});var next=inputs[inputs.indexOf(event.target)+1];if(next){next.focus();next.select();}
