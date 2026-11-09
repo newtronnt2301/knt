@@ -1474,9 +1474,21 @@ function initCamera(cameraId) {
   });
 }
 
+function setScannerSubmissionMode(mode){
+  var work=cur&&cur.works.find(function(w){return w.id===document.getElementById('scanner-work-select').value;});
+  if(!work||work.type==='สอบ'||['sent','late','miss'].indexOf(mode)<0)return;
+  document.getElementById('scanner-action').value=mode;
+  toggleScannerScoreInput();
+}
 function toggleScannerScoreInput() {
   var act = document.getElementById('scanner-action').value;
   var wrap = document.getElementById('scanner-score-wrap');
+  var work=cur&&cur.works.find(function(w){return w.id===document.getElementById('scanner-work-select').value;});
+  var modes=document.getElementById('scanner-submission-modes');
+  if(modes)modes.hidden=!!(work&&work.type==='สอบ');
+  document.querySelectorAll('[data-scan-mode]').forEach(function(button){button.setAttribute('aria-pressed',String(button.getAttribute('data-scan-mode')===act));});
+  var label=document.getElementById('scanner-mode-label');
+  if(label){label.textContent='โหมดปัจจุบัน: '+(act==='score'?'คะแนนสอบ':act==='toggle'?'สลับส่ง/ไม่ส่ง':submissionLabel(scannedSubmission(act,false)));label.style.color=act==='late'?'#9a5800':'var(--green-d)';}
   if (act === 'score') {
     wrap.style.display = 'block';
   } else {
