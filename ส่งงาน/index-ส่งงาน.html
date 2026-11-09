@@ -91,6 +91,7 @@
   td.examcell input{width:62px;text-align:center;padding:5px 4px;border-radius:6px}
   .cell{cursor:pointer;font-weight:700;user-select:none;min-width:58px}
   .s-send{background:var(--green);color:#fff}
+  .s-late{background:#fff1d6;color:#9a5800}
   .s-miss{background:var(--miss-bg);color:var(--miss)}
   .pend{font-weight:800;color:var(--miss)}.pend0{color:var(--green)}
   .work-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
@@ -199,6 +200,9 @@
 </style>
 <link rel="stylesheet" href="gradebook.css?v=3">
 <link rel="stylesheet" href="../assets/knt-ui.css?v=4c6ea4cef3">
+<style>
+#grid .s-late,#grid tbody tr:hover td.s-late{background:#fff1d6;color:#9a5800}#grid td.cell{user-select:none;-webkit-user-select:none;touch-action:manipulation}
+</style>
 </head>
 <body class="knt-modern" data-knt-page="gradebook">
 
@@ -298,7 +302,7 @@
         <button class="ghost small" style="background:var(--green-l);color:var(--green-d);border-color:var(--green)" onclick="openScannerModal()">📷 สแกนส่งงาน/สอบ</button>
       </div>
       <div style="font-size:13px;margin-bottom:10px;color:var(--muted)">
-        <b style="color:var(--green-d)">งานส่ง</b> : คลิกช่องสลับ <span class="cell s-send" style="padding:1px 7px;border-radius:5px">ส่ง</span> / <span class="cell s-miss" style="padding:1px 7px;border-radius:5px;border:1px solid #e0c4c0">ไม่ส่ง</span> &nbsp;·&nbsp;
+        <b style="color:var(--green-d)">งานส่ง</b> : คลิกช่องสลับ <span class="cell s-send" style="padding:1px 7px;border-radius:5px">ส่ง</span> / <span class="cell s-miss" style="padding:1px 7px;border-radius:5px;border:1px solid #e0c4c0">ไม่ส่ง</span> · ดับเบิลคลิกช่องเพื่อเป็น <span class="cell s-late" style="padding:1px 7px;border-radius:5px">ส่งสาย</span> &nbsp;·&nbsp;
         <b style="color:var(--exam)">ข้อสอบ</b> : กรอกคะแนนในช่อง
       </div>
       <div class="grade-filters"><label for="studentSearch">ค้นหานักเรียน<input id="studentSearch" type="search" placeholder="ชื่อ หรือเลขที่" autocomplete="off"></label><label for="workFilter">เลือกงาน / ข้อสอบ<select id="workFilter"><option value="">แสดงทุกงาน</option></select></label><label class="pending-filter"><input type="checkbox" id="onlyPending"> เฉพาะนักเรียนที่มีงานค้าง</label><button id="focusGrid" type="button" class="ghost small" aria-pressed="false">ขยายตาราง</button></div><p id="gridCount" class="hint" role="status"></p>
@@ -476,6 +480,7 @@
         <select id="scanner-action" style="padding: 6px; border-radius: 8px; font-family: inherit; font-size: 14px;" onchange="toggleScannerScoreInput()">
           <option value="toggle">สลับ ส่ง/ไม่ส่ง</option>
           <option value="sent" selected>เช็คเป็น ส่ง (✓)</option>
+          <option value="late">เช็คเป็น ส่งสาย (◷)</option>
           <option value="miss">เช็คเป็น ไม่ส่ง (–)</option>
           <option value="score">กรอกคะแนนสอบ</option>
         </select>
@@ -510,6 +515,6 @@
 </dialog>
 
 <script src="../js/network.js?v=1" defer></script>
-<script src="gradebook.js?v=20261106-sync2" defer></script>
+<script src="gradebook.js?v=20261109-late1" defer></script>
 </body>
 </html>
