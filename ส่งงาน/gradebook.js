@@ -259,7 +259,13 @@ function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,function(c){
 /* ===== ค่าในเซลล์ ===== */
 function val(sid,wid){ return cur.data[sid] ? cur.data[sid][wid] : undefined; }
 function setVal(sid,wid,v){ if(!cur.data[sid])cur.data[sid]={}; cur.data[sid][wid]=v; }
-function isSent(sid,wid){ return val(sid,wid)===true; }
+// Keep existing boolean values; 'late' is a submitted assignment received late.
+function submissionReceived(value){return value===true||value==='late';}
+function isSent(sid,wid){return submissionReceived(val(sid,wid));}
+function isLate(sid,wid){return val(sid,wid)==='late';}
+function submissionLabel(value){return value==='late'?'ส่งสาย':value===true?'ส่ง':'ไม่ส่ง';}
+function submissionClass(value){return value==='late'?'s-late':value===true?'s-send':'s-miss';}
+function scannedSubmission(action,current){return action==='late'?'late':action==='miss'?false:action==='toggle'?!submissionReceived(current):true;}
 function pendingCount(sid){
   var n=0; cur.works.forEach(function(w){ if(w.type==='ส่ง' && !isSent(sid,w.id)) n++; });
   return n;
@@ -369,8 +375,8 @@ function renderGrid(){
         var sc=val(s.id,w.id); sc=(sc==null?'':sc);
         html+='<td class="examcell"><input aria-label="'+escapeHtml(s.name+' · '+w.name)+'" inputmode="decimal" type="number" min="0" max="'+(w.max||999)+'" value="'+sc+'" data-s="'+s.id+'" data-w="'+w.id+'"></td>';
       } else {
-        var sent=isSent(s.id,w.id);
-        html+='<td class="cell '+(sent?'s-send':'s-miss')+'" data-s="'+s.id+'" data-w="'+w.id+'">'+(sent?'ส่ง':'–')+'</td>';
+        var value=val(s.id,w.id);
+        html+='<td class="cell '+submissionClass(value)+'" title="คลิก: ส่ง/ไม่ส่ง · ดับเบิลคลิก: ส่งสาย" data-s="'+s.id+'" data-w="'+w.id+'">'+(submissionReceived(value)?submissionLabel(value):'–')+'</td>';
       }
     });
     var p=pendingCount(s.id);
@@ -395,11 +401,11 @@ function renderFooter(){
          '<br><span class="ft-sub">กรอก '+cnt+'/'+n+'</span>'+
          '<br><span class="ft-rpt" data-rptw="'+w.id+'">📤 ผลสอบ/LINE</span></th>';
     } else {
-      var c=0; cur.students.forEach(function(s){if(isSent(s.id,w.id))c++;});
+      var c=0,late=0; cur.students.forEach(function(s){if(isSent(s.id,w.id))c++;if(isLate(s.id,w.id))late++;});
       var pct=n?Math.round(c/n*100):0;
       var miss=n-c;
       h+='<th><span class="ft-pct">'+c+'/'+n+'</span> ('+pct+'%)'+
-         '<br><span class="ft-sub">ค้าง '+miss+' คน</span>'+
+         '<br><span class="ft-sub">ค้าง '+miss+' คน'+(late?' · ส่งสาย '+late+' คน':'')+'</span>'+
          '<br><span class="ft-rpt" data-rptw="'+w.id+'">📤 ตามงาน/LINE</span></th>';
     }
   });
@@ -408,16 +414,33 @@ function renderFooter(){
   h+='<th><span class="ft-pct" style="color:'+(totPend?'var(--miss)':'var(--green)')+'">'+totPend+'</span><br><span class="ft-sub">ค้างรวม</span></th></tr>';
   tfoot.innerHTML=h;
 }
-/* คลิกช่องงานส่ง */
-document.querySelector('#grid').addEventListener('click',function(e){
-  var c=e.target; if(!c.classList.contains('cell'))return;
-  if(!unlocked){promptUnlock();return;}
-  var sid=c.getAttribute('data-s'), wid=c.getAttribute('data-w');
-  var sent=!isSent(sid,wid); setVal(sid,wid,sent);
-  c.className='cell '+(sent?'s-send':'s-miss'); c.textContent=sent?'ส่ง':'–';
-  var p=pendingCount(sid); var pe=document.querySelector('[data-pend="'+sid+'"]');
+/* คลิกครั้งเดียวสลับส่ง/ไม่ส่ง; ดับเบิลคลิกกำหนดส่งสายเสมอ */
+var submissionFilterTimer=null;
+function markSubmissionCell(cell,value,deferFilter){
+  if(!cur)return;
+  var sid=cell.getAttribute('data-s'),wid=cell.getAttribute('data-w');
+  if(!cur.students.some(function(s){return s.id===sid;})||!cur.works.some(function(w){return w.id===wid&&w.type==='ส่ง';}))return;
+  setVal(sid,wid,value);
+  cell.className='cell '+submissionClass(value);
+  cell.textContent=submissionReceived(value)?submissionLabel(value):'–';
+  var p=pendingCount(sid),pe=document.querySelector('[data-pend="'+sid+'"]');
   if(pe){pe.textContent=p;pe.className=p?'pend':'pend0';}
-  renderFooter(); updateGradeMetrics(); filterStudentRows(); save();
+  renderFooter();updateGradeMetrics();save();
+  clearTimeout(submissionFilterTimer);
+  // Keep the cell under the pointer until the double-click has completed.
+  if(deferFilter)submissionFilterTimer=setTimeout(filterStudentRows,600);
+  else filterStudentRows();
+}
+document.querySelector('#grid').addEventListener('click',function(e){
+  var c=e.target;if(!c.classList.contains('cell')||e.detail>1)return;
+  if(!unlocked){promptUnlock();return;}
+  markSubmissionCell(c,!isSent(c.getAttribute('data-s'),c.getAttribute('data-w')),true);
+});
+document.querySelector('#grid').addEventListener('dblclick',function(e){
+  var c=e.target;if(!c.classList.contains('cell'))return;
+  e.preventDefault();
+  if(!unlocked){promptUnlock();return;}
+  markSubmissionCell(c,'late',false);
 });
 /* คลิกลิงก์รายงานในแถวสรุปท้ายตาราง */
 document.querySelector('#grid').addEventListener('click',function(e){
@@ -653,7 +676,7 @@ function renderSummary(){
     stat((cells?sent:0)+'/'+cells,'ส่งแล้ว')+stat(rate+'%','อัตราส่งรวม');
   // bars งานส่ง
   bars.innerHTML = sendWorks.length ? sendWorks.map(function(w){
-    var c=0; cur.students.forEach(function(s){if(isSent(s.id,w.id))c++;});
+    var c=0,late=0; cur.students.forEach(function(s){if(isSent(s.id,w.id))c++;if(isLate(s.id,w.id))late++;});
     var pct=nStu?Math.round(c/nStu*100):0;
     return '<div class="barline"><div class="nm">'+escapeHtml(w.name)+'</div><div class="barbg">'+
       '<div class="barfill" style="width:'+pct+'%"></div></div><div style="width:96px;font-size:13px">'+c+'/'+nStu+' ('+pct+'%)</div></div>';
@@ -752,7 +775,7 @@ function setStats(s){
   var nStu=(s.students||[]).length;
   var cells=nStu*sendWorks.length, sent=0;
   (s.students||[]).forEach(function(st){ sendWorks.forEach(function(w){
-    if(data[st.id] && data[st.id][w.id]===true) sent++; }); });
+    if(data[st.id] && submissionReceived(data[st.id][w.id])) sent++; }); });
   var rate=cells?Math.round(sent/cells*100):0;
   return {sendWorks:sendWorks,examWorks:examWorks,nStu:nStu,cells:cells,sent:sent,rate:rate,data:data};
 }
@@ -778,7 +801,7 @@ function renderAll(){
         var avg=cnt?Math.round(sum/cnt*100)/100:0;
         return '<span class="chip" style="cursor:default"><span class="tag-exam">สอบ</span> '+escapeHtml(w.name)+' <small>เฉลี่ย '+avg+'/'+(w.max||0)+'</small></span>';
       }
-      var c=0; (s.students||[]).forEach(function(stu){if(st.data[stu.id]&&st.data[stu.id][w.id]===true)c++;});
+      var c=0; (s.students||[]).forEach(function(stu){if(st.data[stu.id]&&submissionReceived(st.data[stu.id][w.id]))c++;});
       var pct=st.nStu?Math.round(c/st.nStu*100):0;
       return '<span class="chip" style="cursor:default"><span class="tag-send">ส่ง</span> '+escapeHtml(w.name)+' <small>'+c+'/'+st.nStu+' ('+pct+'%)</small></span>';
     }).join('');
@@ -793,7 +816,7 @@ function renderAll(){
   keys.forEach(function(k){
     var s=DB.sets[k], st=setStats(s);
     (s.students||[]).forEach(function(stu){
-      var pend=st.sendWorks.filter(function(w){return !(st.data[stu.id]&&st.data[stu.id][w.id]===true);});
+      var pend=st.sendWorks.filter(function(w){return !(st.data[stu.id]&&submissionReceived(st.data[stu.id][w.id]));});
       if(pend.length) allRows.push({room:s.room,subject:s.subject,stu:stu,pend:pend});
     });
   });
@@ -835,7 +858,7 @@ document.getElementById('btnExportXLSX').onclick=function(){
           works.forEach(function(w){
             var v=st.data[stu.id]?st.data[stu.id][w.id]:undefined;
             if(w.type==='สอบ'){ row.push(v===''||v==null||isNaN(v)?'':Number(v)); }
-            else { var sent=(v===true); row.push(sent?'ส่ง':'ไม่ส่ง'); if(!sent)pend++; }
+            else { var sent=submissionReceived(v); row.push(submissionLabel(v)); if(!sent)pend++; }
           });
           row.push(pend);
           aoa.push(row);
@@ -844,9 +867,9 @@ document.getElementById('btnExportXLSX').onclick=function(){
         var foot=['','📊 สรุปรายงาน'];
         works.forEach(function(w){
           if(w.type==='สอบ'){var sm=0,cn=0;(s.students||[]).forEach(function(stu){var v=st.data[stu.id]?st.data[stu.id][w.id]:undefined;if(v!==''&&v!=null&&!isNaN(v)){sm+=Number(v);cn++;}});foot.push('เฉลี่ย '+(cn?Math.round(sm/cn*100)/100:0)+'/'+(w.max||0));}
-          else{var c=0;(s.students||[]).forEach(function(stu){if(st.data[stu.id]&&st.data[stu.id][w.id]===true)c++;});foot.push('ส่ง '+c+'/'+st.nStu);}
+          else{var c=0;(s.students||[]).forEach(function(stu){if(st.data[stu.id]&&submissionReceived(st.data[stu.id][w.id]))c++;});foot.push('ส่ง '+c+'/'+st.nStu);}
         });
-        var totPend=0;(s.students||[]).forEach(function(stu){st.sendWorks.forEach(function(w){if(!(st.data[stu.id]&&st.data[stu.id][w.id]===true))totPend++;});});
+        var totPend=0;(s.students||[]).forEach(function(stu){st.sendWorks.forEach(function(w){if(!(st.data[stu.id]&&submissionReceived(st.data[stu.id][w.id])))totPend++;});});
         foot.push(totPend);
         aoa.push(foot);
         var ws=XLSX.utils.aoa_to_sheet(aoa);
@@ -988,12 +1011,13 @@ function buildWorkReportHtml(w){
       return '<tr><td style="padding:7px;border:1px solid #e2e0d4;text-align:center">'+escapeHtml(s.no||'')+'</td>'+
         '<td style="padding:7px;border:1px solid #e2e0d4">'+escapeHtml(s.name||'')+'</td>'+
         (sent
-          ? '<td style="padding:7px;border:1px solid #e2e0d4;text-align:center;color:#1f6f3e;font-weight:700">✓ ส่งแล้ว</td>'
+          ? '<td style="padding:7px;border:1px solid #e2e0d4;text-align:center;color:'+(isLate(s.id,w.id)?'#9a5800':'#1f6f3e')+';font-weight:700">'+(isLate(s.id,w.id)?'◷ ส่งสาย':'✓ ส่งแล้ว')+'</td>'
           : '<td style="padding:7px;border:1px solid #e2e0d4;text-align:center;color:#c0392b;font-weight:700">✗ ยังไม่ส่ง</td>')+'</tr>';
     }).join('');
     body='<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+
       statBox(n,'นักเรียน','#2c4a39')+
       statBox(sentL.length,'ส่งแล้ว','#1f6f3e')+
+      statBox(sentL.filter(function(s){return isLate(s.id,w.id);}).length,'ในจำนวนนี้ส่งสาย','#9a5800')+
       statBox(missL.length,'ยังไม่ส่ง',missL.length?'#c0392b':'#1f6f3e')+
       statBox(pct+'%','อัตราการส่ง',rc)+'</div>'+
       '<table style="width:100%;border-collapse:collapse;font-size:15px"><tr style="background:#2c4a39;color:#f4f1e6">'+
@@ -1461,6 +1485,8 @@ function toggleScannerScoreInput() {
 }
 
 function handleScannedCode(code) {
+  if(!cur)return;
+  if(!unlocked){promptUnlock();return;}
   if (scanCooldown) return;
   scanCooldown = true;
   setTimeout(function() { scanCooldown = false; }, 1800);
@@ -1494,13 +1520,9 @@ function handleScannedCode(code) {
       setVal(foundStudent.id, work.id, score);
       actionText = 'กรอกคะแนน ' + (score === '' ? 'ว่าง' : score) + ' คะแนน';
     } else {
-      var valNow = isSent(foundStudent.id, work.id);
-      var newVal = true;
-      if (action === 'toggle') newVal = !valNow;
-      else if (action === 'miss') newVal = false;
-      
-      setVal(foundStudent.id, work.id, newVal);
-      actionText = newVal ? 'เช็คว่า ส่ง' : 'เช็คว่า ไม่ส่ง';
+      var newVal=scannedSubmission(action,val(foundStudent.id,work.id));
+      setVal(foundStudent.id,work.id,newVal);
+      actionText='เช็คว่า '+submissionLabel(newVal);
     }
 
     renderGrid();
